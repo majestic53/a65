@@ -1,0 +1,164 @@
+====[ TOKEN ]====
+
+begin | command | constant | directive | end | identifier | label | literal | macro | pragma | register | scalar | symbol
+
+====[ LEXER ]====
+
+document ::= <statement>*
+
+---
+
+statement ::= <command> | <comment> | <directive> | <label> | <pragma>
+
+---
+
+character ::= . | <character_escape>
+
+character_escape ::= \a | \b | \\ | \r | \f | \" | \' | \n | \t | \v | \x[0-9a-fA-F]{2} | \[0-9]{3}
+
+command ::= <command_absolute> | <command_absolute_index_indirect> | <command_ansolute_index_x> | <command_absolute_index_y>
+	| <command_absolute_indirect> | <command_accumulator> | <command_immediate> | <command_implied> | <command_relative>
+	| <command_zeropage> | <command_zeropage_index_indirect> | <command_zeropage_index_x> | <command_zeropage_index_y>
+	| <command_zeropage_indirect> | <command_zeropage_indirect_index>
+
+command_absolute ::= <command_absolute_opcode> <expression>
+
+command_absolute_opcode ::= adc | and | asl | bit | cmp | cpx | cpy | dec | eor | inc | jmp | jsr | lda | ldx | ldy
+	| lsr | ora | rol | ror | sbc | sta | stx | sty | stz | trb | tsb
+
+command_absolute_index_indirect ::= <command_absolute_index_indirect_opcode> [<expression>,x]
+
+command_absolute_index_indirect_opcode ::= jmp
+
+command_ansolute_index_x ::= <command_ansolute_index_x_opcode> <expression>,x
+
+command_ansolute_index_x_opcode ::= adc | and | asl | bit | cmp | dec | eor | inc | lda | lsr | ora
+	| rol | ror | sbc | sta | stz
+
+command_absolute_index_y ::= <command_ansolute_index_y_opcode> <expression>,y
+
+command_ansolute_index_y_opcode ::= adc | and | cmp | eor | lda | ldx | ldy | ora | sbc | sta
+
+command_absolute_indirect ::= <command_absolute_indirect_opcode> [<expression>]
+
+command_absolute_indirect_opcode ::= jmp
+
+command_accumulator ::= <command_accumulator_opcode> a
+
+command_accumulator_opcode ::= asl | dea | ina | lsr | rol | ror
+
+command_immediate ::= <command_immediate_opcode> #<expression>
+
+command_immediate_opcode ::= adc | and | bit | cmp | cpx | cpy | eor | lda | ldx | ldy | ora | sbc
+
+command_implied ::= <command_implied_opcode>
+
+command_implied_opcode ::= brk | clc | cld | cli | clv | dex | dey | inx | iny | nop | pha | php | phx | phy
+	| pla | plp | plx | ply | rti | rts | sec | sed | sei | stp | tax | tay | tsx | txa | txs | tya | wai
+
+command_relative ::= <command_relative_opcode> <expression>
+
+command_relative_opcode ::= bbr0 | bbr1 | bbr2 | bbr3 | bbr4 | bbr5 | bbr6 | bbr7 | bbs0 | bbs1 | bbs2
+	| bbs3 | bbs4 | bbs5 | bbs6 | bbs7 | bcc | bcs | beq | bmi | bne | bpl | bra | bvc | bvs
+
+command_zeropage ::= <command_zeropage_opcode> <expression>
+
+command_zeropage_opcode ::= adc | and | asl | bit | cmp | cpx | cpy | dec | eor | inc | lda | ldx | ldy
+	| lsr | ora | rmb0 | rmb1 | rmb2 | rmb3 | rmb4 | rmb5 | rmb6 | rmb7 | rol | ror | sbc
+	| smb0 | smb1 | smb2 | smb3 | smb4 | smb5 | smb6 | smb7 | sta | stx | sty | stz | trb | tsb
+
+command_zeropage_index_indirect ::= <command_zeropage_index_indirect_opcode> [<expression>,x]
+
+command_zeropage_index_indirect_opcode ::= adc | and | cmp | eor | lda | ora | sbc | sta
+
+command_zeropage_index_x ::= <command_zeropage_index_x_opcode> <expression>,x
+
+command_zeropage_index_x_opcode ::= adc | and | asl | bit | cmp | dec | eor | inc | lda | lsr | ora
+	| rol | ror | sbc | sta | sty | stz
+
+command_zeropage_index_y ::= <command_zeropage_index_y_opcode> <expression>,y
+
+command_zeropage_index_y_opcode ::= ldx, ldy, stx
+
+command_zeropage_indirect ::= <command_zeropage_indirect_opcode> [<expression>]
+
+command_zeropage_indirect_opcode ::= adc | and | cmp | eor | lda | ora | sbc | sta
+
+command_zeropage_indirect_index ::= <command_zeropage_indirect_index_opcode> [<expression>],y
+
+command_zeropage_indirect_index_opcode ::= adc | and | cmp | eor | lda | ora | sbc | sta
+
+comment ::= ;.*\n
+
+constant ::= false | null | true
+
+directive ::= <directive_data_byte> | <directive_data_word> | <directive_define> | <directive_if>
+	| <directive_ifdef> | <directive_include_binary> | <directive_reserve> | <directive_undefine>
+
+directive_data_byte ::= .db <expression_list>
+
+directive_data_word ::= .dw <expression_list>
+
+directive_define ::= .def <identifier> <expression>?
+
+directive_else ::= .else <statement>*
+
+directive_elseif ::= .elseif <expression_condition> <statement>*
+
+directive_end ::= .endif
+
+directive_if ::= .if <expression_condition> <statement>* <directive_elseif>* <directive_else>? <directive_end>
+
+directive_ifdef ::= .ifdef <identifier> <statement>* <directive_else>? <directive_end>
+
+directive_origin ::= .org <expression>
+
+directive_reserve ::= .res <expression>
+
+directive_undefine ::= .undef <identifier>
+
+expression ::= <expression_binary>
+
+expression_arithmetic_0 ::= <expression_arithmetic_1> [+ | -] <expression_arithmetic_1>
+	| <expression_arithmetic_1>
+
+expression_arithmetic_1 ::= <expression_factor> [* | / | %] <expression_factor>
+	| <expression_factor>
+
+expression_binary ::= <expression_logical> [& | | | ^] <expression_logical>
+	| <expression_logical>
+
+expression_condition ::= <expression> [== | != | < | <= | > | >= | && | ||] <expression> | <expression>
+
+expression_factor ::= [! | ~]? <macro>? [(<expression>) | <constant> | <identifier> | <literal_character> | <scalar>]
+
+expression_logical ::= <expression_arithmetic_0> [<< | >>] <expression_arithmetic_0>
+	| <expression_arithmetic_0>
+
+expression_list ::= <expression>,<expression_list> | <expression>
+
+identifier ::= [_a-zA-Z][_a-zA-Z0-9]*
+
+label ::= <identifier>:
+
+literal ::= "<character>*"
+
+literal_character ::= <identifier>{<expression>}? | '<character>'
+
+macro ::= high | low
+
+pragma ::= <pragma_include_binary> | <pragma_include_source>
+
+pragma_include_binary ::= @incb <literal>
+
+pragma_include_source ::= @inc <literal>
+
+scalar ::= <scalar_binary> | <scalar_decimal> | <scalar_hexidecimal> | <scalar_octal>
+
+scalar_binary ::= 0b[0-1]{1-16}
+
+scalar_decimal ::= [0-9]{1-5}
+
+scalar_hexidecimal ::= 0x[a-fA-F0-9]{1-4}
+
+scalar_octal ::= 0c[0-7]{1-6}
