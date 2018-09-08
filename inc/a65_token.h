@@ -110,7 +110,7 @@ class a65_token {
 
 		size_t m_line;
 
-		std::string m_literal;
+		a65_literal_t m_literal;
 
 		std::string m_path;
 
