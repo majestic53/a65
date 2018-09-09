@@ -30,6 +30,16 @@ enum {
 	A65_STREAM_CHARACTER_SYMBOL,
 };
 
+#define A65_STREAM_CHARACTER_MAX A65_STREAM_CHARACTER_SYMBOL
+
+static const std::string A65_STREAM_CHARACTER_STR[] = {
+	"Alpha", "Digit", "End", "Space", "Symbol",
+	};
+
+#define A65_STREAM_CHARACTER_STRING(_TYPE_) \
+	(((_TYPE_) > A65_STREAM_CHARACTER_MAX) ? A65_STRING_UNKNOWN : \
+		A65_STRING_CHECK(A65_STREAM_CHARACTER_STR[_TYPE_]))
+
 typedef uint8_t a65_char_t;
 typedef std::vector<a65_char_t> a65_literal_t;
 
@@ -53,6 +63,8 @@ class a65_stream {
 			);
 
 		a65_char_t character(void) const;
+
+		int character_type(void) const;
 
 		virtual void clear(void);
 
@@ -91,8 +103,6 @@ class a65_stream {
 		virtual std::string to_string(void) const;
 
 	protected:
-
-		int type(void) const;
 
 		a65_literal_t m_character;
 

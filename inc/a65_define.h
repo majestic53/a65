@@ -19,6 +19,7 @@
 #ifndef A65_DEFINE_H_
 #define A65_DEFINE_H_
 
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <iomanip>
@@ -54,8 +55,11 @@
 	std::setw(sizeof(_TYPE_) * 2) << std::setfill('0') << std::hex << (uintmax_t) ((_TYPE_) (_VALUE_)) \
 		<< std::dec << std::setfill(' ')
 
+#define A65_STRING_LOWER(_STRING_) \
+	std::transform((_STRING_).begin(), (_STRING_).end(), (_STRING_).begin(), ::tolower)
+
 #define A65_VERSION_MAJOR 0
 #define A65_VERSION_MINOR 1
-#define A65_VERSION_REVISION 4
+#define A65_VERSION_REVISION 5
 
 #endif // A65_DEFINE_H_

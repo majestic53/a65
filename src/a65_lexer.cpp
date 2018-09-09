@@ -21,7 +21,13 @@
 #include "../inc/a65_utility.h"
 
 #define A65_CHARACTER_COMMENT ';'
+#define A65_CHARACTER_DIRECTIVE '.'
+#define A65_CHARACTER_LABEL ':'
+#define A65_CHARACTER_LITERAL '\"'
+#define A65_CHARACTER_LITERAL_CHARACTER '\''
 #define A65_CHARACTER_NEWLINE '\n'
+#define A65_CHARACTER_PRAGMA '@'
+#define A65_CHARACTER_UNDERSCORE '_'
 
 #define A65_TOKEN_SENTINEL_COUNT 2
 
@@ -147,22 +153,28 @@ a65_lexer::contains(
 a65_token
 a65_lexer::enumerate(void)
 {
+	int type;
 	a65_token result;
 
 	A65_DEBUG_ENTRY();
 
-	// TODO: enumerate token
-	a65_literal_t literal;
+	result.set_metadata(path(), line());
 
-	literal.push_back(a65_stream::character());
-
-	result.set(A65_TOKEN_IDENTIFIER);
-	result.set_literal(literal);
-
-	if(a65_stream::has_next()) {
-		a65_stream::move_next();
+	type = character_type();
+	switch(type) {
+		case A65_STREAM_CHARACTER_ALPHA:
+			enumerate_alpha(result);
+			break;
+		case A65_STREAM_CHARACTER_DIGIT:
+			enumerate_digit(result);
+			break;
+		case A65_STREAM_CHARACTER_SYMBOL:
+			enumerate_symbol(result);
+			break;
+		default:
+			A65_THROW_EXCEPTION_INFO("Unexpected character type", "%u(%s) (%s:%u)", type, A65_STREAM_CHARACTER_STRING(type),
+				A65_STRING_CHECK(path()), line());
 	}
-	// ---
 
 	A65_DEBUG_ENTRY_INFO("Result=%s", A65_STRING_CHECK(result.to_string()));
 	return result;
@@ -175,7 +187,203 @@ a65_lexer::enumerate_alpha(
 {
 	A65_DEBUG_ENTRY_INFO("Token=%s", A65_STRING_CHECK(token.to_string()));
 
-	// TODO: enumerate alpha token
+	if(a65_stream::match(A65_STREAM_CHARACTER_SYMBOL, A65_CHARACTER_DIRECTIVE)) {
+		enumerate_alpha_directive(token);
+	} else if(a65_stream::match(A65_STREAM_CHARACTER_SYMBOL, A65_CHARACTER_LITERAL)) {
+		enumerate_alpha_literal(token);
+	} else if(a65_stream::match(A65_STREAM_CHARACTER_SYMBOL, A65_CHARACTER_LITERAL_CHARACTER)) {
+		enumerate_alpha_literal_character(token);
+	} else if(a65_stream::match(A65_STREAM_CHARACTER_SYMBOL, A65_CHARACTER_PRAGMA)) {
+		enumerate_alpha_pragma(token);
+	} else {
+		a65_literal_t literal;
+		std::string literal_str;
+
+		if(!a65_stream::match(A65_STREAM_CHARACTER_ALPHA)
+				&& !a65_stream::match(A65_STREAM_CHARACTER_SYMBOL, A65_CHARACTER_UNDERSCORE)) {
+			A65_THROW_EXCEPTION_INFO("Expecting alpha", "(%s:%u)", A65_STRING_CHECK(path()), line());
+		}
+
+		literal.push_back(character());
+
+		if(a65_stream::has_next()) {
+			a65_stream::move_next();
+
+			while(a65_stream::match(A65_STREAM_CHARACTER_ALPHA)
+					|| a65_stream::match(A65_STREAM_CHARACTER_DIGIT)
+					|| a65_stream::match(A65_STREAM_CHARACTER_SYMBOL, A65_CHARACTER_UNDERSCORE)) {
+				literal.push_back(character());
+
+				if(!a65_stream::has_next()) {
+					break;
+				}
+
+				a65_stream::move_next();
+			}
+
+			literal_str = std::string(literal.begin(), literal.end());
+			A65_STRING_LOWER(literal_str);
+
+			if(A65_IS_TOKEN_COMMAND(literal_str)) {
+				token.set(A65_TOKEN_COMMAND, A65_TOKEN_COMMAND_ID(literal_str));
+			} else if(A65_IS_TOKEN_CONSTANT(literal_str)) {
+				token.set(A65_TOKEN_CONSTANT, A65_TOKEN_CONSTANT_ID(literal_str));
+			} else if(A65_IS_TOKEN_MACRO(literal_str)) {
+				token.set(A65_TOKEN_MACRO, A65_TOKEN_MACRO_ID(literal_str));
+			} else if(A65_IS_TOKEN_REGISTER(literal_str)) {
+				token.set(A65_TOKEN_REGISTER, A65_TOKEN_REGISTER_ID(literal_str));
+			} else if(a65_stream::match(A65_STREAM_CHARACTER_SYMBOL, A65_CHARACTER_LABEL)) {
+
+				if(a65_stream::has_next()) {
+					a65_stream::move_next();
+				}
+
+				token.set(A65_TOKEN_LABEL);
+				token.set_literal(literal);
+			} else {
+				token.set(A65_TOKEN_IDENTIFIER);
+				token.set_literal(literal);
+			}
+		}
+	}
+
+	A65_DEBUG_ENTRY_INFO("Result=%s", A65_STRING_CHECK(token.to_string()));
+}
+
+void
+a65_lexer::enumerate_alpha_directive(
+	__inout a65_token &token
+	)
+{
+	a65_literal_t literal;
+	std::string literal_str;
+
+	A65_DEBUG_ENTRY_INFO("Token=%s", A65_STRING_CHECK(token.to_string()));
+
+	if(!a65_stream::match(A65_STREAM_CHARACTER_SYMBOL, A65_CHARACTER_DIRECTIVE)) {
+		A65_THROW_EXCEPTION_INFO("Expecting directive", "(%s:%u)", A65_STRING_CHECK(path()), line());
+	}
+
+	literal.push_back(character());
+
+	if(!a65_stream::has_next()) {
+		A65_THROW_EXCEPTION_INFO("Unterminated directive", "(%s:%u)", A65_STRING_CHECK(path()), line());
+	}
+
+	a65_stream::move_next();
+
+	if(!a65_stream::match(A65_STREAM_CHARACTER_ALPHA)
+			&& !a65_stream::match(A65_STREAM_CHARACTER_DIGIT)
+			&& !a65_stream::match(A65_STREAM_CHARACTER_SYMBOL, A65_CHARACTER_UNDERSCORE)) {
+		A65_THROW_EXCEPTION_INFO("Unterminated directive", "(%s:%u)", A65_STRING_CHECK(path()), line());
+	}
+
+	while(a65_stream::match(A65_STREAM_CHARACTER_ALPHA)
+			|| a65_stream::match(A65_STREAM_CHARACTER_DIGIT)
+			|| a65_stream::match(A65_STREAM_CHARACTER_SYMBOL, A65_CHARACTER_UNDERSCORE)) {
+		literal.push_back(character());
+
+		if(!a65_stream::has_next()) {
+			break;
+		}
+
+		a65_stream::move_next();
+	}
+
+	literal_str = std::string(literal.begin(), literal.end());
+	A65_STRING_LOWER(literal_str);
+
+	if(!A65_IS_TOKEN_DIRECTIVE(literal_str)) {
+		A65_THROW_EXCEPTION_INFO("Unsupported directive", "%s (%s:%u)", A65_STRING_CHECK(std::string(literal.begin(), literal.end())),
+			A65_STRING_CHECK(path()), line());
+	}
+
+	token.set(A65_TOKEN_DIRECTIVE, A65_TOKEN_DIRECTIVE_ID(literal_str));
+
+	A65_DEBUG_ENTRY_INFO("Result=%s", A65_STRING_CHECK(token.to_string()));
+}
+
+void
+a65_lexer::enumerate_alpha_literal(
+	__inout a65_token &token
+	)
+{
+	A65_DEBUG_ENTRY_INFO("Token=%s", A65_STRING_CHECK(token.to_string()));
+
+	if(!a65_stream::match(A65_STREAM_CHARACTER_SYMBOL, A65_CHARACTER_LITERAL)) {
+		A65_THROW_EXCEPTION_INFO("Expecting literal", "(%s:%u)", A65_STRING_CHECK(path()), line());
+	}
+
+	// TODO: enumerate alpha literal token
+
+	A65_DEBUG_ENTRY_INFO("Result=%s", A65_STRING_CHECK(token.to_string()));
+}
+
+void
+a65_lexer::enumerate_alpha_literal_character(
+	__inout a65_token &token
+	)
+{
+	A65_DEBUG_ENTRY_INFO("Token=%s", A65_STRING_CHECK(token.to_string()));
+
+	if(!a65_stream::match(A65_STREAM_CHARACTER_SYMBOL, A65_CHARACTER_LITERAL_CHARACTER)) {
+		A65_THROW_EXCEPTION_INFO("Expecting literal character", "(%s:%u)", A65_STRING_CHECK(path()), line());
+	}
+
+	// TODO: enumerate alpha literal character token
+
+	A65_DEBUG_ENTRY_INFO("Result=%s", A65_STRING_CHECK(token.to_string()));
+}
+
+void
+a65_lexer::enumerate_alpha_pragma(
+	__inout a65_token &token
+	)
+{
+	a65_literal_t literal;
+	std::string literal_str;
+
+	A65_DEBUG_ENTRY_INFO("Token=%s", A65_STRING_CHECK(token.to_string()));
+
+	if(!a65_stream::match(A65_STREAM_CHARACTER_SYMBOL, A65_CHARACTER_PRAGMA)) {
+		A65_THROW_EXCEPTION_INFO("Expecting pragma", "(%s:%u)", A65_STRING_CHECK(path()), line());
+	}
+
+	literal.push_back(character());
+
+	if(!a65_stream::has_next()) {
+		A65_THROW_EXCEPTION_INFO("Unterminated pragma", "(%s:%u)", A65_STRING_CHECK(path()), line());
+	}
+
+	a65_stream::move_next();
+
+	if(!a65_stream::match(A65_STREAM_CHARACTER_ALPHA)
+			&& !a65_stream::match(A65_STREAM_CHARACTER_DIGIT)
+			&& !a65_stream::match(A65_STREAM_CHARACTER_SYMBOL, A65_CHARACTER_UNDERSCORE)) {
+		A65_THROW_EXCEPTION_INFO("Unterminated pragma", "(%s:%u)", A65_STRING_CHECK(path()), line());
+	}
+
+	while(a65_stream::match(A65_STREAM_CHARACTER_ALPHA)
+			|| a65_stream::match(A65_STREAM_CHARACTER_DIGIT)
+			|| a65_stream::match(A65_STREAM_CHARACTER_SYMBOL, A65_CHARACTER_UNDERSCORE)) {
+		literal.push_back(character());
+
+		if(!a65_stream::has_next()) {
+			break;
+		}
+
+		a65_stream::move_next();
+	}
+
+	literal_str = std::string(literal.begin(), literal.end());
+	A65_STRING_LOWER(literal_str);
+
+	if(!A65_IS_TOKEN_PRAGMA(literal_str)) {
+		A65_THROW_EXCEPTION_INFO("Unsupported pragma", "%s (%s:%u)", A65_STRING_CHECK(std::string(literal.begin(), literal.end())),
+			A65_STRING_CHECK(path()), line());
+	}
+
+	token.set(A65_TOKEN_PRAGMA, A65_TOKEN_PRAGMA_ID(literal_str));
 
 	A65_DEBUG_ENTRY_INFO("Result=%s", A65_STRING_CHECK(token.to_string()));
 }
@@ -186,6 +394,10 @@ a65_lexer::enumerate_digit(
 	)
 {
 	A65_DEBUG_ENTRY_INFO("Token=%s", A65_STRING_CHECK(token.to_string()));
+
+	if(!a65_stream::match(A65_STREAM_CHARACTER_DIGIT)) {
+		A65_THROW_EXCEPTION_INFO("Expecting digit", "(%s:%u)", A65_STRING_CHECK(path()), line());
+	}
 
 	// TODO: enumerate digit token
 
@@ -199,7 +411,44 @@ a65_lexer::enumerate_symbol(
 {
 	A65_DEBUG_ENTRY_INFO("Token=%s", A65_STRING_CHECK(token.to_string()));
 
-	// TODO: enumerate symbol token
+	if(a65_stream::match(A65_STREAM_CHARACTER_SYMBOL, A65_CHARACTER_DIRECTIVE)
+			|| a65_stream::match(A65_STREAM_CHARACTER_SYMBOL, A65_CHARACTER_LITERAL)
+			|| a65_stream::match(A65_STREAM_CHARACTER_SYMBOL, A65_CHARACTER_LITERAL_CHARACTER)
+			|| a65_stream::match(A65_STREAM_CHARACTER_SYMBOL, A65_CHARACTER_PRAGMA)
+			|| a65_stream::match(A65_STREAM_CHARACTER_SYMBOL, A65_CHARACTER_UNDERSCORE)) {
+		enumerate_alpha(token);
+	} else if(!a65_stream::match(A65_STREAM_CHARACTER_SYMBOL)) {
+		A65_THROW_EXCEPTION_INFO("Expecting symbol", "(%s:%u)", A65_STRING_CHECK(path()), line());
+	} else {
+		a65_literal_t literal;
+		std::string literal_str;
+
+		literal.push_back(character());
+
+		if(a65_stream::has_next()) {
+			a65_stream::move_next();
+
+			if(a65_stream::match(A65_STREAM_CHARACTER_SYMBOL)) {
+				literal.push_back(character());
+
+				literal_str = std::string(literal.begin(), literal.end());
+
+				if(!A65_IS_TOKEN_SYMBOL(literal_str)) {
+					a65_stream::move_previous();
+					literal.erase(literal.end() - 1);
+				} else if(a65_stream::has_next()) {
+					a65_stream::move_next();
+				}
+			}
+		}
+
+		literal_str = std::string(literal.begin(), literal.end());
+		if(!A65_IS_TOKEN_SYMBOL(literal_str)) {
+			A65_THROW_EXCEPTION_INFO("Unsupported symbol", "%s (%s:%u)", A65_STRING_CHECK(literal_str), A65_STRING_CHECK(path()), line());
+		}
+
+		token.set(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_ID(literal_str));
+	}
 
 	A65_DEBUG_ENTRY_INFO("Result=%s", A65_STRING_CHECK(token.to_string()));
 }

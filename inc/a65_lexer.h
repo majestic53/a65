@@ -87,6 +87,22 @@ class a65_lexer :
 			__inout a65_token &token
 			);
 
+		void enumerate_alpha_directive(
+			__inout a65_token &token
+			);
+
+		void enumerate_alpha_literal(
+			__inout a65_token &token
+			);
+
+		void enumerate_alpha_literal_character(
+			__inout a65_token &token
+			);
+
+		void enumerate_alpha_pragma(
+			__inout a65_token &token
+			);
+
 		void enumerate_digit(
 			__inout a65_token &token
 			);

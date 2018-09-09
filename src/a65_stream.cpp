@@ -25,16 +25,6 @@
 #define A65_CHARACTER_FILL '.'
 #define A65_CHARACTER_NEWLINE '\n'
 
-#define A65_STREAM_CHARACTER_MAX A65_STREAM_CHARACTER_SYMBOL
-
-static const std::string A65_STREAM_CHARACTER_STR[] = {
-	"Alpha", "Digit", "End", "Space", "Symbol",
-	};
-
-#define A65_STREAM_CHARACTER_STRING(_TYPE_) \
-	(((_TYPE_) > A65_STREAM_CHARACTER_MAX) ? A65_STRING_UNKNOWN : \
-		A65_STRING_CHECK(A65_STREAM_CHARACTER_STR[_TYPE_]))
-
 #define A65_STREAM_LINE_START 1
 
 a65_stream::a65_stream(
@@ -102,6 +92,31 @@ a65_stream::character(void) const
 	result = m_character.at(m_character_position);
 
 	A65_DEBUG_EXIT_INFO("Result=\'%c\'(%02x)", std::isprint(result) ? (char)result : A65_CHARACTER_FILL, result);
+	return result;
+}
+
+int
+a65_stream::character_type(void) const
+{
+	int result;
+	a65_char_t value;
+
+	A65_DEBUG_ENTRY();
+
+	value = character();
+	if(value == A65_CHARACTER_END) {
+		result = A65_STREAM_CHARACTER_END;
+	} else if(std::isalpha(value)) {
+		result = A65_STREAM_CHARACTER_ALPHA;
+	} else if(std::isdigit(value)) {
+		result = A65_STREAM_CHARACTER_DIGIT;
+	} else if(std::isspace(value)) {
+		result = A65_STREAM_CHARACTER_SPACE;
+	} else {
+		result = A65_STREAM_CHARACTER_SYMBOL;
+	}
+
+	A65_DEBUG_EXIT_INFO("Result=%i(%s)", result, A65_STREAM_CHARACTER_STRING(result));
 	return result;
 }
 
@@ -211,7 +226,7 @@ a65_stream::match(
 
 	A65_DEBUG_ENTRY_INFO("Type=%i(%s)", type, A65_STREAM_CHARACTER_STRING(type));
 
-	result = (type == a65_stream::type());
+	result = (type == character_type());
 
 	A65_DEBUG_EXIT_INFO("Result=%x", result);
 	return result;
@@ -228,7 +243,7 @@ a65_stream::match(
 	A65_DEBUG_ENTRY_INFO("Type=%i(%s), Value=\'%c\'(%02x)", type, A65_STREAM_CHARACTER_STRING(type),
 		std::isprint(value) ? (char)value : A65_CHARACTER_FILL, value);
 
-	result = ((type == a65_stream::type()) && (value == character()));
+	result = ((type == character_type()) && (value == character()));
 
 	A65_DEBUG_EXIT_INFO("Result=%x", result);
 	return result;
@@ -284,7 +299,7 @@ a65_stream::reset(void)
 	A65_DEBUG_ENTRY();
 
 	m_character_position = 0;
-	m_line = 0;
+	m_line = A65_STREAM_LINE_START;
 
 	A65_DEBUG_EXIT();
 }
@@ -299,7 +314,7 @@ a65_stream::to_string(void) const
 	A65_DEBUG_ENTRY();
 
 	value = character();
-	type = a65_stream::type();
+	type = character_type();
 
 	result << "[" << m_character_position << "] {" << A65_STREAM_CHARACTER_STRING(type) << "}";
 
@@ -316,29 +331,4 @@ a65_stream::to_string(void) const
 
 	A65_DEBUG_EXIT();
 	return result.str();
-}
-
-int
-a65_stream::type(void) const
-{
-	int result;
-	a65_char_t value;
-
-	A65_DEBUG_ENTRY();
-
-	value = character();
-	if(value == A65_CHARACTER_END) {
-		result = A65_STREAM_CHARACTER_END;
-	} else if(std::isalpha(value)) {
-		result = A65_STREAM_CHARACTER_ALPHA;
-	} else if(std::isdigit(value)) {
-		result = A65_STREAM_CHARACTER_DIGIT;
-	} else if(std::isspace(value)) {
-		result = A65_STREAM_CHARACTER_SPACE;
-	} else {
-		result = A65_STREAM_CHARACTER_SYMBOL;
-	}
-
-	A65_DEBUG_EXIT_INFO("Result=%i(%s)", result, A65_STREAM_CHARACTER_STRING(result));
-	return result;
 }
