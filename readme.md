@@ -50,6 +50,10 @@ Changelog
 
 Version 0.1.1836
 ----------------
+*Updated: 9/9/2018*
+
+* Added lexer class
+
 *Updated: 9/5/2018*
 
 * Initial commit

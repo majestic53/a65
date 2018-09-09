@@ -41,6 +41,17 @@ enum {
 	A65_TOKEN_SYMBOL,
 };
 
+#define A65_TOKEN_MAX A65_TOKEN_SYMBOL
+
+static const std::string A65_TOKEN_STR[] = {
+	"Begin", "Command", "Constant", "Directive", "End", "Identifier", "Label", "Literal",
+	"Macro", "Pragma", "Register", "Scalar", "Symbol",
+	};
+
+#define A65_TOKEN_STRING(_TYPE_) \
+	(((_TYPE_) > A65_TOKEN_MAX) ? A65_STRING_UNKNOWN : \
+		A65_STRING_CHECK(A65_TOKEN_STR[_TYPE_]))
+
 enum {
 	A65_TOKEN_COMMAND_ADC = 0,
 	A65_TOKEN_COMMAND_AND,

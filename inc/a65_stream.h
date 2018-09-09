@@ -71,7 +71,7 @@ class a65_stream {
 			__in_opt bool is_path = true
 			);
 
-		virtual bool match(
+		bool match(
 			__in int type
 			) const;
 
@@ -90,9 +90,9 @@ class a65_stream {
 
 		virtual std::string to_string(void) const;
 
-		virtual int type(void) const;
-
 	protected:
+
+		int type(void) const;
 
 		a65_literal_t m_character;
 

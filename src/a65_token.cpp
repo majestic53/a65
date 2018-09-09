@@ -20,17 +20,6 @@
 #include "../inc/a65_token.h"
 #include "../inc/a65_utility.h"
 
-#define A65_TOKEN_MAX A65_TOKEN_SYMBOL
-
-static const std::string A65_TOKEN_STR[] = {
-	"Begin", "Command", "Constant", "Directive", "End", "Identifier", "Label", "Literal",
-	"Macro", "Pragma", "Register", "Scalar", "Symbol",
-	};
-
-#define A65_TOKEN_STRING(_TYPE_) \
-	(((_TYPE_) > A65_TOKEN_MAX) ? A65_STRING_UNKNOWN : \
-		A65_STRING_CHECK(A65_TOKEN_STR[_TYPE_]))
-
 #define A65_TOKEN_COMMAND_MAX A65_TOKEN_COMMAND_WAI
 
 static const std::string A65_TOKEN_COMMAND_STR[] = {
@@ -608,52 +597,67 @@ a65_token::to_string(void) const
 		case A65_TOKEN_BEGIN:
 		case A65_TOKEN_END:
 			break;
-		case A65_TOKEN_IDENTIFIER:
-		case A65_TOKEN_LABEL:
-		case A65_TOKEN_LITERAL:
-			result << " [" << m_literal.size() << "]" << A65_STRING_CHECK(std::string(m_literal.begin(), m_literal.end()));
-			break;
-		case A65_TOKEN_SCALAR:
-			result << " " << m_scalar << "(" << A65_STRING_HEX(uint16_t, m_scalar) << ")";
-			break;
 		default:
+
+			switch(m_type) {
+				case A65_TOKEN_IDENTIFIER:
+				case A65_TOKEN_LABEL:
+				case A65_TOKEN_LITERAL:
+					result << "[" << m_literal.size() << "]";
+
+					if(!m_literal.empty()) {
+						result << " " << A65_STRING_CHECK(std::string(m_literal.begin(), m_literal.end()));
+					}
+					break;
+				case A65_TOKEN_SCALAR:
+					result << " " << m_scalar << "(" << A65_STRING_HEX(uint16_t, m_scalar) << ")";
+					break;
+				default:
+					break;
+			}
+
+			if(m_subtype != A65_TOKEN_SUBTYPE_UNDEFINED) {
+
+				switch(m_type) {
+					case A65_TOKEN_COMMAND:
+						result << " " << A65_TOKEN_COMMAND_STRING(m_subtype);
+
+						if(m_mode != A65_TOKEN_MODE_UNDEFINED) {
+							result << " " << A65_TOKEN_COMMAND_MODE_STRING(m_mode);
+						}
+						break;
+					case A65_TOKEN_CONSTANT:
+						result << " " << A65_TOKEN_CONSTANT_STRING(m_subtype);
+						break;
+					case A65_TOKEN_DIRECTIVE:
+						result << " " << A65_TOKEN_DIRECTIVE_STRING(m_subtype);
+						break;
+					case A65_TOKEN_MACRO:
+						result << " " << A65_TOKEN_MACRO_STRING(m_subtype);
+						break;
+					case A65_TOKEN_PRAGMA:
+						result << " " << A65_TOKEN_PRAGMA_STRING(m_subtype);
+						break;
+					case A65_TOKEN_REGISTER:
+						result << " " << A65_TOKEN_REGISTER_STRING(m_subtype);
+						break;
+					case A65_TOKEN_SYMBOL:
+						result << " " << A65_TOKEN_SYMBOL_STRING(m_subtype);
+						break;
+					default:
+						break;
+				}
+			}
+
+			result << " (";
+
+			if(!m_path.empty()) {
+				result << A65_STRING_CHECK(m_path) << ":";
+			}
+
+			result << m_line << ")";
 			break;
 	}
-
-	if(m_subtype != A65_TOKEN_SUBTYPE_UNDEFINED) {
-
-		switch(m_type) {
-			case A65_TOKEN_COMMAND:
-				result << " " << A65_TOKEN_COMMAND_STRING(m_subtype);
-
-				if(m_mode != A65_TOKEN_MODE_UNDEFINED) {
-					result << " " << A65_TOKEN_COMMAND_MODE_STRING(m_mode);
-				}
-				break;
-			case A65_TOKEN_CONSTANT:
-				result << " " << A65_TOKEN_CONSTANT_STRING(m_subtype);
-				break;
-			case A65_TOKEN_DIRECTIVE:
-				result << " " << A65_TOKEN_DIRECTIVE_STRING(m_subtype);
-				break;
-			case A65_TOKEN_MACRO:
-				result << " " << A65_TOKEN_MACRO_STRING(m_subtype);
-				break;
-			case A65_TOKEN_PRAGMA:
-				result << " " << A65_TOKEN_PRAGMA_STRING(m_subtype);
-				break;
-			case A65_TOKEN_REGISTER:
-				result << " " << A65_TOKEN_REGISTER_STRING(m_subtype);
-				break;
-			case A65_TOKEN_SYMBOL:
-				result << " " << A65_TOKEN_SYMBOL_STRING(m_subtype);
-				break;
-			default:
-				break;
-		}
-	}
-
-	result << " (" << A65_STRING_CHECK(m_path) << ":" << m_line << ")";
 
 	A65_DEBUG_EXIT();
 	return result.str();

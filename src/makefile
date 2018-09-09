@@ -27,7 +27,8 @@ all: build archive
 archive:
 	@echo ''
 	@echo '--- BUILDING LIBRARY -----------------------'
-	ar rcs $(DIR_BIN)$(LIB) $(DIR_BUILD)a65.o $(DIR_BUILD)a65_stream.o $(DIR_BUILD)a65_token.o $(DIR_BUILD)a65_utility.o $(DIR_BUILD)a65_uuid.o
+	ar rcs $(DIR_BIN)$(LIB) $(DIR_BUILD)a65.o $(DIR_BUILD)a65_lexer.o $(DIR_BUILD)a65_stream.o $(DIR_BUILD)a65_token.o $(DIR_BUILD)a65_utility.o \
+		$(DIR_BUILD)a65_uuid.o
 	@echo '--- DONE -----------------------------------'
 	@echo ''
 
@@ -35,10 +36,13 @@ build: build_a65
 
 ### A65 ###
 
-build_a65: a65.o a65_stream.o a65_token.o a65_utility.o a65_uuid.o
+build_a65: a65.o a65_lexer.o a65_stream.o a65_token.o a65_utility.o a65_uuid.o
 
 a65.o: $(DIR_SRC)a65.cpp $(DIR_INC)a65.h
 	$(CC) $(CC_FLAGS) $(CC_BUILD_FLAGS) $(CC_TRACE_FLAGS) -c $(DIR_SRC)a65.cpp -o $(DIR_BUILD)a65.o
+
+a65_lexer.o: $(DIR_SRC)a65_lexer.cpp $(DIR_INC)a65_lexer.h
+	$(CC) $(CC_FLAGS) $(CC_BUILD_FLAGS) $(CC_TRACE_FLAGS) -c $(DIR_SRC)a65_lexer.cpp -o $(DIR_BUILD)a65_lexer.o
 
 a65_stream.o: $(DIR_SRC)a65_stream.cpp $(DIR_INC)a65_stream.h
 	$(CC) $(CC_FLAGS) $(CC_BUILD_FLAGS) $(CC_TRACE_FLAGS) -c $(DIR_SRC)a65_stream.cpp -o $(DIR_BUILD)a65_stream.o

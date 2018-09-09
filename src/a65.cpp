@@ -19,8 +19,8 @@
 #include "../inc/a65.h"
 #include "../inc/a65_utility.h"
 
-// TODO
-#include "../inc/a65_stream.h"
+// TODO: debugging
+#include "../inc/a65_lexer.h"
 // ---
 
 static std::string g_error;
@@ -45,19 +45,19 @@ a65_assemble(
 			A65_THROW_EXCEPTION_INFO("Invalid output path", "%p", input);
 		}
 
-		// TODO
-		a65_stream stream(input);
+		// TODO: debugging
+		a65_lexer lexer(input);
 
-		while(stream.has_next()) {
-			std::cout << stream.to_string() << std::endl;
-			stream.move_next();
+		while(lexer.has_next()) {
+			std::cout << lexer.to_string() << std::endl;
+			lexer.move_next();
 		}
 
-		std::cout << stream.to_string() << std::endl;
+		std::cout << lexer.to_string() << std::endl;
 
-		while(stream.has_previous()) {
-			stream.move_previous();
-			std::cout << stream.to_string() << std::endl;
+		while(lexer.has_previous()) {
+			lexer.move_previous();
+			std::cout << lexer.to_string() << std::endl;
 		}
 		// ---
 

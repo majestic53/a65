@@ -44,7 +44,7 @@ a65_stream::a65_stream(
 		m_character_position(0),
 		m_line(A65_STREAM_LINE_START)
 {
-	A65_DEBUG_ENTRY_INFO("Input[%u]=%s (%s)", input.size(), A65_STRING_CHECK(input), (is_path ? "Path" : "Raw"));
+	A65_DEBUG_ENTRY_INFO("Input[%u]=%s (%s)", input.size(), A65_STRING_CHECK(input), is_path ? "Path" : "Raw");
 
 	a65_stream::load(input, is_path);
 
@@ -185,7 +185,7 @@ a65_stream::load(
 	__in_opt bool is_path
 	)
 {
-	A65_DEBUG_ENTRY_INFO("Input[%u]=%s (%s)", input.size(), A65_STRING_CHECK(input), (is_path ? "Path" : "Raw"));
+	A65_DEBUG_ENTRY_INFO("Input[%u]=%s (%s)", input.size(), A65_STRING_CHECK(input), is_path ? "Path" : "Raw");
 
 	a65_stream::clear();
 
