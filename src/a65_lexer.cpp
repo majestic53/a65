@@ -214,11 +214,6 @@ a65_lexer::enumerate_alpha(
 					|| a65_stream::match(A65_STREAM_CHARACTER_DIGIT)
 					|| a65_stream::match(A65_STREAM_CHARACTER_SYMBOL, A65_CHARACTER_UNDERSCORE)) {
 				literal.push_back(character());
-
-				if(!a65_stream::has_next()) {
-					break;
-				}
-
 				a65_stream::move_next();
 			}
 
@@ -234,11 +229,7 @@ a65_lexer::enumerate_alpha(
 			} else if(A65_IS_TOKEN_REGISTER(literal_str)) {
 				token.set(A65_TOKEN_REGISTER, A65_TOKEN_REGISTER_ID(literal_str));
 			} else if(a65_stream::match(A65_STREAM_CHARACTER_SYMBOL, A65_CHARACTER_LABEL)) {
-
-				if(a65_stream::has_next()) {
-					a65_stream::move_next();
-				}
-
+				a65_stream::move_next();
 				token.set(A65_TOKEN_LABEL);
 				token.set_literal(literal);
 			} else {
@@ -508,7 +499,7 @@ a65_lexer::enumerate_symbol(
 
 				if(!A65_IS_TOKEN_SYMBOL(literal_str)) {
 					literal.erase(literal.end() - 1);
-				} else if(a65_stream::has_next()) {
+				} else {
 					a65_stream::move_next();
 				}
 			}
