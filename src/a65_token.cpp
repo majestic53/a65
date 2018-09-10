@@ -283,7 +283,7 @@ a65_token::to_string(void) const
 					result << "[" << m_literal.size() << "]";
 
 					if(!m_literal.empty()) {
-						result << " " << A65_STRING_CHECK(std::string(m_literal.begin(), m_literal.end()));
+						result << " \"" << A65_STRING_CHECK(std::string(m_literal.begin(), m_literal.end())) << "\"";
 					}
 					break;
 				case A65_TOKEN_SCALAR:
