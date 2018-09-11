@@ -210,11 +210,6 @@ a65_lexer::enumerate_alpha(
 	} else {
 		std::string literal;
 
-		if(!a65_stream::match(A65_STREAM_CHARACTER_ALPHA)
-				&& !a65_stream::match(A65_STREAM_CHARACTER_SYMBOL, A65_CHARACTER_UNDERSCORE)) {
-			A65_THROW_EXCEPTION_INFO("Expecting alpha", "(%s:%u)", A65_STRING_CHECK(path()), line());
-		}
-
 		literal += character();
 
 		if(a65_stream::has_next()) {
@@ -281,10 +276,6 @@ a65_lexer::enumerate_alpha_directive(
 
 	A65_DEBUG_ENTRY_INFO("Token=%s", A65_STRING_CHECK(token.to_string()));
 
-	if(!a65_stream::match(A65_STREAM_CHARACTER_SYMBOL, A65_CHARACTER_DIRECTIVE)) {
-		A65_THROW_EXCEPTION_INFO("Expecting directive", "(%s:%u)", A65_STRING_CHECK(path()), line());
-	}
-
 	literal += character();
 
 	if(!a65_stream::has_next()) {
@@ -331,10 +322,6 @@ a65_lexer::enumerate_alpha_literal(
 
 	A65_DEBUG_ENTRY_INFO("Token=%s", A65_STRING_CHECK(token.to_string()));
 
-	if(!a65_stream::match(A65_STREAM_CHARACTER_SYMBOL, A65_CHARACTER_LITERAL)) {
-		A65_THROW_EXCEPTION_INFO("Expecting literal", "(%s:%u)", A65_STRING_CHECK(path()), line());
-	}
-
 	if(!a65_stream::has_next()) {
 		A65_THROW_EXCEPTION_INFO("Unterminated literal", "(%s:%u)", A65_STRING_CHECK(path()), line());
 	}
@@ -373,10 +360,6 @@ a65_lexer::enumerate_alpha_literal_character(
 	std::string literal;
 
 	A65_DEBUG_ENTRY_INFO("Token=%s", A65_STRING_CHECK(token.to_string()));
-
-	if(!a65_stream::match(A65_STREAM_CHARACTER_SYMBOL, A65_CHARACTER_LITERAL_CHARACTER)) {
-		A65_THROW_EXCEPTION_INFO("Expecting literal character", "(%s:%u)", A65_STRING_CHECK(path()), line());
-	}
 
 	if(!a65_stream::has_next()) {
 		A65_THROW_EXCEPTION_INFO("Unterminated character", "(%s:%u)", A65_STRING_CHECK(path()), line());
@@ -418,10 +401,6 @@ a65_lexer::enumerate_alpha_pragma(
 	std::string literal;
 
 	A65_DEBUG_ENTRY_INFO("Token=%s", A65_STRING_CHECK(token.to_string()));
-
-	if(!a65_stream::match(A65_STREAM_CHARACTER_SYMBOL, A65_CHARACTER_PRAGMA)) {
-		A65_THROW_EXCEPTION_INFO("Expecting pragma", "(%s:%u)", A65_STRING_CHECK(path()), line());
-	}
 
 	literal += character();
 
@@ -469,16 +448,13 @@ a65_lexer::enumerate_digit(
 
 	A65_DEBUG_ENTRY_INFO("Token=%s", A65_STRING_CHECK(token.to_string()));
 
-	if(!a65_stream::match(A65_STREAM_CHARACTER_DIGIT)) {
-		A65_THROW_EXCEPTION_INFO("Expecting digit", "(%s:%u)", A65_STRING_CHECK(path()), line());
-	}
-
 	if(a65_stream::has_next() && a65_stream::match(A65_STREAM_CHARACTER_DIGIT, A65_CHARACTER_ZERO)) {
 		a65_stream::move_next();
 
 		if(a65_stream::match(A65_STREAM_CHARACTER_ALPHA)) {
-			std::string value = std::string(1, a65_stream::character());
+			std::string value;
 
+			value += a65_stream::character();
 			A65_STRING_LOWER(value);
 
 			switch(value.front()) {
@@ -513,20 +489,21 @@ a65_lexer::enumerate_digit(
 uint16_t
 a65_lexer::enumerate_digit_binary(void)
 {
-	uint16_t result;
+	uint32_t result;
 	std::string value;
 
 	A65_DEBUG_ENTRY();
 
 	if(!a65_stream::is_binary()) {
-		A65_THROW_EXCEPTION_INFO("Unterminated binary scalar", "(%s:%u)", A65_STRING_CHECK(path()), line());
+		A65_THROW_EXCEPTION_INFO("Unterminated scalar", "(%s:%u)", A65_STRING_CHECK(path()), line());
 	}
 
 	while(a65_stream::is_binary()) {
 		value += a65_stream::character();
 
 		if(value.size() > A65_SCALAR_BINARY_LENGTH_MAX) {
-			A65_THROW_EXCEPTION_INFO("Binary scalar too large", "%s (%s:%u)", A65_STRING_CHECK(value), A65_STRING_CHECK(path()), line());
+			A65_THROW_EXCEPTION_INFO("Scalar too large", "0%c%s (%s:%u)", A65_CHARACTER_DIGIT_BINARY, A65_STRING_CHECK(value),
+				A65_STRING_CHECK(path()), line());
 		}
 
 		if(!a65_stream::has_next()) {
@@ -537,6 +514,10 @@ a65_lexer::enumerate_digit_binary(void)
 	}
 
 	result = std::stoul(value, nullptr, A65_SCALAR_BINARY_BASE);
+	if(result > UINT16_MAX) {
+		A65_THROW_EXCEPTION_INFO("Scalar overflow", "0%c%s (%s:%u)", A65_CHARACTER_DIGIT_BINARY, A65_STRING_CHECK(value),
+			A65_STRING_CHECK(path()), line());
+	}
 
 	A65_DEBUG_EXIT_INFO("Result=%u(%04x)", result, result);
 	return result;
@@ -545,21 +526,21 @@ a65_lexer::enumerate_digit_binary(void)
 uint16_t
 a65_lexer::enumerate_digit_decimal(void)
 {
-	uint16_t result;
+	uint32_t result;
 	std::string value;
 	std::stringstream stream;
 
 	A65_DEBUG_ENTRY();
 
 	if(!a65_stream::is_decimal()) {
-		A65_THROW_EXCEPTION_INFO("Unterminated decimal scalar", "(%s:%u)", A65_STRING_CHECK(path()), line());
+		A65_THROW_EXCEPTION_INFO("Unterminated scalar", "(%s:%u)", A65_STRING_CHECK(path()), line());
 	}
 
 	while(a65_stream::is_decimal()) {
 		value += a65_stream::character();
 
 		if(value.size() > A65_SCALAR_DECIMAL_LENGTH_MAX) {
-			A65_THROW_EXCEPTION_INFO("Decimal scalar too large", "%s (%s:%u)", A65_STRING_CHECK(value), A65_STRING_CHECK(path()), line());
+			A65_THROW_EXCEPTION_INFO("Scalar too large", "%s (%s:%u)", A65_STRING_CHECK(value), A65_STRING_CHECK(path()), line());
 		}
 
 		if(!a65_stream::has_next()) {
@@ -572,6 +553,10 @@ a65_lexer::enumerate_digit_decimal(void)
 	stream << std::dec << value;
 	stream >> result;
 
+	if(result > UINT16_MAX) {
+		A65_THROW_EXCEPTION_INFO("Scalar overflow", "%s (%s:%u)", A65_STRING_CHECK(value), A65_STRING_CHECK(path()), line());
+	}
+
 	A65_DEBUG_EXIT_INFO("Result=%u(%04x)", result, result);
 	return result;
 }
@@ -579,22 +564,22 @@ a65_lexer::enumerate_digit_decimal(void)
 uint16_t
 a65_lexer::enumerate_digit_hexidecimal(void)
 {
-	uint16_t result;
+	uint32_t result;
 	std::string value;
 	std::stringstream stream;
 
 	A65_DEBUG_ENTRY();
 
 	if(!a65_stream::is_hexidecimal()) {
-		A65_THROW_EXCEPTION_INFO("Unterminated hexidecimal scalar", "(%s:%u)", A65_STRING_CHECK(path()), line());
+		A65_THROW_EXCEPTION_INFO("Unterminated scalar", "(%s:%u)", A65_STRING_CHECK(path()), line());
 	}
 
 	while(a65_stream::is_hexidecimal()) {
 		value += a65_stream::character();
 
 		if(value.size() > A65_SCALAR_HEXIDECIMAL_LENGTH_MAX) {
-			A65_THROW_EXCEPTION_INFO("Hexidecimal scalar too large", "%s (%s:%u)", A65_STRING_CHECK(value), A65_STRING_CHECK(path()),
-				line());
+			A65_THROW_EXCEPTION_INFO("Scalar too large", "0%c%s (%s:%u)", A65_CHARACTER_DIGIT_HEXIDECIMAL, A65_STRING_CHECK(value),
+				A65_STRING_CHECK(path()), line());
 		}
 
 		if(!a65_stream::has_next()) {
@@ -607,6 +592,11 @@ a65_lexer::enumerate_digit_hexidecimal(void)
 	stream << std::hex << value;
 	stream >> result;
 
+	if(result > UINT16_MAX) {
+		A65_THROW_EXCEPTION_INFO("Scalar overflow", "0%c%s (%s:%u)", A65_CHARACTER_DIGIT_HEXIDECIMAL, A65_STRING_CHECK(value),
+			A65_STRING_CHECK(path()), line());
+	}
+
 	A65_DEBUG_EXIT_INFO("Result=%u(%04x)", result, result);
 	return result;
 }
@@ -614,20 +604,21 @@ a65_lexer::enumerate_digit_hexidecimal(void)
 uint16_t
 a65_lexer::enumerate_digit_octal(void)
 {
-	uint16_t result;
+	uint32_t result;
 	std::string value;
 
 	A65_DEBUG_ENTRY();
 
 	if(!a65_stream::is_octal()) {
-		A65_THROW_EXCEPTION_INFO("Unterminated octal scalar", "(%s:%u)", A65_STRING_CHECK(path()), line());
+		A65_THROW_EXCEPTION_INFO("Unterminated scalar", "(%s:%u)", A65_STRING_CHECK(path()), line());
 	}
 
 	while(a65_stream::is_octal()) {
 		value += a65_stream::character();
 
 		if(value.size() > A65_SCALAR_OCTAL_LENGTH_MAX) {
-			A65_THROW_EXCEPTION_INFO("Octal scalar too large", "%s (%s:%u)", A65_STRING_CHECK(value), A65_STRING_CHECK(path()), line());
+			A65_THROW_EXCEPTION_INFO("Scalar too large", "0%c%s (%s:%u)", A65_CHARACTER_DIGIT_OCTAL, A65_STRING_CHECK(value),
+				A65_STRING_CHECK(path()), line());
 		}
 
 		if(!a65_stream::has_next()) {
@@ -638,6 +629,11 @@ a65_lexer::enumerate_digit_octal(void)
 	}
 
 	result = std::stoul(value, nullptr, A65_SCALAR_OCTAL_BASE);
+
+	if(result > UINT16_MAX) {
+		A65_THROW_EXCEPTION_INFO("Scalar overflow", "0%c%s (%s:%u)", A65_CHARACTER_DIGIT_OCTAL, A65_STRING_CHECK(value),
+			A65_STRING_CHECK(path()), line());
+	}
 
 	A65_DEBUG_EXIT_INFO("Result=%u(%04x)", result, result);
 	return result;
@@ -656,8 +652,6 @@ a65_lexer::enumerate_symbol(
 			|| a65_stream::match(A65_STREAM_CHARACTER_SYMBOL, A65_CHARACTER_PRAGMA)
 			|| a65_stream::match(A65_STREAM_CHARACTER_SYMBOL, A65_CHARACTER_UNDERSCORE)) {
 		enumerate_alpha(token);
-	} else if(!a65_stream::match(A65_STREAM_CHARACTER_SYMBOL)) {
-		A65_THROW_EXCEPTION_INFO("Expecting symbol", "(%s:%u)", A65_STRING_CHECK(path()), line());
 	} else {
 		std::string literal;
 
