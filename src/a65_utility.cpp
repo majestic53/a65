@@ -153,7 +153,7 @@ a65_utility::debug_print(
 size_t
 a65_utility::read_file(
 	__in const std::string &path,
-	__inout std::vector<uint8_t> &data
+	__inout std::string &data
 	)
 {
 	size_t result = 0;

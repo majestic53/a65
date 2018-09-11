@@ -585,7 +585,7 @@ class a65_token {
 
 		size_t line(void) const;
 
-		a65_literal_t literal(void) const;
+		std::string literal(void) const;
 
 		bool match(
 			__in int type,
@@ -606,7 +606,7 @@ class a65_token {
 			);
 
 		void set_literal(
-			__in const a65_literal_t &literal
+			__in const std::string &literal
 			);
 
 		void set_metadata(
@@ -636,7 +636,7 @@ class a65_token {
 
 		size_t m_line;
 
-		a65_literal_t m_literal;
+		std::string m_literal;
 
 		int m_mode;
 

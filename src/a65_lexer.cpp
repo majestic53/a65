@@ -21,6 +21,9 @@
 #include "../inc/a65_utility.h"
 
 #define A65_CHARACTER_COMMENT ';'
+#define A65_CHARACTER_DIGIT_BINARY 'b'
+#define A65_CHARACTER_DIGIT_HEXIDECIMAL 'x'
+#define A65_CHARACTER_DIGIT_OCTAL 'c'
 #define A65_CHARACTER_DIRECTIVE '.'
 #define A65_CHARACTER_ESCAPE '\\'
 #define A65_CHARACTER_LABEL ':'
@@ -29,6 +32,14 @@
 #define A65_CHARACTER_NEWLINE '\n'
 #define A65_CHARACTER_PRAGMA '@'
 #define A65_CHARACTER_UNDERSCORE '_'
+#define A65_CHARACTER_ZERO '0'
+
+#define A65_SCALAR_BINARY_BASE 2
+#define A65_SCALAR_BINARY_LENGTH_MAX 16
+#define A65_SCALAR_DECIMAL_LENGTH_MAX 5
+#define A65_SCALAR_HEXIDECIMAL_LENGTH_MAX 4
+#define A65_SCALAR_OCTAL_BASE 8
+#define A65_SCALAR_OCTAL_LENGTH_MAX 6
 
 #define A65_TOKEN_SENTINEL_COUNT 2
 
@@ -197,15 +208,14 @@ a65_lexer::enumerate_alpha(
 	} else if(a65_stream::match(A65_STREAM_CHARACTER_SYMBOL, A65_CHARACTER_PRAGMA)) {
 		enumerate_alpha_pragma(token);
 	} else {
-		a65_literal_t literal;
-		std::string literal_str;
+		std::string literal;
 
 		if(!a65_stream::match(A65_STREAM_CHARACTER_ALPHA)
 				&& !a65_stream::match(A65_STREAM_CHARACTER_SYMBOL, A65_CHARACTER_UNDERSCORE)) {
 			A65_THROW_EXCEPTION_INFO("Expecting alpha", "(%s:%u)", A65_STRING_CHECK(path()), line());
 		}
 
-		literal.push_back(character());
+		literal += character();
 
 		if(a65_stream::has_next()) {
 			a65_stream::move_next();
@@ -213,21 +223,20 @@ a65_lexer::enumerate_alpha(
 			while(a65_stream::match(A65_STREAM_CHARACTER_ALPHA)
 					|| a65_stream::match(A65_STREAM_CHARACTER_DIGIT)
 					|| a65_stream::match(A65_STREAM_CHARACTER_SYMBOL, A65_CHARACTER_UNDERSCORE)) {
-				literal.push_back(character());
+				literal += character();
 				a65_stream::move_next();
 			}
 
-			literal_str = std::string(literal.begin(), literal.end());
-			A65_STRING_LOWER(literal_str);
+			A65_STRING_LOWER(literal);
 
-			if(A65_IS_TOKEN_COMMAND(literal_str)) {
-				token.set(A65_TOKEN_COMMAND, A65_TOKEN_COMMAND_ID(literal_str));
-			} else if(A65_IS_TOKEN_CONSTANT(literal_str)) {
-				token.set(A65_TOKEN_CONSTANT, A65_TOKEN_CONSTANT_ID(literal_str));
-			} else if(A65_IS_TOKEN_MACRO(literal_str)) {
-				token.set(A65_TOKEN_MACRO, A65_TOKEN_MACRO_ID(literal_str));
-			} else if(A65_IS_TOKEN_REGISTER(literal_str)) {
-				token.set(A65_TOKEN_REGISTER, A65_TOKEN_REGISTER_ID(literal_str));
+			if(A65_IS_TOKEN_COMMAND(literal)) {
+				token.set(A65_TOKEN_COMMAND, A65_TOKEN_COMMAND_ID(literal));
+			} else if(A65_IS_TOKEN_CONSTANT(literal)) {
+				token.set(A65_TOKEN_CONSTANT, A65_TOKEN_CONSTANT_ID(literal));
+			} else if(A65_IS_TOKEN_MACRO(literal)) {
+				token.set(A65_TOKEN_MACRO, A65_TOKEN_MACRO_ID(literal));
+			} else if(A65_IS_TOKEN_REGISTER(literal)) {
+				token.set(A65_TOKEN_REGISTER, A65_TOKEN_REGISTER_ID(literal));
 			} else if(a65_stream::match(A65_STREAM_CHARACTER_SYMBOL, A65_CHARACTER_LABEL)) {
 				a65_stream::move_next();
 				token.set(A65_TOKEN_LABEL);
@@ -242,20 +251,25 @@ a65_lexer::enumerate_alpha(
 	A65_DEBUG_ENTRY_INFO("Result=%s", A65_STRING_CHECK(token.to_string()));
 }
 
-void
-a65_lexer::enumerate_alpha_character(
-	__inout a65_literal_t &literal
-	)
+char
+a65_lexer::enumerate_alpha_character(void)
 {
-	A65_DEBUG_ENTRY_INFO("Literal[%u]=%p", literal.size(), &literal);
+	char result;
+
+	A65_DEBUG_ENTRY();
 
 	if(a65_stream::match(A65_STREAM_CHARACTER_SYMBOL, A65_CHARACTER_ESCAPE)) {
+
 		// TODO: enumerate escape character
+		result = '\0';
+		// ---
+
 	} else {
-		literal.push_back(character());
+		result = character();
 	}
 
-	A65_DEBUG_EXIT_INFO("Result[%u]=%p", literal.size(), &literal);
+	A65_DEBUG_EXIT_INFO("Result=\'%c\'(%02x)", std::isprint(result) ? result : A65_CHARACTER_FILL, result);
+	return result;
 }
 
 void
@@ -263,8 +277,7 @@ a65_lexer::enumerate_alpha_directive(
 	__inout a65_token &token
 	)
 {
-	a65_literal_t literal;
-	std::string literal_str;
+	std::string literal;
 
 	A65_DEBUG_ENTRY_INFO("Token=%s", A65_STRING_CHECK(token.to_string()));
 
@@ -272,10 +285,10 @@ a65_lexer::enumerate_alpha_directive(
 		A65_THROW_EXCEPTION_INFO("Expecting directive", "(%s:%u)", A65_STRING_CHECK(path()), line());
 	}
 
-	literal.push_back(character());
+	literal += character();
 
 	if(!a65_stream::has_next()) {
-		A65_THROW_EXCEPTION_INFO("Unterminated directive", "(%s:%u)", A65_STRING_CHECK(path()), line());
+		A65_THROW_EXCEPTION_INFO("Unterminated directive", "%s (%s:%u)", A65_STRING_CHECK(literal), A65_STRING_CHECK(path()), line());
 	}
 
 	a65_stream::move_next();
@@ -283,13 +296,13 @@ a65_lexer::enumerate_alpha_directive(
 	if(!a65_stream::match(A65_STREAM_CHARACTER_ALPHA)
 			&& !a65_stream::match(A65_STREAM_CHARACTER_DIGIT)
 			&& !a65_stream::match(A65_STREAM_CHARACTER_SYMBOL, A65_CHARACTER_UNDERSCORE)) {
-		A65_THROW_EXCEPTION_INFO("Unterminated directive", "(%s:%u)", A65_STRING_CHECK(path()), line());
+		A65_THROW_EXCEPTION_INFO("Unterminated directive", "%s (%s:%u)", A65_STRING_CHECK(literal), A65_STRING_CHECK(path()), line());
 	}
 
 	while(a65_stream::match(A65_STREAM_CHARACTER_ALPHA)
 			|| a65_stream::match(A65_STREAM_CHARACTER_DIGIT)
 			|| a65_stream::match(A65_STREAM_CHARACTER_SYMBOL, A65_CHARACTER_UNDERSCORE)) {
-		literal.push_back(character());
+		literal += character();
 
 		if(!a65_stream::has_next()) {
 			break;
@@ -298,15 +311,13 @@ a65_lexer::enumerate_alpha_directive(
 		a65_stream::move_next();
 	}
 
-	literal_str = std::string(literal.begin(), literal.end());
-	A65_STRING_LOWER(literal_str);
+	A65_STRING_LOWER(literal);
 
-	if(!A65_IS_TOKEN_DIRECTIVE(literal_str)) {
-		A65_THROW_EXCEPTION_INFO("Unsupported directive", "%s (%s:%u)", A65_STRING_CHECK(std::string(literal.begin(), literal.end())),
-			A65_STRING_CHECK(path()), line());
+	if(!A65_IS_TOKEN_DIRECTIVE(literal)) {
+		A65_THROW_EXCEPTION_INFO("Unsupported directive", "%s (%s:%u)", A65_STRING_CHECK(literal), A65_STRING_CHECK(path()), line());
 	}
 
-	token.set(A65_TOKEN_DIRECTIVE, A65_TOKEN_DIRECTIVE_ID(literal_str));
+	token.set(A65_TOKEN_DIRECTIVE, A65_TOKEN_DIRECTIVE_ID(literal));
 
 	A65_DEBUG_ENTRY_INFO("Result=%s", A65_STRING_CHECK(token.to_string()));
 }
@@ -316,7 +327,7 @@ a65_lexer::enumerate_alpha_literal(
 	__inout a65_token &token
 	)
 {
-	a65_literal_t literal;
+	std::string literal;
 
 	A65_DEBUG_ENTRY_INFO("Token=%s", A65_STRING_CHECK(token.to_string()));
 
@@ -331,7 +342,7 @@ a65_lexer::enumerate_alpha_literal(
 	a65_stream::move_next();
 
 	while(!a65_stream::match(A65_STREAM_CHARACTER_SYMBOL, A65_CHARACTER_LITERAL)) {
-		enumerate_alpha_character(literal);
+		literal += enumerate_alpha_character();
 
 		if(!a65_stream::has_next()) {
 			break;
@@ -341,7 +352,7 @@ a65_lexer::enumerate_alpha_literal(
 	}
 
 	if(!a65_stream::match(A65_STREAM_CHARACTER_SYMBOL, A65_CHARACTER_LITERAL)) {
-		A65_THROW_EXCEPTION_INFO("Unterminated literal", "(%s:%u)", A65_STRING_CHECK(path()), line());
+		A65_THROW_EXCEPTION_INFO("Unterminated literal", "%s (%s:%u)", A65_STRING_CHECK(literal), A65_STRING_CHECK(path()), line());
 	}
 
 	if(a65_stream::has_next()) {
@@ -359,7 +370,7 @@ a65_lexer::enumerate_alpha_literal_character(
 	__inout a65_token &token
 	)
 {
-	a65_literal_t literal;
+	std::string literal;
 
 	A65_DEBUG_ENTRY_INFO("Token=%s", A65_STRING_CHECK(token.to_string()));
 
@@ -377,10 +388,10 @@ a65_lexer::enumerate_alpha_literal_character(
 		A65_THROW_EXCEPTION_INFO("Empty character", "(%s:%u)", A65_STRING_CHECK(path()), line());
 	}
 
-	enumerate_alpha_character(literal);
+	literal += enumerate_alpha_character();
 
 	if(!a65_stream::has_next()) {
-		A65_THROW_EXCEPTION_INFO("Unterminated character", "(%s:%u)", A65_STRING_CHECK(path()), line());
+		A65_THROW_EXCEPTION_INFO("Unterminated character", "%s (%s:%u)", A65_STRING_CHECK(literal), A65_STRING_CHECK(path()), line());
 	}
 
 	a65_stream::move_next();
@@ -404,8 +415,7 @@ a65_lexer::enumerate_alpha_pragma(
 	__inout a65_token &token
 	)
 {
-	a65_literal_t literal;
-	std::string literal_str;
+	std::string literal;
 
 	A65_DEBUG_ENTRY_INFO("Token=%s", A65_STRING_CHECK(token.to_string()));
 
@@ -413,10 +423,10 @@ a65_lexer::enumerate_alpha_pragma(
 		A65_THROW_EXCEPTION_INFO("Expecting pragma", "(%s:%u)", A65_STRING_CHECK(path()), line());
 	}
 
-	literal.push_back(character());
+	literal += character();
 
 	if(!a65_stream::has_next()) {
-		A65_THROW_EXCEPTION_INFO("Unterminated pragma", "(%s:%u)", A65_STRING_CHECK(path()), line());
+		A65_THROW_EXCEPTION_INFO("Unterminated pragma", "%s (%s:%u)", A65_STRING_CHECK(literal), A65_STRING_CHECK(path()), line());
 	}
 
 	a65_stream::move_next();
@@ -424,13 +434,13 @@ a65_lexer::enumerate_alpha_pragma(
 	if(!a65_stream::match(A65_STREAM_CHARACTER_ALPHA)
 			&& !a65_stream::match(A65_STREAM_CHARACTER_DIGIT)
 			&& !a65_stream::match(A65_STREAM_CHARACTER_SYMBOL, A65_CHARACTER_UNDERSCORE)) {
-		A65_THROW_EXCEPTION_INFO("Unterminated pragma", "(%s:%u)", A65_STRING_CHECK(path()), line());
+		A65_THROW_EXCEPTION_INFO("Unterminated pragma", "%s (%s:%u)", A65_STRING_CHECK(literal), A65_STRING_CHECK(path()), line());
 	}
 
 	while(a65_stream::match(A65_STREAM_CHARACTER_ALPHA)
 			|| a65_stream::match(A65_STREAM_CHARACTER_DIGIT)
 			|| a65_stream::match(A65_STREAM_CHARACTER_SYMBOL, A65_CHARACTER_UNDERSCORE)) {
-		literal.push_back(character());
+		literal += character();
 
 		if(!a65_stream::has_next()) {
 			break;
@@ -439,15 +449,13 @@ a65_lexer::enumerate_alpha_pragma(
 		a65_stream::move_next();
 	}
 
-	literal_str = std::string(literal.begin(), literal.end());
-	A65_STRING_LOWER(literal_str);
+	A65_STRING_LOWER(literal);
 
-	if(!A65_IS_TOKEN_PRAGMA(literal_str)) {
-		A65_THROW_EXCEPTION_INFO("Unsupported pragma", "%s (%s:%u)", A65_STRING_CHECK(std::string(literal.begin(), literal.end())),
-			A65_STRING_CHECK(path()), line());
+	if(!A65_IS_TOKEN_PRAGMA(literal)) {
+		A65_THROW_EXCEPTION_INFO("Unsupported pragma", "%s (%s:%u)", A65_STRING_CHECK(literal), A65_STRING_CHECK(path()), line());
 	}
 
-	token.set(A65_TOKEN_PRAGMA, A65_TOKEN_PRAGMA_ID(literal_str));
+	token.set(A65_TOKEN_PRAGMA, A65_TOKEN_PRAGMA_ID(literal));
 
 	A65_DEBUG_ENTRY_INFO("Result=%s", A65_STRING_CHECK(token.to_string()));
 }
@@ -457,15 +465,182 @@ a65_lexer::enumerate_digit(
 	__inout a65_token &token
 	)
 {
+	uint16_t scalar = 0;
+
 	A65_DEBUG_ENTRY_INFO("Token=%s", A65_STRING_CHECK(token.to_string()));
 
 	if(!a65_stream::match(A65_STREAM_CHARACTER_DIGIT)) {
 		A65_THROW_EXCEPTION_INFO("Expecting digit", "(%s:%u)", A65_STRING_CHECK(path()), line());
 	}
 
-	// TODO: enumerate digit token
+	if(a65_stream::has_next() && a65_stream::match(A65_STREAM_CHARACTER_DIGIT, A65_CHARACTER_ZERO)) {
+		a65_stream::move_next();
+
+		if(a65_stream::match(A65_STREAM_CHARACTER_ALPHA)) {
+			std::string value = std::string(1, a65_stream::character());
+
+			A65_STRING_LOWER(value);
+
+			switch(value.front()) {
+				case A65_CHARACTER_DIGIT_BINARY:
+					a65_stream::move_next();
+					scalar = enumerate_digit_binary();
+					break;
+				case A65_CHARACTER_DIGIT_HEXIDECIMAL:
+					a65_stream::move_next();
+					scalar = enumerate_digit_hexidecimal();
+					break;
+				case A65_CHARACTER_DIGIT_OCTAL:
+					a65_stream::move_next();
+					scalar = enumerate_digit_octal();
+					break;
+				default:
+					break;
+			}
+		} else if(a65_stream::match(A65_STREAM_CHARACTER_DIGIT)) {
+			scalar = enumerate_digit_decimal();
+		}
+	} else {
+		scalar = enumerate_digit_decimal();
+	}
+
+	token.set(A65_TOKEN_SCALAR);
+	token.set_scalar(scalar);
 
 	A65_DEBUG_ENTRY_INFO("Result=%s", A65_STRING_CHECK(token.to_string()));
+}
+
+uint16_t
+a65_lexer::enumerate_digit_binary(void)
+{
+	uint16_t result;
+	std::string value;
+
+	A65_DEBUG_ENTRY();
+
+	if(!a65_stream::is_binary()) {
+		A65_THROW_EXCEPTION_INFO("Unterminated binary scalar", "(%s:%u)", A65_STRING_CHECK(path()), line());
+	}
+
+	while(a65_stream::is_binary()) {
+		value += a65_stream::character();
+
+		if(value.size() > A65_SCALAR_BINARY_LENGTH_MAX) {
+			A65_THROW_EXCEPTION_INFO("Binary scalar too large", "%s (%s:%u)", A65_STRING_CHECK(value), A65_STRING_CHECK(path()), line());
+		}
+
+		if(!a65_stream::has_next()) {
+			break;
+		}
+
+		a65_stream::move_next();
+	}
+
+	result = std::stoul(value, nullptr, A65_SCALAR_BINARY_BASE);
+
+	A65_DEBUG_EXIT_INFO("Result=%u(%04x)", result, result);
+	return result;
+}
+
+uint16_t
+a65_lexer::enumerate_digit_decimal(void)
+{
+	uint16_t result;
+	std::string value;
+	std::stringstream stream;
+
+	A65_DEBUG_ENTRY();
+
+	if(!a65_stream::is_decimal()) {
+		A65_THROW_EXCEPTION_INFO("Unterminated decimal scalar", "(%s:%u)", A65_STRING_CHECK(path()), line());
+	}
+
+	while(a65_stream::is_decimal()) {
+		value += a65_stream::character();
+
+		if(value.size() > A65_SCALAR_DECIMAL_LENGTH_MAX) {
+			A65_THROW_EXCEPTION_INFO("Decimal scalar too large", "%s (%s:%u)", A65_STRING_CHECK(value), A65_STRING_CHECK(path()), line());
+		}
+
+		if(!a65_stream::has_next()) {
+			break;
+		}
+
+		a65_stream::move_next();
+	}
+
+	stream << std::dec << value;
+	stream >> result;
+
+	A65_DEBUG_EXIT_INFO("Result=%u(%04x)", result, result);
+	return result;
+}
+
+uint16_t
+a65_lexer::enumerate_digit_hexidecimal(void)
+{
+	uint16_t result;
+	std::string value;
+	std::stringstream stream;
+
+	A65_DEBUG_ENTRY();
+
+	if(!a65_stream::is_hexidecimal()) {
+		A65_THROW_EXCEPTION_INFO("Unterminated hexidecimal scalar", "(%s:%u)", A65_STRING_CHECK(path()), line());
+	}
+
+	while(a65_stream::is_hexidecimal()) {
+		value += a65_stream::character();
+
+		if(value.size() > A65_SCALAR_HEXIDECIMAL_LENGTH_MAX) {
+			A65_THROW_EXCEPTION_INFO("Hexidecimal scalar too large", "%s (%s:%u)", A65_STRING_CHECK(value), A65_STRING_CHECK(path()),
+				line());
+		}
+
+		if(!a65_stream::has_next()) {
+			break;
+		}
+
+		a65_stream::move_next();
+	}
+
+	stream << std::hex << value;
+	stream >> result;
+
+	A65_DEBUG_EXIT_INFO("Result=%u(%04x)", result, result);
+	return result;
+}
+
+uint16_t
+a65_lexer::enumerate_digit_octal(void)
+{
+	uint16_t result;
+	std::string value;
+
+	A65_DEBUG_ENTRY();
+
+	if(!a65_stream::is_octal()) {
+		A65_THROW_EXCEPTION_INFO("Unterminated octal scalar", "(%s:%u)", A65_STRING_CHECK(path()), line());
+	}
+
+	while(a65_stream::is_octal()) {
+		value += a65_stream::character();
+
+		if(value.size() > A65_SCALAR_OCTAL_LENGTH_MAX) {
+			A65_THROW_EXCEPTION_INFO("Octal scalar too large", "%s (%s:%u)", A65_STRING_CHECK(value), A65_STRING_CHECK(path()), line());
+		}
+
+		if(!a65_stream::has_next()) {
+			break;
+		}
+
+		a65_stream::move_next();
+	}
+
+	result = std::stoul(value, nullptr, A65_SCALAR_OCTAL_BASE);
+
+	A65_DEBUG_EXIT_INFO("Result=%u(%04x)", result, result);
+	return result;
 }
 
 void
@@ -484,20 +659,17 @@ a65_lexer::enumerate_symbol(
 	} else if(!a65_stream::match(A65_STREAM_CHARACTER_SYMBOL)) {
 		A65_THROW_EXCEPTION_INFO("Expecting symbol", "(%s:%u)", A65_STRING_CHECK(path()), line());
 	} else {
-		a65_literal_t literal;
-		std::string literal_str;
+		std::string literal;
 
-		literal.push_back(character());
+		literal += character();
 
 		if(a65_stream::has_next()) {
 			a65_stream::move_next();
 
 			if(a65_stream::match(A65_STREAM_CHARACTER_SYMBOL)) {
-				literal.push_back(character());
 
-				literal_str = std::string(literal.begin(), literal.end());
-
-				if(!A65_IS_TOKEN_SYMBOL(literal_str)) {
+				literal += character();
+				if(!A65_IS_TOKEN_SYMBOL(literal)) {
 					literal.erase(literal.end() - 1);
 				} else {
 					a65_stream::move_next();
@@ -505,12 +677,11 @@ a65_lexer::enumerate_symbol(
 			}
 		}
 
-		literal_str = std::string(literal.begin(), literal.end());
-		if(!A65_IS_TOKEN_SYMBOL(literal_str)) {
-			A65_THROW_EXCEPTION_INFO("Unsupported symbol", "%s (%s:%u)", A65_STRING_CHECK(literal_str), A65_STRING_CHECK(path()), line());
+		if(!A65_IS_TOKEN_SYMBOL(literal)) {
+			A65_THROW_EXCEPTION_INFO("Unsupported symbol", "%s (%s:%u)", A65_STRING_CHECK(literal), A65_STRING_CHECK(path()), line());
 		}
 
-		token.set(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_ID(literal_str));
+		token.set(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_ID(literal));
 	}
 
 	A65_DEBUG_ENTRY_INFO("Result=%s", A65_STRING_CHECK(token.to_string()));

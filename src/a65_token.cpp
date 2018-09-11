@@ -143,11 +143,11 @@ a65_token::line(void) const
 	return m_line;
 }
 
-a65_literal_t
+std::string
 a65_token::literal(void) const
 {
 	A65_DEBUG_ENTRY();
-	A65_DEBUG_EXIT_INFO("Result[%u]=%p", m_literal.size(), &m_literal);
+	A65_DEBUG_EXIT_INFO("Result[%u]=%s", m_literal.size(), A65_STRING_CHECK(m_literal));
 	return m_literal;
 }
 
@@ -217,10 +217,10 @@ a65_token::set(
 
 void
 a65_token::set_literal(
-	__in const a65_literal_t &literal
+	__in const std::string &literal
 	)
 {
-	A65_DEBUG_ENTRY_INFO("Literal[%u]=%p", literal.size(), &literal);
+	A65_DEBUG_ENTRY_INFO("Literal[%u]=%s", literal.size(), A65_STRING_CHECK(literal));
 
 	m_literal = literal;
 

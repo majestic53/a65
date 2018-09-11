@@ -22,6 +22,8 @@
 #include <vector>
 #include "./a65_define.h"
 
+#define A65_CHARACTER_FILL '.'
+
 enum {
 	A65_STREAM_CHARACTER_ALPHA = 0,
 	A65_STREAM_CHARACTER_DIGIT,
@@ -39,9 +41,6 @@ static const std::string A65_STREAM_CHARACTER_STR[] = {
 #define A65_STREAM_CHARACTER_STRING(_TYPE_) \
 	(((_TYPE_) > A65_STREAM_CHARACTER_MAX) ? A65_STRING_UNKNOWN : \
 		A65_STRING_CHECK(A65_STREAM_CHARACTER_STR[_TYPE_]))
-
-typedef uint8_t a65_char_t;
-typedef std::vector<a65_char_t> a65_literal_t;
 
 class a65_stream {
 
@@ -62,7 +61,7 @@ class a65_stream {
 			__in const a65_stream &other
 			);
 
-		a65_char_t character(void) const;
+		char character(void) const;
 
 		int character_type(void) const;
 
@@ -72,9 +71,13 @@ class a65_stream {
 
 		virtual bool has_previous(void) const;
 
+		bool is_binary(void) const;
+
 		bool is_decimal(void) const;
 
 		bool is_hexidecimal(void) const;
+
+		bool is_octal(void) const;
 
 		size_t line(void) const;
 
@@ -89,7 +92,7 @@ class a65_stream {
 
 		bool match(
 			__in int type,
-			__in a65_char_t value
+			__in char value
 			) const;
 
 		virtual void move_next(void);
@@ -104,7 +107,7 @@ class a65_stream {
 
 	protected:
 
-		a65_literal_t m_character;
+		std::string m_character;
 
 		size_t m_character_position;
 

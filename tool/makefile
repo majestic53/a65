@@ -20,7 +20,7 @@ DIR_BIN=./../bin/
 DIR_BUILD=./../build/
 DIR_TOOL=./
 EXE=a65
-LIB=liba65.a
+LIB=./inc/liba65.a
 
 all: exe
 

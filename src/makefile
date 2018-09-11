@@ -16,7 +16,7 @@
 
 CC=clang++
 CC_FLAGS=-march=native -std=gnu++11 -Wall -Werror
-DIR_BIN=./../bin/
+DIR_BIN=./../bin/inc/
 DIR_BUILD=./../build/
 DIR_INC=./../inc/
 DIR_SRC=./
@@ -29,6 +29,7 @@ archive:
 	@echo '--- BUILDING LIBRARY -----------------------'
 	ar rcs $(DIR_BIN)$(LIB) $(DIR_BUILD)a65.o $(DIR_BUILD)a65_lexer.o $(DIR_BUILD)a65_stream.o $(DIR_BUILD)a65_token.o $(DIR_BUILD)a65_utility.o \
 		$(DIR_BUILD)a65_uuid.o
+	cp $(DIR_INC)a65.h $(DIR_BIN)
 	@echo '--- DONE -----------------------------------'
 	@echo ''
 

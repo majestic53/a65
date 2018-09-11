@@ -22,8 +22,11 @@
 #include "../inc/a65_utility.h"
 
 #define A65_CHARACTER_END '\0'
-#define A65_CHARACTER_FILL '.'
 #define A65_CHARACTER_NEWLINE '\n'
+#define A65_CHARACTER_SCALAR_BINARY_HIGH '1'
+#define A65_CHARACTER_SCALAR_BINARY_LOW '0'
+#define A65_CHARACTER_SCALAR_OCTAL_HIGH '7'
+#define A65_CHARACTER_SCALAR_OCTAL_LOW '0'
 
 #define A65_STREAM_LINE_START 1
 
@@ -78,10 +81,10 @@ a65_stream::operator=(
 	return *this;
 }
 
-a65_char_t
+char
 a65_stream::character(void) const
 {
-	a65_char_t result;
+	char result;
 
 	A65_DEBUG_ENTRY();
 
@@ -91,7 +94,7 @@ a65_stream::character(void) const
 
 	result = m_character.at(m_character_position);
 
-	A65_DEBUG_EXIT_INFO("Result=\'%c\'(%02x)", std::isprint(result) ? (char)result : A65_CHARACTER_FILL, result);
+	A65_DEBUG_EXIT_INFO("Result=\'%c\'(%02x)", std::isprint(result) ? result : A65_CHARACTER_FILL, result);
 	return result;
 }
 
@@ -99,7 +102,7 @@ int
 a65_stream::character_type(void) const
 {
 	int result;
-	a65_char_t value;
+	char value;
 
 	A65_DEBUG_ENTRY();
 
@@ -161,6 +164,21 @@ a65_stream::has_previous(void) const
 }
 
 bool
+a65_stream::is_binary(void) const
+{
+	char value;
+	bool result;
+
+	A65_DEBUG_ENTRY();
+
+	value = character();
+	result = ((value >= A65_CHARACTER_SCALAR_BINARY_LOW) && (value <= A65_CHARACTER_SCALAR_BINARY_HIGH));
+
+	A65_DEBUG_EXIT_INFO("Result=%x", result);
+	return result;
+}
+
+bool
 a65_stream::is_decimal(void) const
 {
 	bool result;
@@ -181,6 +199,21 @@ a65_stream::is_hexidecimal(void) const
 	A65_DEBUG_ENTRY();
 
 	result = (std::isxdigit(character()) > 0);
+
+	A65_DEBUG_EXIT_INFO("Result=%x", result);
+	return result;
+}
+
+bool
+a65_stream::is_octal(void) const
+{
+	char value;
+	bool result;
+
+	A65_DEBUG_ENTRY();
+
+	value = character();
+	result = ((value >= A65_CHARACTER_SCALAR_OCTAL_LOW) && (value <= A65_CHARACTER_SCALAR_OCTAL_HIGH));
 
 	A65_DEBUG_EXIT_INFO("Result=%x", result);
 	return result;
@@ -208,7 +241,7 @@ a65_stream::load(
 		a65_utility::read_file(input, m_character);
 		m_path = input;
 	} else {
-		m_character = a65_literal_t(input.begin(), input.end());
+		m_character = input;
 		m_path = A65_STRING_UNKNOWN;
 	}
 
@@ -235,13 +268,13 @@ a65_stream::match(
 bool
 a65_stream::match(
 	__in int type,
-	__in a65_char_t value
+	__in char value
 	) const
 {
 	bool result;
 
 	A65_DEBUG_ENTRY_INFO("Type=%i(%s), Value=\'%c\'(%02x)", type, A65_STREAM_CHARACTER_STRING(type),
-		std::isprint(value) ? (char)value : A65_CHARACTER_FILL, value);
+		std::isprint(value) ? value : A65_CHARACTER_FILL, value);
 
 	result = ((type == character_type()) && (value == character()));
 
@@ -308,7 +341,7 @@ std::string
 a65_stream::to_string(void) const
 {
 	int type;
-	a65_char_t value;
+	char value;
 	std::stringstream result;
 
 	A65_DEBUG_ENTRY();
@@ -319,8 +352,8 @@ a65_stream::to_string(void) const
 	result << "[" << m_character_position << "] {" << A65_STREAM_CHARACTER_STRING(type) << "}";
 
 	if(type != A65_STREAM_CHARACTER_END) {
-		result << " \'" << (std::isprint(value) ? (char)value : A65_CHARACTER_FILL)
-			<< "\' (" << A65_STRING_HEX(a65_char_t, value) << ") (";
+		result << " \'" << (std::isprint(value) ? value : A65_CHARACTER_FILL)
+			<< "\' (" << A65_STRING_HEX(uint8_t, value) << ") (";
 
 		if(!m_path.empty()) {
 			result << m_path << ":";

@@ -23,18 +23,11 @@
 extern "C" {
 #endif // __cplusplus
 
-int a65_assemble(
-	const char *input,
-	const char *output
-	);
+extern int a65_assemble(const char *input, const char *output);
 
-const char *a65_error(void);
+extern const char *a65_error(void);
 
-void a65_version(
-	int *major,
-	int *minor,
-	int *revision
-	);
+extern void a65_version(int *major, int *minor, int *revision);
 
 #ifdef __cplusplus
 }

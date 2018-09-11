@@ -19,7 +19,6 @@
 #ifndef A65_UTILITY_H_
 #define A65_UTILITY_H_
 
-#include <vector>
 #include "./a65_define.h"
 
 #ifndef NDEBUG
@@ -89,7 +88,7 @@ class a65_utility {
 
 		static size_t read_file(
 			__in const std::string &path,
-			__inout std::vector<uint8_t> &data
+			__inout std::string &data
 			);
 
 		static void throw_exception(
