@@ -23,9 +23,7 @@
 #include <set>
 #include "./a65_define.h"
 
-typedef uint32_t a65_uuid_t;
-
-#define A65_UUID_INVALID (a65_uuid_t)0
+#define A65_UUID_INVALID 0
 
 class a65_uuid {
 
@@ -34,17 +32,17 @@ class a65_uuid {
 		~a65_uuid(void);
 
 		bool contains(
-			__in a65_uuid_t id
+			__in uint32_t id
 			) const;
 
 		void decrement(
-			__in a65_uuid_t id
+			__in uint32_t id
 			);
 
-		a65_uuid_t generate(void);
+		uint32_t generate(void);
 
 		void increment(
-			__in a65_uuid_t id
+			__in uint32_t id
 			);
 
 		static a65_uuid &instance(void);
@@ -61,15 +59,15 @@ class a65_uuid {
 			__in const a65_uuid &other
 			) = delete;
 
-		std::map<a65_uuid_t, size_t>::iterator find(
-			__in a65_uuid_t id
+		std::map<uint32_t, size_t>::iterator find(
+			__in uint32_t id
 			);
 
-		a65_uuid_t m_next;
+		uint32_t m_next;
 
-		std::map<a65_uuid_t, size_t> m_reference;
+		std::map<uint32_t, size_t> m_reference;
 
-		std::set<a65_uuid_t> m_surplus;
+		std::set<uint32_t> m_surplus;
 };
 
 #endif // A65_UUID_H_

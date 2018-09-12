@@ -51,7 +51,7 @@ class a65_lexer :
 		virtual void clear(void) override;
 
 		virtual bool contains(
-			__in a65_uuid_t id
+			__in uint32_t id
 			) const;
 
 		virtual bool has_next(void) const override;
@@ -68,7 +68,7 @@ class a65_lexer :
 		virtual void move_previous(void) override;
 
 		virtual void remove(
-			__in a65_uuid_t id
+			__in uint32_t id
 			);
 
 		virtual void reset(void) override;
@@ -76,7 +76,7 @@ class a65_lexer :
 		virtual std::string to_string(void) const override;
 
 		a65_token token(
-			__in_opt a65_uuid_t id = A65_UUID_INVALID
+			__in_opt uint32_t id = A65_UUID_INVALID
 			) const;
 
 	protected:
@@ -121,15 +121,15 @@ class a65_lexer :
 			__inout a65_token &token
 			);
 
-		std::map<a65_uuid_t, a65_token>::iterator find(
-			__in a65_uuid_t id
+		std::map<uint32_t, a65_token>::iterator find(
+			__in uint32_t id
 			);
 
 		void skip(void);
 
-		std::vector<a65_uuid_t> m_token;
+		std::vector<uint32_t> m_token;
 
-		std::map<a65_uuid_t, a65_token> m_token_map;
+		std::map<uint32_t, a65_token> m_token_map;
 
 		size_t m_token_position;
 };

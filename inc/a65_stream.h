@@ -22,6 +22,7 @@
 #include <vector>
 #include "./a65_define.h"
 
+#define A65_CHARACTER_END '\0'
 #define A65_CHARACTER_FILL '.'
 
 enum {

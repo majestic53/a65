@@ -16,6 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <cctype>
 #include <sstream>
 #include "../inc/a65_token.h"
 #include "../inc/a65_utility.h"
@@ -114,7 +115,7 @@ a65_token::generate(void)
 	A65_DEBUG_EXIT();
 }
 
-a65_uuid_t
+uint32_t
 a65_token::id(void) const
 {
 	A65_DEBUG_ENTRY();
@@ -268,7 +269,7 @@ a65_token::to_string(void) const
 
 	A65_DEBUG_ENTRY();
 
-	result << "{" << A65_STRING_HEX(a65_uuid_t, m_id) << "} [" << A65_TOKEN_STRING(m_type) << "]";
+	result << "{" << A65_STRING_HEX(uint32_t, m_id) << "} [" << A65_TOKEN_STRING(m_type) << "]";
 
 	switch(m_type) {
 		case A65_TOKEN_BEGIN:
@@ -279,12 +280,35 @@ a65_token::to_string(void) const
 			switch(m_type) {
 				case A65_TOKEN_IDENTIFIER:
 				case A65_TOKEN_LABEL:
-				case A65_TOKEN_LITERAL:
 					result << "[" << m_literal.size() << "]";
 
 					if(!m_literal.empty()) {
-						result << " \"" << A65_STRING_CHECK(std::string(m_literal.begin(), m_literal.end())) << "\"";
+						result << " \"" << A65_STRING_CHECK(m_literal) << "\"";
 					}
+					break;
+				case A65_TOKEN_LITERAL:
+					result << "[" << m_literal.size() << "] \"";
+
+					for(std::string::const_iterator ch = m_literal.begin(); ch != m_literal.end(); ++ch) {
+
+						if(A65_IS_CHARACTER_ESCAPE_VALUE(*ch)) {
+							int type = A65_CHARACTER_ESCAPE_VALUE_ID(*ch);
+
+							if(type == A65_CHARACTER_ESCAPE_HEXIDECIMAL) {
+								result << A65_CHARACTER_ESCAPE_STRING(A65_CHARACTER_ESCAPE_HEXIDECIMAL)
+									<< A65_STRING_HEX(uint8_t, *ch);
+							} else {
+								result << A65_CHARACTER_ESCAPE_STRING(type);
+							}
+						} else if(!std::isprint(*ch)) {
+							result << A65_CHARACTER_ESCAPE_STRING(A65_CHARACTER_ESCAPE_HEXIDECIMAL)
+								<< A65_STRING_HEX(uint8_t, *ch);
+						} else {
+							result << *ch;
+						}
+					}
+
+					result << "\"";
 					break;
 				case A65_TOKEN_SCALAR:
 					result << " " << m_scalar << "(" << A65_STRING_HEX(uint16_t, m_scalar) << ")";

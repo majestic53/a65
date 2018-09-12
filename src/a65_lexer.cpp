@@ -26,6 +26,8 @@
 #define A65_CHARACTER_DIGIT_OCTAL 'c'
 #define A65_CHARACTER_DIRECTIVE '.'
 #define A65_CHARACTER_ESCAPE '\\'
+#define A65_CHARACTER_ESCAPE_DECIMAL_LENGTH 3
+#define A65_CHARACTER_ESCAPE_HEXIDECIMAL_LENGTH 2
 #define A65_CHARACTER_LABEL ':'
 #define A65_CHARACTER_LITERAL '\"'
 #define A65_CHARACTER_LITERAL_CHARACTER '\''
@@ -99,7 +101,7 @@ a65_lexer::add(
 	__in_opt size_t position
 	)
 {
-	a65_uuid_t id;
+	uint32_t id;
 
 	A65_DEBUG_ENTRY_INFO("Token=%s, Position=%u", A65_STRING_CHECK(token.to_string()), position);
 
@@ -149,7 +151,7 @@ a65_lexer::clear(void)
 
 bool
 a65_lexer::contains(
-	__in a65_uuid_t id
+	__in uint32_t id
 	) const
 {
 	bool result;
@@ -249,16 +251,94 @@ a65_lexer::enumerate_alpha(
 char
 a65_lexer::enumerate_alpha_character(void)
 {
-	char result;
+	char result = A65_CHARACTER_END;
 
 	A65_DEBUG_ENTRY();
 
 	if(a65_stream::match(A65_STREAM_CHARACTER_SYMBOL, A65_CHARACTER_ESCAPE)) {
+		size_t iter;
+		uint16_t value;
+		std::string literal;
+		std::stringstream stream;
 
-		// TODO: enumerate escape character
-		result = '\0';
-		// ---
+		literal += character();
+		a65_stream::move_next();
 
+		if(a65_stream::match(A65_STREAM_CHARACTER_ALPHA)
+				|| a65_stream::match(A65_STREAM_CHARACTER_SYMBOL)) {
+			int type;
+
+			literal += character();
+
+			if(!A65_IS_CHARACTER_ESCAPE(literal)) {
+				A65_THROW_EXCEPTION_INFO("Unsupported character escape", "%s (%s:%u)", A65_STRING_CHECK(literal),
+					A65_STRING_CHECK(path()), line());
+			}
+
+			type = A65_CHARACTER_ESCAPE_ID(literal);
+			switch(type) {
+				case A65_CHARACTER_ESCAPE_ALERT:
+				case A65_CHARACTER_ESCAPE_BACKSPACE:
+				case A65_CHARACTER_ESCAPE_BACKSLASH:
+				case A65_CHARACTER_ESCAPE_CARRAGE_RETURN:
+				case A65_CHARACTER_ESCAPE_FORMFEED:
+				case A65_CHARACTER_ESCAPE_NEWLINE:
+				case A65_CHARACTER_ESCAPE_QUOTE_DOUBLE:
+				case A65_CHARACTER_ESCAPE_QUOTE_SINGLE:
+				case A65_CHARACTER_ESCAPE_TAB_HORIZONTAL:
+				case A65_CHARACTER_ESCAPE_TAB_VERTICAL:
+					result = A65_CHARACTER_ESCAPE_VALUE(type);
+					break;
+				case A65_CHARACTER_ESCAPE_HEXIDECIMAL:
+					literal.clear();
+
+					for(iter = 0; iter < A65_CHARACTER_ESCAPE_HEXIDECIMAL_LENGTH; ++iter) {
+						a65_stream::move_next();
+
+						if(!a65_stream::is_hexidecimal()) {
+							A65_THROW_EXCEPTION_INFO("Invalid character escape", "(%s:%u)",
+								A65_STRING_CHECK(path()), line());
+						}
+
+						literal += character();
+					}
+
+					stream << std::hex << literal;
+					stream >> value;
+					result = value;
+					break;
+				default:
+					A65_THROW_EXCEPTION_INFO("Unsupported character escape", "%s (%s:%u)", A65_STRING_CHECK(literal),
+						A65_STRING_CHECK(path()), line());
+			}
+		} else if(a65_stream::match(A65_STREAM_CHARACTER_DIGIT)) {
+			literal.clear();
+
+			for(iter = 0; iter < A65_CHARACTER_ESCAPE_DECIMAL_LENGTH; ++iter) {
+
+				if(!a65_stream::is_decimal()) {
+					A65_THROW_EXCEPTION_INFO("Invalid character escape", "(%s:%u)", A65_STRING_CHECK(path()), line());
+				}
+
+				literal += character();
+
+				if(iter < (A65_CHARACTER_ESCAPE_DECIMAL_LENGTH - 1)) {
+					a65_stream::move_next();
+				}
+			}
+
+			stream << std::dec << literal;
+			stream >> value;
+
+			if(value > UINT8_MAX) {
+				A65_THROW_EXCEPTION_INFO("Scalar overflow", "%s (%s:%u)", A65_STRING_CHECK(literal), A65_STRING_CHECK(path()), line());
+			}
+
+			result = value;
+		} else {
+			A65_THROW_EXCEPTION_INFO("Unterminated character escape", "%s (%s:%u)", A65_STRING_CHECK(literal), A65_STRING_CHECK(path()),
+				line());
+		}
 	} else {
 		result = character();
 	}
@@ -452,12 +532,12 @@ a65_lexer::enumerate_digit(
 		a65_stream::move_next();
 
 		if(a65_stream::match(A65_STREAM_CHARACTER_ALPHA)) {
-			std::string value;
+			std::string literal;
 
-			value += a65_stream::character();
-			A65_STRING_LOWER(value);
+			literal += a65_stream::character();
+			A65_STRING_LOWER(literal);
 
-			switch(value.front()) {
+			switch(literal.front()) {
 				case A65_CHARACTER_DIGIT_BINARY:
 					a65_stream::move_next();
 					scalar = enumerate_digit_binary();
@@ -490,7 +570,7 @@ uint16_t
 a65_lexer::enumerate_digit_binary(void)
 {
 	uint32_t result;
-	std::string value;
+	std::string literal;
 
 	A65_DEBUG_ENTRY();
 
@@ -499,10 +579,10 @@ a65_lexer::enumerate_digit_binary(void)
 	}
 
 	while(a65_stream::is_binary()) {
-		value += a65_stream::character();
+		literal += a65_stream::character();
 
-		if(value.size() > A65_SCALAR_BINARY_LENGTH_MAX) {
-			A65_THROW_EXCEPTION_INFO("Scalar too large", "0%c%s (%s:%u)", A65_CHARACTER_DIGIT_BINARY, A65_STRING_CHECK(value),
+		if(literal.size() > A65_SCALAR_BINARY_LENGTH_MAX) {
+			A65_THROW_EXCEPTION_INFO("Scalar too large", "0%c%s (%s:%u)", A65_CHARACTER_DIGIT_BINARY, A65_STRING_CHECK(literal),
 				A65_STRING_CHECK(path()), line());
 		}
 
@@ -513,9 +593,9 @@ a65_lexer::enumerate_digit_binary(void)
 		a65_stream::move_next();
 	}
 
-	result = std::stoul(value, nullptr, A65_SCALAR_BINARY_BASE);
+	result = std::stoul(literal, nullptr, A65_SCALAR_BINARY_BASE);
 	if(result > UINT16_MAX) {
-		A65_THROW_EXCEPTION_INFO("Scalar overflow", "0%c%s (%s:%u)", A65_CHARACTER_DIGIT_BINARY, A65_STRING_CHECK(value),
+		A65_THROW_EXCEPTION_INFO("Scalar overflow", "0%c%s (%s:%u)", A65_CHARACTER_DIGIT_BINARY, A65_STRING_CHECK(literal),
 			A65_STRING_CHECK(path()), line());
 	}
 
@@ -527,7 +607,7 @@ uint16_t
 a65_lexer::enumerate_digit_decimal(void)
 {
 	uint32_t result;
-	std::string value;
+	std::string literal;
 	std::stringstream stream;
 
 	A65_DEBUG_ENTRY();
@@ -537,10 +617,10 @@ a65_lexer::enumerate_digit_decimal(void)
 	}
 
 	while(a65_stream::is_decimal()) {
-		value += a65_stream::character();
+		literal += a65_stream::character();
 
-		if(value.size() > A65_SCALAR_DECIMAL_LENGTH_MAX) {
-			A65_THROW_EXCEPTION_INFO("Scalar too large", "%s (%s:%u)", A65_STRING_CHECK(value), A65_STRING_CHECK(path()), line());
+		if(literal.size() > A65_SCALAR_DECIMAL_LENGTH_MAX) {
+			A65_THROW_EXCEPTION_INFO("Scalar too large", "%s (%s:%u)", A65_STRING_CHECK(literal), A65_STRING_CHECK(path()), line());
 		}
 
 		if(!a65_stream::has_next()) {
@@ -550,11 +630,11 @@ a65_lexer::enumerate_digit_decimal(void)
 		a65_stream::move_next();
 	}
 
-	stream << std::dec << value;
+	stream << std::dec << literal;
 	stream >> result;
 
 	if(result > UINT16_MAX) {
-		A65_THROW_EXCEPTION_INFO("Scalar overflow", "%s (%s:%u)", A65_STRING_CHECK(value), A65_STRING_CHECK(path()), line());
+		A65_THROW_EXCEPTION_INFO("Scalar overflow", "%s (%s:%u)", A65_STRING_CHECK(literal), A65_STRING_CHECK(path()), line());
 	}
 
 	A65_DEBUG_EXIT_INFO("Result=%u(%04x)", result, result);
@@ -565,7 +645,7 @@ uint16_t
 a65_lexer::enumerate_digit_hexidecimal(void)
 {
 	uint32_t result;
-	std::string value;
+	std::string literal;
 	std::stringstream stream;
 
 	A65_DEBUG_ENTRY();
@@ -575,10 +655,10 @@ a65_lexer::enumerate_digit_hexidecimal(void)
 	}
 
 	while(a65_stream::is_hexidecimal()) {
-		value += a65_stream::character();
+		literal += a65_stream::character();
 
-		if(value.size() > A65_SCALAR_HEXIDECIMAL_LENGTH_MAX) {
-			A65_THROW_EXCEPTION_INFO("Scalar too large", "0%c%s (%s:%u)", A65_CHARACTER_DIGIT_HEXIDECIMAL, A65_STRING_CHECK(value),
+		if(literal.size() > A65_SCALAR_HEXIDECIMAL_LENGTH_MAX) {
+			A65_THROW_EXCEPTION_INFO("Scalar too large", "0%c%s (%s:%u)", A65_CHARACTER_DIGIT_HEXIDECIMAL, A65_STRING_CHECK(literal),
 				A65_STRING_CHECK(path()), line());
 		}
 
@@ -589,11 +669,11 @@ a65_lexer::enumerate_digit_hexidecimal(void)
 		a65_stream::move_next();
 	}
 
-	stream << std::hex << value;
+	stream << std::hex << literal;
 	stream >> result;
 
 	if(result > UINT16_MAX) {
-		A65_THROW_EXCEPTION_INFO("Scalar overflow", "0%c%s (%s:%u)", A65_CHARACTER_DIGIT_HEXIDECIMAL, A65_STRING_CHECK(value),
+		A65_THROW_EXCEPTION_INFO("Scalar overflow", "0%c%s (%s:%u)", A65_CHARACTER_DIGIT_HEXIDECIMAL, A65_STRING_CHECK(literal),
 			A65_STRING_CHECK(path()), line());
 	}
 
@@ -605,7 +685,7 @@ uint16_t
 a65_lexer::enumerate_digit_octal(void)
 {
 	uint32_t result;
-	std::string value;
+	std::string literal;
 
 	A65_DEBUG_ENTRY();
 
@@ -614,10 +694,10 @@ a65_lexer::enumerate_digit_octal(void)
 	}
 
 	while(a65_stream::is_octal()) {
-		value += a65_stream::character();
+		literal += a65_stream::character();
 
-		if(value.size() > A65_SCALAR_OCTAL_LENGTH_MAX) {
-			A65_THROW_EXCEPTION_INFO("Scalar too large", "0%c%s (%s:%u)", A65_CHARACTER_DIGIT_OCTAL, A65_STRING_CHECK(value),
+		if(literal.size() > A65_SCALAR_OCTAL_LENGTH_MAX) {
+			A65_THROW_EXCEPTION_INFO("Scalar too large", "0%c%s (%s:%u)", A65_CHARACTER_DIGIT_OCTAL, A65_STRING_CHECK(literal),
 				A65_STRING_CHECK(path()), line());
 		}
 
@@ -628,10 +708,10 @@ a65_lexer::enumerate_digit_octal(void)
 		a65_stream::move_next();
 	}
 
-	result = std::stoul(value, nullptr, A65_SCALAR_OCTAL_BASE);
+	result = std::stoul(literal, nullptr, A65_SCALAR_OCTAL_BASE);
 
 	if(result > UINT16_MAX) {
-		A65_THROW_EXCEPTION_INFO("Scalar overflow", "0%c%s (%s:%u)", A65_CHARACTER_DIGIT_OCTAL, A65_STRING_CHECK(value),
+		A65_THROW_EXCEPTION_INFO("Scalar overflow", "0%c%s (%s:%u)", A65_CHARACTER_DIGIT_OCTAL, A65_STRING_CHECK(literal),
 			A65_STRING_CHECK(path()), line());
 	}
 
@@ -681,12 +761,12 @@ a65_lexer::enumerate_symbol(
 	A65_DEBUG_ENTRY_INFO("Result=%s", A65_STRING_CHECK(token.to_string()));
 }
 
-std::map<a65_uuid_t, a65_token>::iterator
+std::map<uint32_t, a65_token>::iterator
 a65_lexer::find(
-	__in a65_uuid_t id
+	__in uint32_t id
 	)
 {
-	std::map<a65_uuid_t, a65_token>::iterator result;
+	std::map<uint32_t, a65_token>::iterator result;
 
 	A65_DEBUG_ENTRY_INFO("Id=%u(%x)", id, id);
 
@@ -778,11 +858,11 @@ a65_lexer::move_previous(void)
 
 void
 a65_lexer::remove(
-	__in a65_uuid_t id
+	__in uint32_t id
 	)
 {
 	size_t position = 0;
-	std::vector<a65_uuid_t>::iterator entry;
+	std::vector<uint32_t>::iterator entry;
 
 	A65_DEBUG_ENTRY_INFO("Id=%u(%x)", id, id);
 
@@ -863,11 +943,11 @@ a65_lexer::to_string(void) const
 
 a65_token
 a65_lexer::token(
-	__in_opt a65_uuid_t id
+	__in_opt uint32_t id
 	) const
 {
 	a65_token result;
-	std::map<a65_uuid_t, a65_token>::const_iterator entry;
+	std::map<uint32_t, a65_token>::const_iterator entry;
 
 	A65_DEBUG_ENTRY_INFO("Id=%u(%x)", id, id);
 

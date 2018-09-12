@@ -36,7 +36,7 @@ a65_uuid::~a65_uuid(void)
 
 bool
 a65_uuid::contains(
-	__in a65_uuid_t id
+	__in uint32_t id
 	) const
 {
 	bool result;
@@ -55,10 +55,10 @@ a65_uuid::contains(
 
 void
 a65_uuid::decrement(
-	__in a65_uuid_t id
+	__in uint32_t id
 	)
 {
-	std::map<a65_uuid_t, size_t>::iterator entry;
+	std::map<uint32_t, size_t>::iterator entry;
 
 	A65_DEBUG_ENTRY_INFO("Id=%u(%x)", id, id);
 
@@ -73,12 +73,12 @@ a65_uuid::decrement(
 	A65_DEBUG_EXIT();
 }
 
-std::map<a65_uuid_t, size_t>::iterator
+std::map<uint32_t, size_t>::iterator
 a65_uuid::find(
-	__in a65_uuid_t id
+	__in uint32_t id
 	)
 {
-	std::map<a65_uuid_t, size_t>::iterator result;
+	std::map<uint32_t, size_t>::iterator result;
 
 	A65_DEBUG_ENTRY_INFO("Id=%u(%x)", id, id);
 
@@ -91,15 +91,15 @@ a65_uuid::find(
 	return result;
 }
 
-a65_uuid_t
+uint32_t
 a65_uuid::generate(void)
 {
-	a65_uuid_t result = A65_UUID_INVALID;
+	uint32_t result = A65_UUID_INVALID;
 
 	A65_DEBUG_ENTRY();
 
 	if(!m_surplus.empty()) {
-		std::set<a65_uuid_t>::iterator entry = m_surplus.begin();
+		std::set<uint32_t>::iterator entry = m_surplus.begin();
 
 		result = *entry;
 		m_reference.insert(std::make_pair(result, A65_UUID_REFERENCE_START));
@@ -116,7 +116,7 @@ a65_uuid::generate(void)
 
 void
 a65_uuid::increment(
-	__in a65_uuid_t id
+	__in uint32_t id
 	)
 {
 	A65_DEBUG_ENTRY_INFO("Id=%u(%x)", id, id);

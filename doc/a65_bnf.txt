@@ -14,7 +14,7 @@ statement ::= <command> | <comment> | <directive> | <label> | <pragma>
 
 character ::= . | <character_escape>
 
-character_escape ::= \a | \b | \\ | \r | \f | \" | \' | \n | \t | \v | \x[0-9a-fA-F]{2} | \[0-9]{3}
+character_escape ::= \a | \b | \\ | \r | \f | \n | \" | \' | \t | \v | \x[0-9a-fA-F]{2} | \[0-9]{3}
 
 command ::= <command_absolute> | <command_absolute_index_indirect> | <command_ansolute_index_x> | <command_absolute_index_y>
 	| <command_absolute_indirect> | <command_accumulator> | <command_immediate> | <command_implied> | <command_relative>

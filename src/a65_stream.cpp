@@ -21,7 +21,6 @@
 #include "../inc/a65_stream.h"
 #include "../inc/a65_utility.h"
 
-#define A65_CHARACTER_END '\0'
 #define A65_CHARACTER_NEWLINE '\n'
 #define A65_CHARACTER_SCALAR_BINARY_HIGH '1'
 #define A65_CHARACTER_SCALAR_BINARY_LOW '0'

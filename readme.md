@@ -48,6 +48,13 @@ TBD
 Changelog
 =========
 
+Version 0.1.1837
+----------------
+*Updated: 9/11/2018*
+
+* Completed lexer class
+* Added parser node/tree classes
+
 Version 0.1.1836
 ----------------
 *Updated: 9/9/2018*

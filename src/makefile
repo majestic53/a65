@@ -27,8 +27,8 @@ all: build archive
 archive:
 	@echo ''
 	@echo '--- BUILDING LIBRARY -----------------------'
-	ar rcs $(DIR_BIN)$(LIB) $(DIR_BUILD)a65.o $(DIR_BUILD)a65_lexer.o $(DIR_BUILD)a65_stream.o $(DIR_BUILD)a65_token.o $(DIR_BUILD)a65_utility.o \
-		$(DIR_BUILD)a65_uuid.o
+	ar rcs $(DIR_BIN)$(LIB) $(DIR_BUILD)a65.o $(DIR_BUILD)a65_lexer.o $(DIR_BUILD)a65_node.o $(DIR_BUILD)a65_stream.o $(DIR_BUILD)a65_token.o \
+		$(DIR_BUILD)a65_tree.o $(DIR_BUILD)a65_utility.o $(DIR_BUILD)a65_uuid.o
 	cp $(DIR_INC)a65.h $(DIR_BIN)
 	@echo '--- DONE -----------------------------------'
 	@echo ''
@@ -37,7 +37,7 @@ build: build_a65
 
 ### A65 ###
 
-build_a65: a65.o a65_lexer.o a65_stream.o a65_token.o a65_utility.o a65_uuid.o
+build_a65: a65.o a65_lexer.o a65_node.o a65_stream.o a65_token.o a65_tree.o a65_utility.o a65_uuid.o
 
 a65.o: $(DIR_SRC)a65.cpp $(DIR_INC)a65.h
 	$(CC) $(CC_FLAGS) $(CC_BUILD_FLAGS) $(CC_TRACE_FLAGS) -c $(DIR_SRC)a65.cpp -o $(DIR_BUILD)a65.o
@@ -45,11 +45,17 @@ a65.o: $(DIR_SRC)a65.cpp $(DIR_INC)a65.h
 a65_lexer.o: $(DIR_SRC)a65_lexer.cpp $(DIR_INC)a65_lexer.h
 	$(CC) $(CC_FLAGS) $(CC_BUILD_FLAGS) $(CC_TRACE_FLAGS) -c $(DIR_SRC)a65_lexer.cpp -o $(DIR_BUILD)a65_lexer.o
 
+a65_node.o: $(DIR_SRC)a65_node.cpp $(DIR_INC)a65_node.h
+	$(CC) $(CC_FLAGS) $(CC_BUILD_FLAGS) $(CC_TRACE_FLAGS) -c $(DIR_SRC)a65_node.cpp -o $(DIR_BUILD)a65_node.o
+
 a65_stream.o: $(DIR_SRC)a65_stream.cpp $(DIR_INC)a65_stream.h
 	$(CC) $(CC_FLAGS) $(CC_BUILD_FLAGS) $(CC_TRACE_FLAGS) -c $(DIR_SRC)a65_stream.cpp -o $(DIR_BUILD)a65_stream.o
 
 a65_token.o: $(DIR_SRC)a65_token.cpp $(DIR_INC)a65_token.h
 	$(CC) $(CC_FLAGS) $(CC_BUILD_FLAGS) $(CC_TRACE_FLAGS) -c $(DIR_SRC)a65_token.cpp -o $(DIR_BUILD)a65_token.o
+
+a65_tree.o: $(DIR_SRC)a65_tree.cpp $(DIR_INC)a65_tree.h
+	$(CC) $(CC_FLAGS) $(CC_BUILD_FLAGS) $(CC_TRACE_FLAGS) -c $(DIR_SRC)a65_tree.cpp -o $(DIR_BUILD)a65_tree.o
 
 a65_utility.o: $(DIR_SRC)a65_utility.cpp $(DIR_INC)a65_utility.h
 	$(CC) $(CC_FLAGS) $(CC_BUILD_FLAGS) $(CC_TRACE_FLAGS) -c $(DIR_SRC)a65_utility.cpp -o $(DIR_BUILD)a65_utility.o
