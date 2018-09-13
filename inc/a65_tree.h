@@ -21,11 +21,108 @@
 
 #include "./a65_node.h"
 
+enum {
+	A65_TREE_BEGIN = 0,
+	A65_TREE_END,
+	A65_TREE_STATEMENT,
+};
+
+#define A65_TREE_MAX A65_TREE_STATEMENT
+
+static const std::string A65_TREE_STR[] = {
+	"Begin", "End", "Statement",
+	};
+
+#define A65_TREE_STRING(_TYPE_) \
+	(((_TYPE_) > A65_TREE_MAX) ? A65_STRING_UNKNOWN : \
+		A65_STRING_CHECK(A65_TREE_STR[_TYPE_]))
+
 class a65_tree {
 
 	public:
 
-		// TODO: declare tree class
+		explicit a65_tree(
+			__in_opt int type = A65_TREE_BEGIN
+			);
+
+		a65_tree(
+			__in const a65_tree &other
+			);
+
+		virtual ~a65_tree(void);
+
+		a65_tree &operator=(
+			__in const a65_tree &other
+			);
+
+		void add(
+			__in int type,
+			__in uint32_t token
+			);
+
+		void add_child_left(
+			__in int type,
+			__in uint32_t token
+			);
+
+		void add_child_right(
+			__in int type,
+			__in uint32_t token
+			);
+
+		bool has_child_left(void) const;
+
+		bool has_child_right(void) const;
+
+		bool has_parent(void) const;
+
+		bool has_root(void) const;
+
+		uint32_t id(void) const;
+
+		bool match(
+			__in int type
+			);
+
+		void move_child_left(void);
+
+		void move_child_right(void);
+
+		void move_parent(void);
+
+		void move_root(void);
+
+		a65_node &node(void);
+
+		void remove(void);
+
+		void remove_child_left(void);
+
+		void remove_child_right(void);
+
+		virtual std::string to_string(void) const;
+
+		int type(void) const;
+
+	protected:
+
+		void decrement(void);
+
+		std::map<uint32_t, a65_node>::iterator find(
+			__in uint32_t id
+			);
+
+		void generate(void);
+
+		void increment(void);
+
+		uint32_t m_id;
+
+		uint32_t m_node_current;
+
+		std::map<uint32_t, a65_node> m_node_map;
+
+		uint32_t m_node_root;
 };
 
 #endif // A65_TREE_H_

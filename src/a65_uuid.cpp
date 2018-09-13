@@ -102,13 +102,14 @@ a65_uuid::generate(void)
 		std::set<uint32_t>::iterator entry = m_surplus.begin();
 
 		result = *entry;
-		m_reference.insert(std::make_pair(result, A65_UUID_REFERENCE_START));
 		m_surplus.erase(entry);
 	} else if(m_next != A65_UUID_INVALID) {
 		result = m_next++;
 	} else {
 		A65_THROW_EXCEPTION("No avaliable uuid");
 	}
+
+	m_reference.insert(std::make_pair(result, A65_UUID_REFERENCE_START));
 
 	A65_DEBUG_EXIT_INFO("Result=%u(%x)", result, result);
 	return result;

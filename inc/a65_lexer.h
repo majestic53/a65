@@ -43,11 +43,6 @@ class a65_lexer :
 			__in const a65_lexer &other
 			);
 
-		void add(
-			__in const a65_token &token,
-			__in_opt size_t position = A65_TOKEN_POSITION_UNDEFINED
-			);
-
 		virtual void clear(void) override;
 
 		virtual bool contains(
@@ -67,10 +62,6 @@ class a65_lexer :
 
 		virtual void move_previous(void) override;
 
-		virtual void remove(
-			__in uint32_t id
-			);
-
 		virtual void reset(void) override;
 
 		virtual std::string to_string(void) const override;
@@ -80,6 +71,11 @@ class a65_lexer :
 			) const;
 
 	protected:
+
+		void add(
+			__in const a65_token &token,
+			__in_opt size_t position = A65_TOKEN_POSITION_UNDEFINED
+			);
 
 		a65_token enumerate(void);
 

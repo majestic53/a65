@@ -71,6 +71,16 @@ enum {
 	A65_DEBUG_LEVEL_VERBOSE,
 };
 
+#define A65_DEBUG_LEVEL_MAX A65_DEBUG_LEVEL_VERBOSE
+
+static const std::string A65_DEBUG_LEVEL_STR[] = {
+	"Error", "Warning", "Information", "Verbose",
+	};
+
+#define A65_DEBUG_LEVEL_STRING(_TYPE_) \
+	(((_TYPE_) > A65_DEBUG_LEVEL_MAX) ? A65_STRING_UNKNOWN : \
+		A65_STRING_CHECK(A65_DEBUG_LEVEL_STR[_TYPE_]))
+
 class a65_utility {
 
 	public:

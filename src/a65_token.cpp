@@ -88,7 +88,7 @@ a65_token::operator=(
 		increment();
 	}
 
-	A65_DEBUG_EXIT();
+	A65_DEBUG_EXIT_INFO("Result=%p", this);
 	return *this;
 }
 
@@ -100,6 +100,7 @@ a65_token::decrement(void)
 	a65_uuid &instance = a65_uuid::instance();
 	if(instance.contains(m_id)) {
 		instance.decrement(m_id);
+		m_id = A65_UUID_INVALID;
 	}
 
 	A65_DEBUG_EXIT();

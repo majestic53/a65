@@ -19,13 +19,119 @@
 #ifndef A65_NODE_H_
 #define A65_NODE_H_
 
-#include "./a65_token.h"
+#include "./a65_uuid.h"
+
+enum {
+	A65_NODE_BEGIN = 0,
+	A65_NODE_COMMAND,
+	A65_NODE_DIRECTIVE,
+	A65_NODE_END,
+	A65_NODE_EXPRESSION,
+	A65_NODE_LEAF,
+	A65_NODE_PRAGMA,
+};
+
+#define A65_NODE_MAX A65_NODE_PRAGMA
+
+static const std::string A65_NODE_STR[] = {
+	"Begin", "Command", "Directive", "End", "Expression", "Leaf", "Pragma",
+	};
+
+#define A65_NODE_STRING(_TYPE_) \
+	(((_TYPE_) > A65_NODE_MAX) ? A65_STRING_UNKNOWN : \
+		A65_STRING_CHECK(A65_NODE_STR[_TYPE_]))
 
 class a65_node {
 
 	public:
 
-		// TODO: declare node class
+		a65_node(
+			__in_opt int type = A65_NODE_BEGIN,
+			__in_opt uint32_t token = A65_UUID_INVALID,
+			__in_opt uint32_t token_parent = A65_UUID_INVALID,
+			__in_opt uint32_t token_child_left = A65_UUID_INVALID,
+			__in_opt uint32_t token_child_right = A65_UUID_INVALID
+			);
+
+		a65_node(
+			__in const a65_node &other
+			);
+
+		virtual ~a65_node(void);
+
+		a65_node &operator=(
+			__in const a65_node &other
+			);
+
+		bool has_token(void) const;
+
+		bool has_token_child_left(void) const;
+
+		bool has_token_child_right(void) const;
+
+		bool has_token_parent(void) const;
+
+		uint32_t id(void) const;
+
+		bool is_leaf(void) const;
+
+		bool is_root(void) const;
+
+		bool match(
+			__in int type
+			);
+
+		void set(
+			__in int type
+			);
+
+		void set_token(
+			__in uint32_t id
+			);
+
+		void set_token_child_left(
+			__in uint32_t id
+			);
+
+		void set_token_child_right(
+			__in uint32_t id
+			);
+
+		void set_token_parent(
+			__in uint32_t id
+			);
+
+		uint32_t token_child_left(void) const;
+
+		uint32_t token_child_right(void) const;
+
+		uint32_t token(void) const;
+
+		uint32_t token_parent(void) const;
+
+		virtual std::string to_string(void) const;
+
+		int type(void) const;
+
+	protected:
+
+		void decrement(void);
+
+		void generate(void);
+
+		void increment(void);
+
+		uint32_t m_id;
+
+		uint32_t m_token;
+
+		uint32_t m_token_child_left;
+
+		uint32_t m_token_child_right;
+
+		uint32_t m_token_parent;
+
+		int m_type;
 };
 
 #endif // A65_NODE_H_

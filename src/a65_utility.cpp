@@ -34,16 +34,6 @@ static const std::string A65_DEBUG_COLOR_STR[] = {
 	(((_TYPE_) > A65_DEBUG_LEVEL_MAX) ? A65_DEBUG_COLOR_OFF : \
 		A65_STRING_CHECK(A65_DEBUG_COLOR_STR[_TYPE_]))
 
-#define A65_DEBUG_LEVEL_MAX A65_DEBUG_LEVEL_VERBOSE
-
-static const std::string A65_DEBUG_LEVEL_STR[] = {
-	"Error", "Warning", "Information", "Verbose",
-	};
-
-#define A65_DEBUG_LEVEL_STRING(_TYPE_) \
-	(((_TYPE_) > A65_DEBUG_LEVEL_MAX) ? A65_STRING_UNKNOWN : \
-		A65_STRING_CHECK(A65_DEBUG_LEVEL_STR[_TYPE_]))
-
 #define A65_DEBUG_TIMESTAMP_FORMAT "%Y-%m-%d %H:%M:%S"
 #define A65_DEBUG_TIMESTAMP_LENGTH 32
 

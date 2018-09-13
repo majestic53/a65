@@ -857,37 +857,6 @@ a65_lexer::move_previous(void)
 }
 
 void
-a65_lexer::remove(
-	__in uint32_t id
-	)
-{
-	size_t position = 0;
-	std::vector<uint32_t>::iterator entry;
-
-	A65_DEBUG_ENTRY_INFO("Id=%u(%x)", id, id);
-
-	m_token_map.erase(find(id));
-
-	for(entry = m_token.begin(); entry != m_token.end(); ++entry, ++position) {
-
-		if(id == *entry) {
-			break;
-		}
-	}
-
-	if(entry != m_token.end()) {
-
-		if(m_token_position >= position) {
-			--m_token_position;
-		}
-
-		m_token.erase(entry);
-	}
-
-	A65_DEBUG_EXIT();
-}
-
-void
 a65_lexer::reset(void)
 {
 	A65_DEBUG_ENTRY();
