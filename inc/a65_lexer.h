@@ -19,12 +19,13 @@
 #ifndef A65_LEXER_H_
 #define A65_LEXER_H_
 
+#include "./a65_stream.h"
 #include "./a65_token.h"
 
 #define A65_TOKEN_POSITION_UNDEFINED (-1)
 
 class a65_lexer :
-		public a65_stream {
+		protected a65_stream {
 
 	public:
 

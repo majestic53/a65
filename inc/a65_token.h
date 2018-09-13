@@ -19,7 +19,6 @@
 #ifndef A65_TOKEN_H_
 #define A65_TOKEN_H_
 
-#include "./a65_stream.h"
 #include "./a65_uuid.h"
 
 enum {
