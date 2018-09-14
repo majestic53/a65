@@ -50,6 +50,10 @@ Changelog
 
 Version 0.1.1837
 ----------------
+*Updated: 9/13/2018*
+
+* Implemented parser node/tree classes
+
 *Updated: 9/11/2018*
 
 * Completed lexer class

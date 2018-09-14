@@ -55,17 +55,17 @@ class a65_tree {
 			__in const a65_tree &other
 			);
 
-		void add(
-			__in int type,
-			__in uint32_t token
-			);
-
 		void add_child_left(
 			__in int type,
 			__in uint32_t token
 			);
 
 		void add_child_right(
+			__in int type,
+			__in uint32_t token
+			);
+
+		void add_root(
 			__in int type,
 			__in uint32_t token
 			);
@@ -82,7 +82,7 @@ class a65_tree {
 
 		bool match(
 			__in int type
-			);
+			) const;
 
 		void move_child_left(void);
 
@@ -92,7 +92,9 @@ class a65_tree {
 
 		void move_root(void);
 
-		a65_node &node(void);
+		a65_node &node(
+			__in_opt uint32_t id = A65_UUID_INVALID
+			);
 
 		void remove(void);
 
@@ -118,11 +120,13 @@ class a65_tree {
 
 		uint32_t m_id;
 
-		uint32_t m_node_current;
+		uint32_t m_node;
 
 		std::map<uint32_t, a65_node> m_node_map;
 
 		uint32_t m_node_root;
+
+		int m_type;
 };
 
 #endif // A65_TREE_H_

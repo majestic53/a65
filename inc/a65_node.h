@@ -48,9 +48,9 @@ class a65_node {
 		a65_node(
 			__in_opt int type = A65_NODE_BEGIN,
 			__in_opt uint32_t token = A65_UUID_INVALID,
-			__in_opt uint32_t token_parent = A65_UUID_INVALID,
-			__in_opt uint32_t token_child_left = A65_UUID_INVALID,
-			__in_opt uint32_t token_child_right = A65_UUID_INVALID
+			__in_opt uint32_t parent = A65_UUID_INVALID,
+			__in_opt uint32_t child_left = A65_UUID_INVALID,
+			__in_opt uint32_t child_right = A65_UUID_INVALID
 			);
 
 		a65_node(
@@ -63,13 +63,17 @@ class a65_node {
 			__in const a65_node &other
 			);
 
+		uint32_t child_left(void) const;
+
+		uint32_t child_right(void) const;
+
+		bool has_child_left(void) const;
+
+		bool has_child_right(void) const;
+
+		bool has_parent(void) const;
+
 		bool has_token(void) const;
-
-		bool has_token_child_left(void) const;
-
-		bool has_token_child_right(void) const;
-
-		bool has_token_parent(void) const;
 
 		uint32_t id(void) const;
 
@@ -79,35 +83,31 @@ class a65_node {
 
 		bool match(
 			__in int type
-			);
+			) const;
+
+		uint32_t parent(void) const;
 
 		void set(
 			__in int type
+			);
+
+		void set_child_left(
+			__in uint32_t id
+			);
+
+		void set_child_right(
+			__in uint32_t id
+			);
+
+		void set_parent(
+			__in uint32_t id
 			);
 
 		void set_token(
 			__in uint32_t id
 			);
 
-		void set_token_child_left(
-			__in uint32_t id
-			);
-
-		void set_token_child_right(
-			__in uint32_t id
-			);
-
-		void set_token_parent(
-			__in uint32_t id
-			);
-
-		uint32_t token_child_left(void) const;
-
-		uint32_t token_child_right(void) const;
-
 		uint32_t token(void) const;
-
-		uint32_t token_parent(void) const;
 
 		virtual std::string to_string(void) const;
 
@@ -121,15 +121,15 @@ class a65_node {
 
 		void increment(void);
 
+		uint32_t m_child_left;
+
+		uint32_t m_child_right;
+
 		uint32_t m_id;
 
+		uint32_t m_parent;
+
 		uint32_t m_token;
-
-		uint32_t m_token_child_left;
-
-		uint32_t m_token_child_right;
-
-		uint32_t m_token_parent;
 
 		int m_type;
 };
