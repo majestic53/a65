@@ -176,6 +176,19 @@ a65_tree::decrement(void)
 	A65_DEBUG_EXIT();
 }
 
+bool
+a65_tree::empty(void) const
+{
+	bool result;
+
+	A65_DEBUG_ENTRY();
+
+	result = (m_node_root == A65_UUID_INVALID);
+
+	A65_DEBUG_EXIT_INFO("Result=%x", result);
+	return result;
+}
+
 std::map<uint32_t, a65_node>::iterator
 a65_tree::find(
 	__in uint32_t id

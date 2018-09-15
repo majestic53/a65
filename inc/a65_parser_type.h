@@ -21,6 +21,10 @@
 
 #include "./a65_define.h"
 
-// TODO
+#define A65_TREE_POSITION_UNDEFINED (-1)
+
+#define A65_TREE_SENTINEL_COUNT 2
+
+#define A65_TREE_STRING_OFFSET_START 1
 
 #endif // A65_PARSER_TYPE_H_

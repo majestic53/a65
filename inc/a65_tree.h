@@ -55,6 +55,8 @@ class a65_tree {
 			__in uint32_t token
 			);
 
+		bool empty(void) const;
+
 		bool has_child_left(void) const;
 
 		bool has_child_right(void) const;
