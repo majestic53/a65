@@ -16,54 +16,25 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef A65_UUID_H_
-#define A65_UUID_H_
+#ifndef A65_TREE_TYPE_H_
+#define A65_TREE_TYPE_H_
 
-#include "./a65_uuid_type.h"
+#include "./a65_define.h"
 
-class a65_uuid {
-
-	public:
-
-		~a65_uuid(void);
-
-		bool contains(
-			__in uint32_t id
-			) const;
-
-		void decrement(
-			__in uint32_t id
-			);
-
-		uint32_t generate(void);
-
-		void increment(
-			__in uint32_t id
-			);
-
-		static a65_uuid &instance(void);
-
-	protected:
-
-		a65_uuid(void);
-
-		a65_uuid(
-			__in const a65_uuid &other
-			) = delete;
-
-		a65_uuid &operator=(
-			__in const a65_uuid &other
-			) = delete;
-
-		std::map<uint32_t, size_t>::iterator find(
-			__in uint32_t id
-			);
-
-		uint32_t m_next;
-
-		std::map<uint32_t, size_t> m_reference;
-
-		std::set<uint32_t> m_surplus;
+enum {
+	A65_TREE_BEGIN = 0,
+	A65_TREE_END,
+	A65_TREE_STATEMENT,
 };
 
-#endif // A65_UUID_H_
+#define A65_TREE_MAX A65_TREE_STATEMENT
+
+static const std::string A65_TREE_STR[] = {
+	"Begin", "End", "Statement",
+	};
+
+#define A65_TREE_STRING(_TYPE_) \
+	(((_TYPE_) > A65_TREE_MAX) ? A65_STRING_UNKNOWN : \
+		A65_STRING_CHECK(A65_TREE_STR[_TYPE_]))
+
+#endif // A65_TREE_TYPE_H_

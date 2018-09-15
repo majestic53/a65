@@ -20,11 +20,21 @@
 #define A65_DEFINE_H_
 
 #include <algorithm>
+#include <cstdarg>
 #include <cstddef>
 #include <cstdint>
+#include <cstdlib>
+#include <ctime>
+#include <cctype>
+#include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <map>
+#include <set>
+#include <sstream>
+#include <stdexcept>
 #include <string>
+#include <vector>
 
 #ifndef __in
 #define __in

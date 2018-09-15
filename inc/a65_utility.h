@@ -19,67 +19,7 @@
 #ifndef A65_UTILITY_H_
 #define A65_UTILITY_H_
 
-#include "./a65_define.h"
-
-#ifndef NDEBUG
-#define A65_ASSERT(_CONDITION_) { \
-	if(!(_CONDITION_)) { \
-		A65_THROW_EXCEPTION("Assertion failed: " A65_STRING_CONCAT(_CONDITION_)); \
-	} \
-	}
-#else
-#define A65_ASSERT(_CONDITION_)
-#endif // NDEBUG
-
-#define A65_DEBUG_ENTRY() \
-	A65_DEBUG_ENTRY_INFO("", "")
-#define A65_DEBUG_ENTRY_INFO(_FORMAT_, ...) \
-	A65_DEBUG_PRINT(A65_DEBUG_LEVEL_VERBOSE, "+", __FUNCTION__, __FILE__, __FUNCTION__, __LINE__, \
-		_FORMAT_, __VA_ARGS__)
-
-#define A65_DEBUG_EXIT() \
-	A65_DEBUG_EXIT_INFO("", "")
-#define A65_DEBUG_EXIT_INFO(_FORMAT_, ...) \
-	A65_DEBUG_PRINT(A65_DEBUG_LEVEL_VERBOSE, "-", __FUNCTION__, __FILE__, __FUNCTION__, __LINE__, \
-		_FORMAT_, __VA_ARGS__)
-
-#define A65_DEBUG_MESSAGE(_LEVEL_, _MESSAGE_) \
-	A65_DEBUG_MESSAGE_INFO(_LEVEL_, _MESSAGE_, "", "")
-#define A65_DEBUG_MESSAGE_INFO(_LEVEL_, _MESSAGE_, _FORMAT_, ...) \
-	A65_DEBUG_PRINT(_LEVEL_, "", _MESSAGE_, __FILE__, __FUNCTION__, __LINE__, _FORMAT_, __VA_ARGS__)
-
-#ifndef NDEBUG
-#define A65_DEBUG_PRINT(_LEVEL_, _PREFIX_, _MESSAGE_, _FILE_, _FUNCTION_, _LINE_, _FORMAT_, ...) { \
-	if((_LEVEL_) <= (TRACE)) { \
-		a65_utility::debug_print(_LEVEL_, _PREFIX_, _MESSAGE_, _FILE_, _FUNCTION_, _LINE_, \
-			_FORMAT_, __VA_ARGS__); \
-	} \
-	}
-#else
-#define A65_DEBUG_PRINT(_LEVEL_, _PREFIX_, _MESSAGE_, _FILE_, _FUNCTION_, _LINE_, _FORMAT_, ...)
-#endif // NDEBUG
-
-#define A65_THROW_EXCEPTION(_MESSAGE_) \
-	A65_THROW_EXCEPTION_INFO(_MESSAGE_, "", "")
-#define A65_THROW_EXCEPTION_INFO(_MESSAGE_, _FORMAT_, ...) \
-	a65_utility::throw_exception(_MESSAGE_, __FILE__, __FUNCTION__, __LINE__, _FORMAT_, __VA_ARGS__)
-
-enum {
-	A65_DEBUG_LEVEL_ERROR = 0,
-	A65_DEBUG_LEVEL_WARNING,
-	A65_DEBUG_LEVEL_INFORMATION,
-	A65_DEBUG_LEVEL_VERBOSE,
-};
-
-#define A65_DEBUG_LEVEL_MAX A65_DEBUG_LEVEL_VERBOSE
-
-static const std::string A65_DEBUG_LEVEL_STR[] = {
-	"Error", "Warning", "Information", "Verbose",
-	};
-
-#define A65_DEBUG_LEVEL_STRING(_TYPE_) \
-	(((_TYPE_) > A65_DEBUG_LEVEL_MAX) ? A65_STRING_UNKNOWN : \
-		A65_STRING_CHECK(A65_DEBUG_LEVEL_STR[_TYPE_]))
+#include "./a65_utility_type.h"
 
 class a65_utility {
 

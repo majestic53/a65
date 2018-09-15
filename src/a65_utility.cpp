@@ -16,26 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <cstdarg>
-#include <cstdlib>
-#include <ctime>
-#include <fstream>
-#include <sstream>
-#include <stdexcept>
 #include "../inc/a65_utility.h"
-
-#define A65_DEBUG_COLOR_OFF "\x1b[0m"
-
-static const std::string A65_DEBUG_COLOR_STR[] = {
-	"\x1b[91m", "\x1b[93m", "\x1b[94m", "\x1b[90m",
-	};
-
-#define A65_DEBUG_COLOR_STRING(_TYPE_) \
-	(((_TYPE_) > A65_DEBUG_LEVEL_MAX) ? A65_DEBUG_COLOR_OFF : \
-		A65_STRING_CHECK(A65_DEBUG_COLOR_STR[_TYPE_]))
-
-#define A65_DEBUG_TIMESTAMP_FORMAT "%Y-%m-%d %H:%M:%S"
-#define A65_DEBUG_TIMESTAMP_LENGTH 32
 
 void
 a65_utility::debug_print(

@@ -16,8 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <cctype>
-#include <sstream>
 #include "../inc/a65_token.h"
 #include "../inc/a65_utility.h"
 

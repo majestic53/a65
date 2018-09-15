@@ -20,22 +20,7 @@
 #define A65_TREE_H_
 
 #include "./a65_node.h"
-
-enum {
-	A65_TREE_BEGIN = 0,
-	A65_TREE_END,
-	A65_TREE_STATEMENT,
-};
-
-#define A65_TREE_MAX A65_TREE_STATEMENT
-
-static const std::string A65_TREE_STR[] = {
-	"Begin", "End", "Statement",
-	};
-
-#define A65_TREE_STRING(_TYPE_) \
-	(((_TYPE_) > A65_TREE_MAX) ? A65_STRING_UNKNOWN : \
-		A65_STRING_CHECK(A65_TREE_STR[_TYPE_]))
+#include "./a65_tree_type.h"
 
 class a65_tree {
 

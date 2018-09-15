@@ -16,18 +16,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <cctype>
-#include <sstream>
 #include "../inc/a65_stream.h"
 #include "../inc/a65_utility.h"
-
-#define A65_CHARACTER_NEWLINE '\n'
-#define A65_CHARACTER_SCALAR_BINARY_HIGH '1'
-#define A65_CHARACTER_SCALAR_BINARY_LOW '0'
-#define A65_CHARACTER_SCALAR_OCTAL_HIGH '7'
-#define A65_CHARACTER_SCALAR_OCTAL_LOW '0'
-
-#define A65_STREAM_LINE_START 1
 
 a65_stream::a65_stream(
 	__in_opt const std::string &input,

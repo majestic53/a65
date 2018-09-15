@@ -19,27 +19,8 @@
 #ifndef A65_NODE_H_
 #define A65_NODE_H_
 
+#include "./a65_node_type.h"
 #include "./a65_uuid.h"
-
-enum {
-	A65_NODE_BEGIN = 0,
-	A65_NODE_COMMAND,
-	A65_NODE_DIRECTIVE,
-	A65_NODE_END,
-	A65_NODE_EXPRESSION,
-	A65_NODE_LEAF,
-	A65_NODE_PRAGMA,
-};
-
-#define A65_NODE_MAX A65_NODE_PRAGMA
-
-static const std::string A65_NODE_STR[] = {
-	"Begin", "Command", "Directive", "End", "Expression", "Leaf", "Pragma",
-	};
-
-#define A65_NODE_STRING(_TYPE_) \
-	(((_TYPE_) > A65_NODE_MAX) ? A65_STRING_UNKNOWN : \
-		A65_STRING_CHECK(A65_NODE_STR[_TYPE_]))
 
 class a65_node {
 

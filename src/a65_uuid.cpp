@@ -19,8 +19,6 @@
 #include "../inc/a65_utility.h"
 #include "../inc/a65_uuid.h"
 
-#define A65_UUID_REFERENCE_START 1
-
 a65_uuid::a65_uuid(void) :
 	m_next(A65_UUID_INVALID + 1)
 {

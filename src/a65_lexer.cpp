@@ -16,34 +16,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <sstream>
 #include "../inc/a65_lexer.h"
 #include "../inc/a65_utility.h"
-
-#define A65_CHARACTER_COMMENT ';'
-#define A65_CHARACTER_DIGIT_BINARY 'b'
-#define A65_CHARACTER_DIGIT_HEXIDECIMAL 'x'
-#define A65_CHARACTER_DIGIT_OCTAL 'c'
-#define A65_CHARACTER_DIRECTIVE '.'
-#define A65_CHARACTER_ESCAPE '\\'
-#define A65_CHARACTER_ESCAPE_DECIMAL_LENGTH 3
-#define A65_CHARACTER_ESCAPE_HEXIDECIMAL_LENGTH 2
-#define A65_CHARACTER_LABEL ':'
-#define A65_CHARACTER_LITERAL '\"'
-#define A65_CHARACTER_LITERAL_CHARACTER '\''
-#define A65_CHARACTER_NEWLINE '\n'
-#define A65_CHARACTER_PRAGMA '@'
-#define A65_CHARACTER_UNDERSCORE '_'
-#define A65_CHARACTER_ZERO '0'
-
-#define A65_SCALAR_BINARY_BASE 2
-#define A65_SCALAR_BINARY_LENGTH_MAX 16
-#define A65_SCALAR_DECIMAL_LENGTH_MAX 5
-#define A65_SCALAR_HEXIDECIMAL_LENGTH_MAX 4
-#define A65_SCALAR_OCTAL_BASE 8
-#define A65_SCALAR_OCTAL_LENGTH_MAX 6
-
-#define A65_TOKEN_SENTINEL_COUNT 2
 
 a65_lexer::a65_lexer(
 	__in_opt const std::string &input,

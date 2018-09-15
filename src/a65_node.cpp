@@ -16,7 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <sstream>
 #include "../inc/a65_node.h"
 #include "../inc/a65_utility.h"
 

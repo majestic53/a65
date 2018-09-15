@@ -20,6 +20,7 @@
 #define A65_PARSER_H_
 
 #include "./a65_lexer.h"
+#include "./a65_parser_type.h"
 #include "./a65_tree.h"
 
 class a65_parser :

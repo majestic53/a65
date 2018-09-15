@@ -19,29 +19,7 @@
 #ifndef A65_STREAM_H_
 #define A65_STREAM_H_
 
-#include <vector>
-#include "./a65_define.h"
-
-#define A65_CHARACTER_END '\0'
-#define A65_CHARACTER_FILL '.'
-
-enum {
-	A65_STREAM_CHARACTER_ALPHA = 0,
-	A65_STREAM_CHARACTER_DIGIT,
-	A65_STREAM_CHARACTER_END,
-	A65_STREAM_CHARACTER_SPACE,
-	A65_STREAM_CHARACTER_SYMBOL,
-};
-
-#define A65_STREAM_CHARACTER_MAX A65_STREAM_CHARACTER_SYMBOL
-
-static const std::string A65_STREAM_CHARACTER_STR[] = {
-	"Alpha", "Digit", "End", "Space", "Symbol",
-	};
-
-#define A65_STREAM_CHARACTER_STRING(_TYPE_) \
-	(((_TYPE_) > A65_STREAM_CHARACTER_MAX) ? A65_STRING_UNKNOWN : \
-		A65_STRING_CHECK(A65_STREAM_CHARACTER_STR[_TYPE_]))
+#include "./a65_stream_type.h"
 
 class a65_stream {
 
