@@ -20,6 +20,7 @@ DIR_BIN=./bin/
 DIR_BIN_INC=./bin/inc/
 DIR_BUILD=./build/
 DIR_EXE=./tool/
+DIR_ROOT=./
 DIR_SRC=./src/
 EXE=a65
 JOB_SLOTS=4
@@ -76,7 +77,7 @@ lines:
 	@echo '============================================'
 	@echo 'CALCULATING LINE COUNT'
 	@echo '============================================'
-	cloc $(DIR_SRC)
+	cloc $(DIR_ROOT)
 
 memory:
 	@echo ''
