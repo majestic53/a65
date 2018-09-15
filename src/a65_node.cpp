@@ -328,20 +328,23 @@ a65_node::to_string(void) const
 
 	A65_DEBUG_ENTRY();
 
-	result << "{" << A65_STRING_HEX(uint32_t, m_id) << "} [" << A65_NODE_STRING(m_type) << "] <";
+	result << "{" << A65_STRING_HEX(uint32_t, m_id) << "} [" << A65_NODE_STRING(m_type) << "] {";
 
 	if(is_root()) {
 		result << "Root";
 	} else {
 		result << A65_STRING_HEX(uint32_t, m_parent);
-
-		if(!is_leaf()) {
-			result << ", <" << A65_STRING_HEX(uint32_t, m_child_left)
-				<< ", " << A65_STRING_HEX(uint32_t, m_child_right) << ">";
-		}
 	}
 
-	result << ">";
+	if(!is_leaf()) {
+		result << ", {" << A65_STRING_HEX(uint32_t, m_child_left) << ", " << A65_STRING_HEX(uint32_t, m_child_right) << "}";
+	}
+
+	result << "}";
+
+	if(has_token()) {
+		result << " <" << A65_STRING_HEX(uint32_t, m_token) << ">";
+	}
 
 	A65_DEBUG_EXIT();
 	return result.str();

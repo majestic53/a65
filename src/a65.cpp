@@ -20,7 +20,7 @@
 #include "../inc/a65_utility.h"
 
 // TODO: debugging
-#include "../inc/a65_lexer.h"
+#include "../inc/a65_parser.h"
 // ---
 
 static std::string g_error;

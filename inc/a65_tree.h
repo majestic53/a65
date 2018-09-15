@@ -55,17 +55,17 @@ class a65_tree {
 			__in const a65_tree &other
 			);
 
+		void add(
+			__in int type,
+			__in uint32_t token
+			);
+
 		void add_child_left(
 			__in int type,
 			__in uint32_t token
 			);
 
 		void add_child_right(
-			__in int type,
-			__in uint32_t token
-			);
-
-		void add_root(
 			__in int type,
 			__in uint32_t token
 			);

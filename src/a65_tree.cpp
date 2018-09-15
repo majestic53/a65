@@ -82,6 +82,30 @@ a65_tree::operator=(
 }
 
 void
+a65_tree::add(
+	__in int type,
+	__in uint32_t token
+	)
+{
+	uint32_t id;
+
+	A65_DEBUG_ENTRY_INFO("Type=%u(%s), Token=%u(%x)", type, A65_NODE_STRING(type), token, token);
+
+	if(m_node_root != A65_UUID_INVALID) {
+		A65_THROW_EXCEPTION_INFO("Node redefined", "%u(%x)", token, token);
+	}
+
+	a65_node node(type, token);
+
+	id = node.id();
+	m_node_map.insert(std::make_pair(id, node));
+	m_node = id;
+	m_node_root = id;
+
+	A65_DEBUG_EXIT();
+}
+
+void
 a65_tree::add_child_left(
 	__in int type,
 	__in uint32_t token
@@ -93,7 +117,7 @@ a65_tree::add_child_left(
 	A65_DEBUG_ENTRY_INFO("Type=%u(%s), Token=%u(%x)", type, A65_NODE_STRING(type), token, token);
 
 	if(m_node == A65_UUID_INVALID) {
-		A65_THROW_EXCEPTION_INFO("Root node undefined", "%u(%x)", token, token);
+		A65_THROW_EXCEPTION_INFO("Parent node undefined", "%u(%x)", token, token);
 	}
 
 	parent = find(m_node);
@@ -122,7 +146,7 @@ a65_tree::add_child_right(
 	A65_DEBUG_ENTRY_INFO("Type=%u(%s), Token=%u(%x)", type, A65_NODE_STRING(type), token, token);
 
 	if(m_node == A65_UUID_INVALID) {
-		A65_THROW_EXCEPTION_INFO("Root node undefined", "%u(%x)", token, token);
+		A65_THROW_EXCEPTION_INFO("Parent node undefined", "%u(%x)", token, token);
 	}
 
 	parent = find(m_node);
@@ -135,30 +159,6 @@ a65_tree::add_child_right(
 	id = node.id();
 	m_node_map.insert(std::make_pair(id, node));
 	parent->second.set_child_right(id);
-
-	A65_DEBUG_EXIT();
-}
-
-void
-a65_tree::add_root(
-	__in int type,
-	__in uint32_t token
-	)
-{
-	uint32_t id;
-
-	A65_DEBUG_ENTRY_INFO("Type=%u(%s), Token=%u(%x)", type, A65_NODE_STRING(type), token, token);
-
-	if(m_node_root != A65_UUID_INVALID) {
-		A65_THROW_EXCEPTION_INFO("Root node redefined", "%u(%x)", token, token);
-	}
-
-	a65_node node(type, token);
-
-	id = node.id();
-	m_node_map.insert(std::make_pair(id, node));
-	m_node = id;
-	m_node_root = id;
 
 	A65_DEBUG_EXIT();
 }
@@ -326,7 +326,7 @@ a65_tree::move_child_left(void)
 	A65_DEBUG_ENTRY();
 
 	if(!has_child_left()) {
-		A65_THROW_EXCEPTION("No left child node found");
+		A65_THROW_EXCEPTION_INFO("No left child node found", "%u(%x)", m_node, m_node);
 	}
 
 	m_node = find(m_node)->second.child_left();
@@ -339,8 +339,8 @@ a65_tree::move_child_right(void)
 {
 	A65_DEBUG_ENTRY();
 
-	if(!has_child_left()) {
-		A65_THROW_EXCEPTION("No right child node found");
+	if(!has_child_right()) {
+		A65_THROW_EXCEPTION_INFO("No right child node found", "%u(%x)", m_node, m_node);
 	}
 
 	m_node = find(m_node)->second.child_right();
@@ -354,7 +354,7 @@ a65_tree::move_parent(void)
 	A65_DEBUG_ENTRY();
 
 	if(!has_parent()) {
-		A65_THROW_EXCEPTION("No parent node found");
+		A65_THROW_EXCEPTION_INFO("No parent node found", "%u(%x)", m_node, m_node);
 	}
 
 	m_node = find(m_node)->second.parent();
@@ -368,10 +368,10 @@ a65_tree::move_root(void)
 	A65_DEBUG_ENTRY();
 
 	if(!has_root()) {
-		A65_THROW_EXCEPTION("No root node found");
+		A65_THROW_EXCEPTION_INFO("No root node found", "%u(%x)", m_node, m_node);
 	}
 
-	m_node = find(m_node)->second.child_right();
+	m_node = m_node_root;
 
 	A65_DEBUG_EXIT();
 }
@@ -398,9 +398,43 @@ a65_tree::node(
 void
 a65_tree::remove(void)
 {
+	uint32_t child;
+
 	A65_DEBUG_ENTRY();
 
-	// TODO
+	if(m_node == A65_UUID_INVALID) {
+		A65_THROW_EXCEPTION_INFO("No node found", "%u(%x)", m_node, m_node);
+	}
+
+	if(has_child_left()) {
+		move_child_left();
+		remove();
+	}
+
+	if(has_child_right()) {
+		move_child_right();
+		remove();
+	}
+
+	child = m_node;
+
+	if(has_parent()) {
+		std::map<uint32_t, a65_node>::iterator parent;
+
+		move_parent();
+		parent = find(m_node);
+
+		if(child == parent->second.child_left()) {
+			parent->second.set_child_left(A65_UUID_INVALID);
+		} else if(child == parent->second.child_right()) {
+			parent->second.set_child_right(A65_UUID_INVALID);
+		}
+	} else {
+		m_node = A65_UUID_INVALID;
+		m_node_root = A65_UUID_INVALID;
+	}
+
+	m_node_map.erase(find(child));
 
 	A65_DEBUG_EXIT();
 }
@@ -410,7 +444,8 @@ a65_tree::remove_child_left(void)
 {
 	A65_DEBUG_ENTRY();
 
-	// TODO
+	move_child_left();
+	remove();
 
 	A65_DEBUG_EXIT();
 }
@@ -420,7 +455,8 @@ a65_tree::remove_child_right(void)
 {
 	A65_DEBUG_ENTRY();
 
-	// TODO
+	move_child_right();
+	remove();
 
 	A65_DEBUG_EXIT();
 }
@@ -433,6 +469,10 @@ a65_tree::to_string(void) const
 	A65_DEBUG_ENTRY();
 
 	result << "{" << A65_STRING_HEX(uint32_t, m_id) << "} [" << A65_TREE_STRING(m_type) << "] <" << m_node_map.size() << ">";
+
+	if(has_root()) {
+		result << " {" << A65_STRING_HEX(uint32_t, m_node_root) << ", " << A65_STRING_HEX(uint32_t, m_node) << "}";
+	}
 
 	A65_DEBUG_EXIT();
 	return result.str();
