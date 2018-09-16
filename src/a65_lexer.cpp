@@ -441,8 +441,8 @@ a65_lexer::enumerate_alpha_literal_character(
 		a65_stream::move_next();
 	}
 
-	token.set(A65_TOKEN_LITERAL);
-	token.set_literal(literal);
+	token.set(A65_TOKEN_SCALAR);
+	token.set_scalar(literal.front());
 
 	A65_DEBUG_ENTRY_INFO("Result=%s", A65_STRING_CHECK(token.to_string()));
 }

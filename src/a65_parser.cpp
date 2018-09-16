@@ -234,20 +234,108 @@ a65_tree
 a65_parser::evaluate(void)
 {
 	a65_tree result;
+	a65_token entry;
 
 	A65_DEBUG_ENTRY();
 
-	// TODO: evaluate tree
 	result.set(A65_TREE_STATEMENT);
-	result.add(A65_NODE_COMMAND, token().id());
+
+	entry = a65_lexer::token();
+
+	switch(entry.type()) {
+		case A65_TOKEN_COMMAND:
+			evaluate_command(result);
+			break;
+		case A65_TOKEN_DIRECTIVE:
+			evaluate_directive(result);
+			break;
+		case A65_TOKEN_LABEL:
+			evaluate_label(result);
+			break;
+		case A65_TOKEN_PRAGMA:
+			evaluate_pragma(result);
+			break;
+		default:
+			A65_THROW_EXCEPTION_INFO("Unexpected token type", "%s (%s:%u)", A65_STRING_CHECK(entry.to_string()),
+				A65_STRING_CHECK(path()), line());
+	}
+
+	A65_DEBUG_EXIT_INFO("Result=%s", A65_STRING_CHECK(result.to_string()));
+	return result;
+}
+
+void
+a65_parser::evaluate_command(
+	__inout a65_tree &tree
+	)
+{
+	A65_DEBUG_ENTRY_INFO("Tree=%s", A65_STRING_CHECK(tree.to_string()));
+
+	// TODO
+
+	A65_DEBUG_EXIT();
+}
+
+void
+a65_parser::evaluate_directive(
+	__inout a65_tree &tree
+	)
+{
+	A65_DEBUG_ENTRY_INFO("Tree=%s", A65_STRING_CHECK(tree.to_string()));
+
+	// TODO
+
+	A65_DEBUG_EXIT();
+}
+
+void
+a65_parser::evaluate_label(
+	__inout a65_tree &tree
+	)
+{
+	A65_DEBUG_ENTRY_INFO("Tree=%s", A65_STRING_CHECK(tree.to_string()));
+
+	tree.add(A65_NODE_LABEL, token().id());
 
 	if(a65_lexer::has_next()) {
 		a65_lexer::move_next();
 	}
-	// ---
 
-	A65_DEBUG_EXIT_INFO("Result=%s", A65_STRING_CHECK(result.to_string()));
-	return result;
+	A65_DEBUG_EXIT();
+}
+
+void
+a65_parser::evaluate_pragma(
+	__inout a65_tree &tree
+	)
+{
+	a65_token entry;
+
+	A65_DEBUG_ENTRY_INFO("Tree=%s", A65_STRING_CHECK(tree.to_string()));
+
+	entry = token();
+	tree.add(A65_NODE_PRAGMA, entry.id());
+
+	if(!a65_lexer::has_next()) {
+		A65_THROW_EXCEPTION_INFO("Unterminated pragma", "%s (%s:%u)", A65_STRING_CHECK(entry.to_string()), A65_TOKEN_STRING(entry.type()),
+			A65_STRING_CHECK(entry.path()), entry.line());
+	}
+
+	a65_lexer::move_next();
+
+	entry = token();
+	if(!entry.match(A65_TOKEN_LITERAL)) {
+		A65_THROW_EXCEPTION_INFO("Expecting literal", "%s (%s:%u)", A65_STRING_CHECK(entry.to_string()), A65_TOKEN_STRING(entry.type()),
+			A65_STRING_CHECK(entry.path()), entry.line());
+	}
+
+	tree.add_child_left(A65_NODE_LEAF, entry.id());
+
+	if(a65_lexer::has_next()) {
+		a65_lexer::move_next();
+	}
+
+	A65_DEBUG_EXIT();
 }
 
 std::map<uint32_t, a65_tree>::iterator

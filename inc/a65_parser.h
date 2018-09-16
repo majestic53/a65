@@ -94,7 +94,21 @@ class a65_parser :
 
 		a65_tree evaluate(void);
 
-		// TODO: add evaluation routines
+		void evaluate_command(
+			__inout a65_tree &tree
+			);
+
+		void evaluate_directive(
+			__inout a65_tree &tree
+			);
+
+		void evaluate_label(
+			__inout a65_tree &tree
+			);
+
+		void evaluate_pragma(
+			__inout a65_tree &tree
+			);
 
 		std::map<uint32_t, a65_tree>::iterator find(
 			__in uint32_t id

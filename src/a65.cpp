@@ -53,7 +53,7 @@ a65_assemble(
 			parser.move_next();
 		}
 
-		std::cout << parser.to_string() << std::endl;
+		std::cout << std::endl << parser.to_string() << std::endl << std::endl;
 
 		while(parser.has_previous()) {
 			parser.move_previous();
