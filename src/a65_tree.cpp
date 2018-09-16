@@ -473,6 +473,18 @@ a65_tree::remove_child_right(void)
 	A65_DEBUG_EXIT();
 }
 
+void
+a65_tree::set(
+	__in int type
+	)
+{
+	A65_DEBUG_ENTRY_INFO("Type=%u(%s)", type, A65_TREE_STRING(type));
+
+	m_type = type;
+
+	A65_DEBUG_EXIT();
+}
+
 std::string
 a65_tree::to_string(void) const
 {

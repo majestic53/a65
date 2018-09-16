@@ -913,3 +913,29 @@ a65_lexer::token(
 	A65_DEBUG_EXIT_INFO("Result=%s", A65_STRING_CHECK(result.to_string()));
 	return result;
 }
+
+a65_token
+a65_lexer::token_begin(void) const
+{
+	a65_token result;
+
+	A65_DEBUG_ENTRY();
+
+	result = token(m_token.front());
+
+	A65_DEBUG_EXIT_INFO("Result=%s", A65_STRING_CHECK(result.to_string()));
+	return result;
+}
+
+a65_token
+a65_lexer::token_end(void) const
+{
+	a65_token result;
+
+	A65_DEBUG_ENTRY();
+
+	result = token(m_token.back());
+
+	A65_DEBUG_EXIT_INFO("Result=%s", A65_STRING_CHECK(result.to_string()));
+	return result;
+}

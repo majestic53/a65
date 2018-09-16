@@ -91,6 +91,10 @@ class a65_tree {
 
 		virtual std::string to_string(void) const;
 
+		void set(
+			__in int type
+			);
+
 		int type(void) const;
 
 	protected:

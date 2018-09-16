@@ -46,18 +46,18 @@ a65_assemble(
 		}
 
 		// TODO: debugging
-		a65_lexer lexer(input);
+		a65_parser parser(input);
 
-		while(lexer.has_next()) {
-			std::cout << lexer.to_string() << std::endl;
-			lexer.move_next();
+		while(parser.has_next()) {
+			std::cout << parser.to_string() << std::endl;
+			parser.move_next();
 		}
 
-		std::cout << lexer.to_string() << std::endl;
+		std::cout << parser.to_string() << std::endl;
 
-		while(lexer.has_previous()) {
-			lexer.move_previous();
-			std::cout << lexer.to_string() << std::endl;
+		while(parser.has_previous()) {
+			parser.move_previous();
+			std::cout << parser.to_string() << std::endl;
 		}
 		// ---
 

@@ -76,17 +76,9 @@ a65_parser::add(
 	)
 {
 	int type;
-	uint32_t id;
+	a65_tree tree;
 
 	A65_DEBUG_ENTRY_INFO("Token=%s, Position=%u", A65_STRING_CHECK(token.to_string()), position);
-
-	if(position == A65_TOKEN_POSITION_UNDEFINED) {
-		position = (m_token_position + 1);
-	}
-
-	if(position > m_tree.size()) {
-		A65_THROW_EXCEPTION_INFO("Tree position out-of-range", "%u (max=%u)", position, m_tree.size());
-	}
 
 	switch(token.type()) {
 		case A65_TOKEN_BEGIN:
@@ -100,7 +92,7 @@ a65_parser::add(
 			break;
 	}
 
-	a65_tree tree(type);
+	tree.set(type);
 
 	switch(token.type()) {
 		case A65_TOKEN_BEGIN:
@@ -124,6 +116,28 @@ a65_parser::add(
 	}
 
 	tree.add(type, token.id());
+	add(tree, position);
+
+	A65_DEBUG_EXIT();
+}
+
+void
+a65_parser::add(
+	__in const a65_tree &tree,
+	__in_opt size_t position
+	)
+{
+	uint32_t id;
+
+	A65_DEBUG_ENTRY_INFO("Tree=%s, Position=%u", A65_STRING_CHECK(tree.to_string()), position);
+
+	if(position == A65_TREE_POSITION_UNDEFINED) {
+		position = (m_tree_position + 1);
+	}
+
+	if(position > m_tree.size()) {
+		A65_THROW_EXCEPTION_INFO("Tree position out-of-range", "%u (max=%u)", position, m_tree.size());
+	}
 
 	id = tree.id();
 
@@ -195,8 +209,8 @@ a65_parser::clear(void)
 	m_tree.clear();
 	m_tree_map.clear();
 	m_tree_position = 0;
-	add(a65_lexer::token(0), 0);
-	add(a65_lexer::token(1), 1);
+	add(token_begin(), 0);
+	add(token_end(), 1);
 
 	A65_DEBUG_EXIT();
 }
@@ -224,6 +238,13 @@ a65_parser::evaluate(void)
 	A65_DEBUG_ENTRY();
 
 	// TODO: evaluate tree
+	result.set(A65_TREE_STATEMENT);
+	result.add(A65_NODE_COMMAND, token().id());
+
+	if(a65_lexer::has_next()) {
+		a65_lexer::move_next();
+	}
+	// ---
 
 	A65_DEBUG_EXIT_INFO("Result=%s", A65_STRING_CHECK(result.to_string()));
 	return result;
@@ -298,8 +319,11 @@ a65_parser::move_next(void)
 
 	if(a65_lexer::has_next() && (m_tree_position <= (m_tree.size() - A65_TREE_SENTINEL_COUNT))) {
 
-		// TODO: evaluate next tree, if one exists
+		if(a65_lexer::token().match(A65_TOKEN_BEGIN)) {
+			a65_lexer::move_next();
+		}
 
+		add(evaluate());
 	}
 
 	++m_tree_position;
@@ -374,6 +398,32 @@ a65_parser::tree(
 	}
 
 	result = entry->second;
+
+	A65_DEBUG_EXIT_INFO("Result=%s", A65_STRING_CHECK(result.to_string()));
+	return result;
+}
+
+a65_tree
+a65_parser::tree_begin(void) const
+{
+	a65_tree result;
+
+	A65_DEBUG_ENTRY();
+
+	result = tree(m_tree.front());
+
+	A65_DEBUG_EXIT_INFO("Result=%s", A65_STRING_CHECK(result.to_string()));
+	return result;
+}
+
+a65_tree
+a65_parser::tree_end(void) const
+{
+	a65_tree result;
+
+	A65_DEBUG_ENTRY();
+
+	result = tree(m_tree.back());
 
 	A65_DEBUG_EXIT_INFO("Result=%s", A65_STRING_CHECK(result.to_string()));
 	return result;

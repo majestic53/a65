@@ -70,10 +70,19 @@ class a65_parser :
 			__in_opt uint32_t id = A65_UUID_INVALID
 			) const;
 
+		a65_tree tree_begin(void) const;
+
+		a65_tree tree_end(void) const;
+
 	protected:
 
 		void add(
 			__in const a65_token &token,
+			__in_opt size_t position = A65_TREE_POSITION_UNDEFINED
+			);
+
+		void add(
+			__in const a65_tree &tree,
 			__in_opt size_t position = A65_TREE_POSITION_UNDEFINED
 			);
 

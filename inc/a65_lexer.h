@@ -70,6 +70,10 @@ class a65_lexer :
 			__in_opt uint32_t id = A65_UUID_INVALID
 			) const;
 
+		a65_token token_begin(void) const;
+
+		a65_token token_end(void) const;
+
 	protected:
 
 		void add(
