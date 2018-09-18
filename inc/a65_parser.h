@@ -102,6 +102,62 @@ class a65_parser :
 			__inout a65_tree &tree
 			);
 
+		void evaluate_directive_data_byte(
+			__inout a65_tree &tree
+			);
+
+		void evaluate_directive_data_word(
+			__inout a65_tree &tree
+			);
+
+		void evaluate_directive_define(
+			__inout a65_tree &tree
+			);
+
+		void evaluate_directive_else(
+			__inout a65_tree &tree
+			);
+
+		void evaluate_directive_elseif(
+			__inout a65_tree &tree
+			);
+
+		void evaluate_directive_end(
+			__inout a65_tree &tree
+			);
+
+		void evaluate_directive_if(
+			__inout a65_tree &tree
+			);
+
+		void evaluate_directive_if_define(
+			__inout a65_tree &tree
+			);
+
+		void evaluate_directive_origin(
+			__inout a65_tree &tree
+			);
+
+		void evaluate_directive_reserve(
+			__inout a65_tree &tree
+			);
+
+		void evaluate_directive_undefine(
+			__inout a65_tree &tree
+			);
+
+		void evaluate_expression(
+			__inout a65_tree &tree
+			);
+
+		void evaluate_expression_condition(
+			__inout a65_tree &tree
+			);
+
+		void evaluate_expression_list(
+			__inout a65_tree &tree
+			);
+
 		void evaluate_label(
 			__inout a65_tree &tree
 			);
@@ -110,9 +166,17 @@ class a65_parser :
 			__inout a65_tree &tree
 			);
 
+		void evaluate_statement_list(
+			__inout a65_tree &tree
+			);
+
 		std::map<uint32_t, a65_tree>::iterator find(
 			__in uint32_t id
 			);
+
+		bool is_expression(void) const;
+
+		bool is_statement(void) const;
 
 		std::vector<uint32_t> m_tree;
 

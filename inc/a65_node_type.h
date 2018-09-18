@@ -30,12 +30,14 @@ enum {
 	A65_NODE_LABEL,
 	A65_NODE_LEAF,
 	A65_NODE_PRAGMA,
+	A65_NODE_STATEMENT,
 };
 
-#define A65_NODE_MAX A65_NODE_PRAGMA
+#define A65_NODE_MAX A65_NODE_STATEMENT
 
 static const std::string A65_NODE_STR[] = {
 	"Begin", "Command", "Directive", "End", "Expression", "Label", "Leaf", "Pragma",
+	"Statement",
 	};
 
 #define A65_NODE_STRING(_TYPE_) \
