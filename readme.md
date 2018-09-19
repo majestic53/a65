@@ -48,6 +48,12 @@ TBD
 Changelog
 =========
 
+Version 0.1.1838
+----------------
+*Updated: 9/18/2018*
+
+* Converted binary tree classes to d-ary tree class
+
 Version 0.1.1837
 ----------------
 *Updated: 9/13/2018*

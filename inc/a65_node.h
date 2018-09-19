@@ -30,8 +30,7 @@ class a65_node {
 			__in_opt int type = A65_NODE_BEGIN,
 			__in_opt uint32_t token = A65_UUID_INVALID,
 			__in_opt uint32_t parent = A65_UUID_INVALID,
-			__in_opt uint32_t child_left = A65_UUID_INVALID,
-			__in_opt uint32_t child_right = A65_UUID_INVALID
+			__in_opt const std::vector<uint32_t> &child = std::vector<uint32_t>()
 			);
 
 		a65_node(
@@ -44,13 +43,20 @@ class a65_node {
 			__in const a65_node &other
 			);
 
-		uint32_t child_left(void) const;
+		void add_child(
+			__in uint32_t id,
+			__in_opt size_t position = A65_NODE_POSITION_UNDEFINED
+			);
 
-		uint32_t child_right(void) const;
+		uint32_t child(
+			__in size_t position
+			) const;
 
-		bool has_child_left(void) const;
+		size_t child_count(void) const;
 
-		bool has_child_right(void) const;
+		bool has_child(
+			__in size_t position
+			) const;
 
 		bool has_parent(void) const;
 
@@ -68,16 +74,23 @@ class a65_node {
 
 		uint32_t parent(void) const;
 
+		void remove_all_children(void);
+
+		void remove_child(
+			__in size_t position
+			);
+
+		void remove_child_id(
+			__in uint32_t id
+			);
+
 		void set(
 			__in int type
 			);
 
-		void set_child_left(
-			__in uint32_t id
-			);
-
-		void set_child_right(
-			__in uint32_t id
+		void set_child(
+			__in uint32_t id,
+			__in size_t position
 			);
 
 		void set_parent(
@@ -102,9 +115,7 @@ class a65_node {
 
 		void increment(void);
 
-		uint32_t m_child_left;
-
-		uint32_t m_child_right;
+		std::vector<uint32_t> m_child;
 
 		uint32_t m_id;
 

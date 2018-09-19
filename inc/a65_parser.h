@@ -92,81 +92,81 @@ class a65_parser :
 			__inout size_t tabs
 			) const;
 
-		a65_tree evaluate(void);
+		a65_tree enumerate(void);
 
-		void evaluate_command(
+		void enumerate_command(
 			__inout a65_tree &tree
 			);
 
-		void evaluate_directive(
+		void enumerate_directive(
 			__inout a65_tree &tree
 			);
 
-		void evaluate_directive_data_byte(
+		void enumerate_directive_data_byte(
 			__inout a65_tree &tree
 			);
 
-		void evaluate_directive_data_word(
+		void enumerate_directive_data_word(
 			__inout a65_tree &tree
 			);
 
-		void evaluate_directive_define(
+		void enumerate_directive_define(
 			__inout a65_tree &tree
 			);
 
-		void evaluate_directive_else(
+		void enumerate_directive_else(
 			__inout a65_tree &tree
 			);
 
-		void evaluate_directive_elseif(
+		void enumerate_directive_elseif(
 			__inout a65_tree &tree
 			);
 
-		void evaluate_directive_end(
+		void enumerate_directive_end(
 			__inout a65_tree &tree
 			);
 
-		void evaluate_directive_if(
+		void enumerate_directive_if(
 			__inout a65_tree &tree
 			);
 
-		void evaluate_directive_if_define(
+		void enumerate_directive_if_define(
 			__inout a65_tree &tree
 			);
 
-		void evaluate_directive_origin(
+		void enumerate_directive_origin(
 			__inout a65_tree &tree
 			);
 
-		void evaluate_directive_reserve(
+		void enumerate_directive_reserve(
 			__inout a65_tree &tree
 			);
 
-		void evaluate_directive_undefine(
+		void enumerate_directive_undefine(
 			__inout a65_tree &tree
 			);
 
-		void evaluate_expression(
+		void enumerate_expression(
 			__inout a65_tree &tree
 			);
 
-		void evaluate_expression_condition(
+		void enumerate_expression_condition(
 			__inout a65_tree &tree
 			);
 
-		void evaluate_expression_list(
+		void enumerate_expression_list(
 			__inout a65_tree &tree
 			);
 
-		void evaluate_label(
+		void enumerate_label(
 			__inout a65_tree &tree
 			);
 
-		void evaluate_pragma(
+		void enumerate_pragma(
 			__inout a65_tree &tree
 			);
 
-		void evaluate_statement_list(
+		void enumerate_statement_list(
 			__inout a65_tree &tree
 			);
 

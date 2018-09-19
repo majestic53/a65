@@ -23,18 +23,16 @@ a65_node::a65_node(
 	__in_opt int type,
 	__in_opt uint32_t token,
 	__in_opt uint32_t parent,
-	__in_opt uint32_t child_left,
-	__in_opt uint32_t child_right
+	__in_opt const std::vector<uint32_t> &child
 	) :
-		m_child_left(child_left),
-		m_child_right(child_right),
+		m_child(child),
 		m_id(A65_UUID_INVALID),
 		m_parent(parent),
 		m_token(token),
 		m_type(type)
 {
-	A65_DEBUG_ENTRY_INFO("Type=%u(%s), Token=%u(%x), Parent=%u(%x), Child={%u(%x), %u(%x)}", type, A65_NODE_STRING(type),
-		token, token, parent, parent, child_left, child_left, child_right, child_right);
+	A65_DEBUG_ENTRY_INFO("Type=%u(%s), Token=%u(%x), Parent=%u(%x), Child[%u]=%p", type, A65_NODE_STRING(type),
+		token, token, parent, parent, child.size(), &child);
 
 	generate();
 
@@ -44,8 +42,7 @@ a65_node::a65_node(
 a65_node::a65_node(
 	__in const a65_node &other
 	) :
-		m_child_left(other.m_child_left),
-		m_child_right(other.m_child_right),
+		m_child(other.m_child),
 		m_id(other.m_id),
 		m_parent(other.m_parent),
 		m_token(other.m_token),
@@ -76,8 +73,7 @@ a65_node::operator=(
 
 	if(this != &other) {
 		decrement();
-		m_child_left = other.m_child_left;
-		m_child_right = other.m_child_right;
+		m_child = other.m_child;
 		m_id = other.m_id;
 		m_parent = other.m_parent;
 		m_token = other.m_token;
@@ -89,20 +85,63 @@ a65_node::operator=(
 	return *this;
 }
 
-uint32_t
-a65_node::child_left(void) const
+void
+a65_node::add_child(
+	__in uint32_t id,
+	__in_opt size_t position
+	)
 {
-	A65_DEBUG_ENTRY();
-	A65_DEBUG_EXIT_INFO("Result=%u(%x)", m_child_left, m_child_left);
-	return m_child_left;
+	A65_DEBUG_ENTRY_INFO("Id=%u(%x), Position=%u", id, id, position);
+
+	if(position == A65_NODE_POSITION_UNDEFINED) {
+		position = m_child.size();
+	}
+
+	if(position > m_child.size()) {
+		A65_THROW_EXCEPTION_INFO("Node child position too large", "%u (max=%u)", position, m_child.size());
+	}
+
+	if(position < m_child.size()) {
+		m_child.insert(m_child.begin() + position, id);
+	} else {
+		m_child.push_back(id);
+	}
+
+	A65_DEBUG_EXIT();
 }
 
 uint32_t
-a65_node::child_right(void) const
+a65_node::child(
+	__in size_t position
+	) const
 {
+	uint32_t result;
+
+	A65_DEBUG_ENTRY_INFO("Position=%u", position);
+
+	if(m_child.empty()) {
+		A65_THROW_EXCEPTION("Node is empty");
+	} else if(position >= m_child.size()) {
+		A65_THROW_EXCEPTION_INFO("Node child position out-of-range", "%u (max=%u)", position, m_child.size() - 1);
+	}
+
+	result = m_child.at(position);
+
+	A65_DEBUG_EXIT_INFO("Result=%u(%x)", result, result);
+	return result;
+}
+
+size_t
+a65_node::child_count(void) const
+{
+	size_t result;
+
 	A65_DEBUG_ENTRY();
-	A65_DEBUG_EXIT_INFO("Result=%u(%x)", m_child_right, m_child_right);
-	return m_child_right;
+
+	result = m_child.size();
+
+	A65_DEBUG_EXIT_INFO("Result=%u", result);
+	return result;
 }
 
 void
@@ -130,26 +169,15 @@ a65_node::generate(void)
 }
 
 bool
-a65_node::has_child_left(void) const
+a65_node::has_child(
+	__in size_t position
+	) const
 {
 	bool result;
 
-	A65_DEBUG_ENTRY();
+	A65_DEBUG_ENTRY_INFO("Position=%u", position);
 
-	result = (m_child_left != A65_UUID_INVALID);
-
-	A65_DEBUG_EXIT_INFO("Result=%x", result);
-	return result;
-}
-
-bool
-a65_node::has_child_right(void) const
-{
-	bool result;
-
-	A65_DEBUG_ENTRY();
-
-	result = (m_child_right != A65_UUID_INVALID);
+	result = (position < m_child.size());
 
 	A65_DEBUG_EXIT_INFO("Result=%x", result);
 	return result;
@@ -209,8 +237,7 @@ a65_node::is_leaf(void) const
 
 	A65_DEBUG_ENTRY();
 
-	result = ((m_child_left == A65_UUID_INVALID)
-			&& (m_child_right == A65_UUID_INVALID));
+	result = m_child.empty();
 
 	A65_DEBUG_EXIT_INFO("Result=%x", result);
 	return result;
@@ -253,6 +280,55 @@ a65_node::parent(void) const
 }
 
 void
+a65_node::remove_all_children(void)
+{
+	A65_DEBUG_ENTRY();
+
+	m_child.clear();
+
+	A65_DEBUG_EXIT();
+}
+
+void
+a65_node::remove_child(
+	__in size_t position
+	)
+{
+	A65_DEBUG_ENTRY_INFO("Position=%u", position);
+
+	if(m_child.empty()) {
+		A65_THROW_EXCEPTION("Node is empty");
+	} else if(position >= m_child.size()) {
+		A65_THROW_EXCEPTION_INFO("Node child position out-of-range", "%u (max=%u)", position, m_child.size() - 1);
+	}
+
+	m_child.erase(m_child.begin() + position);
+
+	A65_DEBUG_EXIT();
+}
+
+void
+a65_node::remove_child_id(
+	__in uint32_t id
+	)
+{
+	size_t position = 0;
+
+	A65_DEBUG_ENTRY_INFO("Id=%u(%x)", id, id);
+
+	for(; position < m_child.size(); ++position) {
+
+		if(id == m_child.at(position)) {
+			break;
+		}
+	}
+
+	remove_child(position);
+
+	A65_DEBUG_EXIT();
+}
+
+void
 a65_node::set(
 	__in int type
 	)
@@ -265,25 +341,14 @@ a65_node::set(
 }
 
 void
-a65_node::set_child_left(
-	__in uint32_t id
+a65_node::set_child(
+	__in uint32_t id,
+	__in size_t position
 	)
 {
-	A65_DEBUG_ENTRY_INFO("Id=%u(%x)", id, id);
+	A65_DEBUG_ENTRY_INFO("Id=%u(%x), Position=%u", id, id, position);
 
-	m_child_left = id;
-
-	A65_DEBUG_EXIT();
-}
-
-void
-a65_node::set_child_right(
-	__in uint32_t id
-	)
-{
-	A65_DEBUG_ENTRY_INFO("Id=%u(%x)", id, id);
-
-	m_child_right = id;
+	m_child.at(position) = id;
 
 	A65_DEBUG_EXIT();
 }
@@ -336,7 +401,20 @@ a65_node::to_string(void) const
 	}
 
 	if(!is_leaf()) {
-		result << ", {" << A65_STRING_HEX(uint32_t, m_child_left) << ", " << A65_STRING_HEX(uint32_t, m_child_right) << "}";
+		std::vector<uint32_t>::const_iterator child;
+
+		result << ", [" << m_child.size() << "]{";
+
+		for(child = m_child.begin(); child != m_child.end(); ++child) {
+
+			if(child != m_child.begin()) {
+				result << ", ";
+			}
+
+			result << A65_STRING_HEX(uint32_t, *child);
+		}
+
+		result << "}";
 	}
 
 	result << "}";

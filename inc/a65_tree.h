@@ -40,26 +40,22 @@ class a65_tree {
 			__in const a65_tree &other
 			);
 
-		void add(
+		void add_child(
 			__in int type,
-			__in uint32_t token
+			__in uint32_t token,
+			__in_opt size_t position = A65_NODE_POSITION_UNDEFINED
 			);
 
-		void add_child_left(
-			__in int type,
-			__in uint32_t token
-			);
-
-		void add_child_right(
+		void add_root(
 			__in int type,
 			__in uint32_t token
 			);
 
 		bool empty(void) const;
 
-		bool has_child_left(void) const;
-
-		bool has_child_right(void) const;
+		bool has_child(
+			__in size_t position
+			) const;
 
 		bool has_parent(void) const;
 
@@ -71,9 +67,9 @@ class a65_tree {
 			__in int type
 			) const;
 
-		void move_child_left(void);
-
-		void move_child_right(void);
+		void move_child(
+			__in size_t position
+			);
 
 		void move_parent(void);
 
@@ -83,11 +79,11 @@ class a65_tree {
 			__in_opt uint32_t id = A65_UUID_INVALID
 			);
 
-		void remove(void);
+		void remove_child(
+			__in size_t position
+			);
 
-		void remove_child_left(void);
-
-		void remove_child_right(void);
+		void remove_root(void);
 
 		virtual std::string to_string(void) const;
 
@@ -108,6 +104,8 @@ class a65_tree {
 		void generate(void);
 
 		void increment(void);
+
+		void remove(void);
 
 		uint32_t m_id;
 

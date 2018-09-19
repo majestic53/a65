@@ -35,6 +35,8 @@ enum {
 
 #define A65_NODE_MAX A65_NODE_STATEMENT
 
+#define A65_NODE_POSITION_UNDEFINED (-1)
+
 static const std::string A65_NODE_STR[] = {
 	"Begin", "Command", "Directive", "End", "Expression", "Label", "Leaf", "Pragma",
 	"Statement",

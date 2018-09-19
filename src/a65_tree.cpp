@@ -81,7 +81,31 @@ a65_tree::operator=(
 }
 
 void
-a65_tree::add(
+a65_tree::add_child(
+	__in int type,
+	__in uint32_t token,
+	__in_opt size_t position
+	)
+{
+	uint32_t id;
+
+	A65_DEBUG_ENTRY_INFO("Type=%u(%s), Token=%u(%x), Position=%u", type, A65_NODE_STRING(type), token, token, position);
+
+	if(m_node == A65_UUID_INVALID) {
+		A65_THROW_EXCEPTION_INFO("Parent node undefined", "%u(%x)", token, token);
+	}
+
+	a65_node node(type, token, m_node);
+
+	id = node.id();
+	m_node_map.insert(std::make_pair(id, node));
+	find(m_node)->second.add_child(id, position);
+
+	A65_DEBUG_EXIT();
+}
+
+void
+a65_tree::add_root(
 	__in int type,
 	__in uint32_t token
 	)
@@ -100,64 +124,6 @@ a65_tree::add(
 	m_node_map.insert(std::make_pair(id, node));
 	m_node = id;
 	m_node_root = id;
-
-	A65_DEBUG_EXIT();
-}
-
-void
-a65_tree::add_child_left(
-	__in int type,
-	__in uint32_t token
-	)
-{
-	uint32_t id;
-	std::map<uint32_t, a65_node>::iterator parent;
-
-	A65_DEBUG_ENTRY_INFO("Type=%u(%s), Token=%u(%x)", type, A65_NODE_STRING(type), token, token);
-
-	if(m_node == A65_UUID_INVALID) {
-		A65_THROW_EXCEPTION_INFO("Parent node undefined", "%u(%x)", token, token);
-	}
-
-	parent = find(m_node);
-	if(parent->second.has_child_left()) {
-		A65_THROW_EXCEPTION_INFO("Left child node redefined", "%u(%x)", token, token);
-	}
-
-	a65_node node(type, token, m_node);
-
-	id = node.id();
-	m_node_map.insert(std::make_pair(id, node));
-	parent->second.set_child_left(id);
-
-	A65_DEBUG_EXIT();
-}
-
-void
-a65_tree::add_child_right(
-	__in int type,
-	__in uint32_t token
-	)
-{
-	uint32_t id;
-	std::map<uint32_t, a65_node>::iterator parent;
-
-	A65_DEBUG_ENTRY_INFO("Type=%u(%s), Token=%u(%x)", type, A65_NODE_STRING(type), token, token);
-
-	if(m_node == A65_UUID_INVALID) {
-		A65_THROW_EXCEPTION_INFO("Parent node undefined", "%u(%x)", token, token);
-	}
-
-	parent = find(m_node);
-	if(parent->second.has_child_right()) {
-		A65_THROW_EXCEPTION_INFO("Right child node redefined", "%u(%x)", token, token);
-	}
-
-	a65_node node(type, token, m_node);
-
-	id = node.id();
-	m_node_map.insert(std::make_pair(id, node));
-	parent->second.set_child_right(id);
 
 	A65_DEBUG_EXIT();
 }
@@ -218,11 +184,13 @@ a65_tree::generate(void)
 }
 
 bool
-a65_tree::has_child_left(void) const
+a65_tree::has_child(
+	__in size_t position
+	) const
 {
 	bool result;
 
-	A65_DEBUG_ENTRY();
+	A65_DEBUG_ENTRY_INFO("Position=%u", position);
 
 	result = (m_node != A65_UUID_INVALID);
 	if(result) {
@@ -230,28 +198,7 @@ a65_tree::has_child_left(void) const
 
 		result = (entry != m_node_map.end());
 		if(result) {
-			result = entry->second.has_child_left();
-		}
-	}
-
-	A65_DEBUG_EXIT_INFO("Result=%x", result);
-	return result;
-}
-
-bool
-a65_tree::has_child_right(void) const
-{
-	bool result;
-
-	A65_DEBUG_ENTRY();
-
-	result = (m_node != A65_UUID_INVALID);
-	if(result) {
-		std::map<uint32_t, a65_node>::const_iterator entry = m_node_map.find(m_node);
-
-		result = (entry != m_node_map.end());
-		if(result) {
-			result = entry->second.has_child_right();
+			result = entry->second.has_child(position);
 		}
 	}
 
@@ -333,29 +280,17 @@ a65_tree::match(
 }
 
 void
-a65_tree::move_child_left(void)
+a65_tree::move_child(
+	__in size_t position
+	)
 {
-	A65_DEBUG_ENTRY();
+	A65_DEBUG_ENTRY_INFO("Position=%u", position);
 
-	if(!has_child_left()) {
-		A65_THROW_EXCEPTION_INFO("No left child node found", "%u(%x)", m_node, m_node);
+	if(!has_child(position)) {
+		A65_THROW_EXCEPTION_INFO("Node child position out-of-range", "%u", position);
 	}
 
-	m_node = find(m_node)->second.child_left();
-
-	A65_DEBUG_EXIT();
-}
-
-void
-a65_tree::move_child_right(void)
-{
-	A65_DEBUG_ENTRY();
-
-	if(!has_child_right()) {
-		A65_THROW_EXCEPTION_INFO("No right child node found", "%u(%x)", m_node, m_node);
-	}
-
-	m_node = find(m_node)->second.child_right();
+	m_node = find(m_node)->second.child(position);
 
 	A65_DEBUG_EXIT();
 }
@@ -401,6 +336,10 @@ a65_tree::node(
 		id = m_node;
 	}
 
+	if(id == A65_UUID_INVALID) {
+		A65_THROW_EXCEPTION("Tree is empty");
+	}
+
 	result = find(id);
 
 	A65_DEBUG_EXIT_INFO("Result=%s", A65_STRING_CHECK(result->second.to_string()));
@@ -410,65 +349,54 @@ a65_tree::node(
 void
 a65_tree::remove(void)
 {
-	uint32_t child;
+	size_t child;
+	a65_node parent;
 
 	A65_DEBUG_ENTRY();
 
-	if(m_node == A65_UUID_INVALID) {
-		A65_THROW_EXCEPTION_INFO("No node found", "%u(%x)", m_node, m_node);
-	}
+	parent = node();
 
-	if(has_child_left()) {
-		move_child_left();
+	for(child = 0; child < parent.child_count(); ++child) {
+		move_child(child);
 		remove();
 	}
 
-	if(has_child_right()) {
-		move_child_right();
-		remove();
-	}
+	parent.remove_all_children();
 
-	child = m_node;
-
-	if(has_parent()) {
-		std::map<uint32_t, a65_node>::iterator parent;
-
+	if(parent.has_parent()) {
 		move_parent();
-		parent = find(m_node);
-
-		if(child == parent->second.child_left()) {
-			parent->second.set_child_left(A65_UUID_INVALID);
-		} else if(child == parent->second.child_right()) {
-			parent->second.set_child_right(A65_UUID_INVALID);
-		}
 	} else {
 		m_node = A65_UUID_INVALID;
 		m_node_root = A65_UUID_INVALID;
 	}
 
-	m_node_map.erase(find(child));
+	m_node_map.erase(find(parent.id()));
 
 	A65_DEBUG_EXIT();
 }
 
 void
-a65_tree::remove_child_left(void)
+a65_tree::remove_child(
+	__in size_t position
+	)
 {
-	A65_DEBUG_ENTRY();
+	A65_DEBUG_ENTRY_INFO("Position=%u", position);
 
-	move_child_left();
+	move_child(position);
 	remove();
+	node().remove_child(position);
 
 	A65_DEBUG_EXIT();
 }
 
 void
-a65_tree::remove_child_right(void)
+a65_tree::remove_root(void)
 {
 	A65_DEBUG_ENTRY();
 
-	move_child_right();
-	remove();
+	m_node = A65_UUID_INVALID;
+	m_node_map.clear();
+	m_node_root = A65_UUID_INVALID;
 
 	A65_DEBUG_EXIT();
 }
