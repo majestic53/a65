@@ -16,7 +16,8 @@
 
 CC=clang++
 CC_FLAGS=-march=native -std=gnu++11 -Wall -Werror
-DIR_BIN=./../bin/inc/
+DIR_BIN_INC=./../bin/inc/
+DIR_BIN_LIB=./../bin/lib/
 DIR_BUILD=./../build/
 DIR_INC=./../inc/
 DIR_SRC=./
@@ -27,9 +28,9 @@ all: build archive
 archive:
 	@echo ''
 	@echo '--- BUILDING LIBRARY -----------------------'
-	ar rcs $(DIR_BIN)$(LIB) $(DIR_BUILD)a65.o $(DIR_BUILD)a65_lexer.o $(DIR_BUILD)a65_node.o $(DIR_BUILD)a65_parser.o $(DIR_BUILD)a65_stream.o \
+	ar rcs $(DIR_BIN_LIB)$(LIB) $(DIR_BUILD)a65.o $(DIR_BUILD)a65_lexer.o $(DIR_BUILD)a65_node.o $(DIR_BUILD)a65_parser.o $(DIR_BUILD)a65_stream.o \
 		$(DIR_BUILD)a65_token.o $(DIR_BUILD)a65_tree.o $(DIR_BUILD)a65_utility.o $(DIR_BUILD)a65_uuid.o
-	cp $(DIR_INC)a65.h $(DIR_BIN)
+	cp $(DIR_INC)a65.h $(DIR_BIN_INC)
 	@echo '--- DONE -----------------------------------'
 	@echo ''
 

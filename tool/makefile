@@ -17,10 +17,11 @@
 CC=clang++
 CC_FLAGS=-march=native -std=gnu++11 -Wall -Werror
 DIR_BIN=./../bin/
+DIR_BIN_LIB=./../bin/lib/
 DIR_BUILD=./../build/
 DIR_TOOL=./
 EXE=a65
-LIB=./inc/liba65.a
+LIB=liba65.a
 
 all: exe
 
@@ -29,6 +30,6 @@ all: exe
 exe:
 	@echo ''
 	@echo '--- BUILDING EXECUTABLE --------------------'
-	$(CC) $(CC_FLAGS) $(CC_BUILD_FLAGS) $(CC_TRACE_FLAGS) $(DIR_TOOL)$(EXE).cpp $(DIR_BIN)$(LIB) -o $(DIR_BIN)$(EXE)
+	$(CC) $(CC_FLAGS) $(CC_BUILD_FLAGS) $(CC_TRACE_FLAGS) $(DIR_TOOL)$(EXE).cpp $(DIR_BIN_LIB)$(LIB) -o $(DIR_BIN)$(EXE)
 	@echo '--- DONE -----------------------------------'
 	@echo ''

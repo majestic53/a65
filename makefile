@@ -18,6 +18,7 @@ BUILD_FLAGS_DBG=CC_BUILD_FLAGS=-g
 BUILD_FLAGS_REL=CC_BUILD_FLAGS=-O3\ -DNDEBUG
 DIR_BIN=./bin/
 DIR_BIN_INC=./bin/inc/
+DIR_BIN_LIB=./bin/lib/
 DIR_BUILD=./build/
 DIR_EXE=./tool/
 DIR_ROOT=./
@@ -54,6 +55,7 @@ exe_release:
 
 init:
 	mkdir -p $(DIR_BIN_INC)
+	mkdir -p $(DIR_BIN_LIB)
 	mkdir $(DIR_BUILD)
 
 lib_debug:
