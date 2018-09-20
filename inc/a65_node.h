@@ -43,7 +43,7 @@ class a65_node {
 			__in const a65_node &other
 			);
 
-		void add_child(
+		size_t add_child(
 			__in uint32_t id,
 			__in_opt size_t position = A65_NODE_POSITION_UNDEFINED
 			);
@@ -78,10 +78,6 @@ class a65_node {
 
 		void remove_child(
 			__in size_t position
-			);
-
-		void remove_child_id(
-			__in uint32_t id
 			);
 
 		void set(

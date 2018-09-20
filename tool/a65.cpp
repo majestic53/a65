@@ -33,7 +33,7 @@ main(
 
 	result = a65_assemble("./doc/example.asm", "./bin");
 	if(result) {
-		std::cerr << "Assembly failed: " << a65_error() << std::endl;
+		std::cerr << "A65: " << a65_error() << std::endl;
 		result = EXIT_FAILURE;
 	}
 

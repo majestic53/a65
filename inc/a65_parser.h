@@ -166,6 +166,14 @@ class a65_parser :
 			__inout a65_tree &tree
 			);
 
+		void enumerate_pragma_include_binary(
+			__inout a65_tree &tree
+			);
+
+		void enumerate_pragma_include_source(
+			__inout a65_tree &tree
+			);
+
 		void enumerate_statement_list(
 			__inout a65_tree &tree
 			);

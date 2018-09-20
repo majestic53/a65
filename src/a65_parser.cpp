@@ -250,8 +250,7 @@ a65_parser::enumerate(void)
 			enumerate_pragma(result);
 			break;
 		default:
-			A65_THROW_EXCEPTION_INFO("Unexpected token type", "%s (%s:%u)", A65_STRING_CHECK(entry.to_string()),
-				A65_STRING_CHECK(path()), line());
+			A65_THROW_EXCEPTION_INFO("Unexpected token type", "%s", A65_STRING_CHECK(entry.to_string()));
 	}
 
 	A65_DEBUG_EXIT_INFO("Result=%s", A65_STRING_CHECK(result.to_string()));
@@ -263,9 +262,30 @@ a65_parser::enumerate_command(
 	__inout a65_tree &tree
 	)
 {
+	a65_token entry;
+	int type = A65_NODE_COMMAND;
+
 	A65_DEBUG_ENTRY_INFO("Tree=%s", A65_STRING_CHECK(tree.to_string()));
 
-	// TODO
+	entry = a65_lexer::token();
+
+	if(tree.has_root()) {
+		tree.move_child(tree.add_child(type, entry.id()));
+	} else {
+		tree.add_root(type, entry.id());
+	}
+
+	if(!a65_lexer::has_next()) {
+		A65_THROW_EXCEPTION_INFO("Unterminated command", "%s", A65_STRING_CHECK(entry.to_string()));
+	}
+
+	a65_lexer::move_next();
+
+	// TODO: implement command parsing
+
+	if(tree.has_parent()) {
+		tree.move_parent();
+	}
 
 	A65_DEBUG_EXIT();
 }
@@ -281,7 +301,7 @@ a65_parser::enumerate_directive(
 
 	entry = a65_lexer::token();
 
-	switch(entry.type()) {
+	switch(entry.subtype()) {
 		case A65_TOKEN_DIRECTIVE_DATA_BYTE:
 			enumerate_directive_data_byte(tree);
 			break;
@@ -307,8 +327,7 @@ a65_parser::enumerate_directive(
 			enumerate_directive_undefine(tree);
 			break;
 		default:
-			A65_THROW_EXCEPTION_INFO("Unsupported directive", "%s (%s:%u)", A65_STRING_CHECK(entry.to_string()),
-				A65_TOKEN_STRING(entry.type()), A65_STRING_CHECK(entry.path()), entry.line());
+			A65_THROW_EXCEPTION_INFO("Unsupported directive", "%s", A65_STRING_CHECK(entry.to_string()));
 	}
 
 	A65_DEBUG_EXIT();
@@ -320,19 +339,28 @@ a65_parser::enumerate_directive_data_byte(
 	)
 {
 	a65_token entry;
+	int type = A65_NODE_DIRECTIVE;
 
 	A65_DEBUG_ENTRY_INFO("Tree=%s", A65_STRING_CHECK(tree.to_string()));
 
 	entry = a65_lexer::token();
-	tree.add_root(A65_NODE_DIRECTIVE, entry.id());
+
+	if(tree.has_root()) {
+		tree.move_child(tree.add_child(type, entry.id()));
+	} else {
+		tree.add_root(type, entry.id());
+	}
 
 	if(!a65_lexer::has_next()) {
-		A65_THROW_EXCEPTION_INFO("Unterminated directive", "%s (%s:%u)", A65_STRING_CHECK(entry.to_string()), A65_TOKEN_STRING(entry.type()),
-			A65_STRING_CHECK(entry.path()), entry.line());
+		A65_THROW_EXCEPTION_INFO("Unterminated directive", "%s", A65_STRING_CHECK(entry.to_string()));
 	}
 
 	a65_lexer::move_next();
 	enumerate_expression_list(tree);
+
+	if(tree.has_parent()) {
+		tree.move_parent();
+	}
 
 	A65_DEBUG_EXIT();
 }
@@ -343,19 +371,28 @@ a65_parser::enumerate_directive_data_word(
 	)
 {
 	a65_token entry;
+	int type = A65_NODE_DIRECTIVE;
 
 	A65_DEBUG_ENTRY_INFO("Tree=%s", A65_STRING_CHECK(tree.to_string()));
 
 	entry = a65_lexer::token();
-	tree.add_root(A65_NODE_DIRECTIVE, entry.id());
+
+	if(tree.has_root()) {
+		tree.move_child(tree.add_child(type, entry.id()));
+	} else {
+		tree.add_root(type, entry.id());
+	}
 
 	if(!a65_lexer::has_next()) {
-		A65_THROW_EXCEPTION_INFO("Unterminated directive", "%s (%s:%u)", A65_STRING_CHECK(entry.to_string()), A65_TOKEN_STRING(entry.type()),
-			A65_STRING_CHECK(entry.path()), entry.line());
+		A65_THROW_EXCEPTION_INFO("Unterminated directive", "%s", A65_STRING_CHECK(entry.to_string()));
 	}
 
 	a65_lexer::move_next();
 	enumerate_expression_list(tree);
+
+	if(tree.has_parent()) {
+		tree.move_parent();
+	}
 
 	A65_DEBUG_EXIT();
 }
@@ -366,23 +403,27 @@ a65_parser::enumerate_directive_define(
 	)
 {
 	a65_token entry;
+	int type = A65_NODE_DIRECTIVE;
 
 	A65_DEBUG_ENTRY_INFO("Tree=%s", A65_STRING_CHECK(tree.to_string()));
 
 	entry = a65_lexer::token();
-	tree.add_root(A65_NODE_DIRECTIVE, entry.id());
+
+	if(tree.has_root()) {
+		tree.move_child(tree.add_child(type, entry.id()));
+	} else {
+		tree.add_root(type, entry.id());
+	}
 
 	if(!a65_lexer::has_next()) {
-		A65_THROW_EXCEPTION_INFO("Unterminated directive", "%s (%s:%u)", A65_STRING_CHECK(entry.to_string()), A65_TOKEN_STRING(entry.type()),
-			A65_STRING_CHECK(entry.path()), entry.line());
+		A65_THROW_EXCEPTION_INFO("Unterminated directive", "%s", A65_STRING_CHECK(entry.to_string()));
 	}
 
 	a65_lexer::move_next();
 
 	entry = a65_lexer::token();
 	if(!entry.match(A65_TOKEN_IDENTIFIER)) {
-		A65_THROW_EXCEPTION_INFO("Expecting identifier", "%s (%s:%u)", A65_STRING_CHECK(entry.to_string()), A65_TOKEN_STRING(entry.type()),
-			A65_STRING_CHECK(entry.path()), entry.line());
+		A65_THROW_EXCEPTION_INFO("Expecting identifier", "%s", A65_STRING_CHECK(entry.to_string()));
 	}
 
 	tree.add_child(A65_NODE_LEAF, entry.id());
@@ -395,6 +436,10 @@ a65_parser::enumerate_directive_define(
 		}
 	}
 
+	if(tree.has_parent()) {
+		tree.move_parent();
+	}
+
 	A65_DEBUG_EXIT();
 }
 
@@ -403,9 +448,30 @@ a65_parser::enumerate_directive_else(
 	__inout a65_tree &tree
 	)
 {
+	a65_token entry;
+	int type = A65_NODE_DIRECTIVE;
+
 	A65_DEBUG_ENTRY_INFO("Tree=%s", A65_STRING_CHECK(tree.to_string()));
 
-	// TODO
+	entry = a65_lexer::token();
+
+	if(tree.has_root()) {
+		tree.move_child(tree.add_child(type, entry.id()));
+	} else {
+		tree.add_root(type, entry.id());
+	}
+
+	if(!a65_lexer::has_next()) {
+		A65_THROW_EXCEPTION_INFO("Unterminated directive", "%s", A65_STRING_CHECK(entry.to_string()));
+	}
+
+	a65_lexer::move_next();
+
+	// TODO: implement directive else parsing
+
+	if(tree.has_parent()) {
+		tree.move_parent();
+	}
 
 	A65_DEBUG_EXIT();
 }
@@ -415,9 +481,30 @@ a65_parser::enumerate_directive_elseif(
 	__inout a65_tree &tree
 	)
 {
+	a65_token entry;
+	int type = A65_NODE_DIRECTIVE;
+
 	A65_DEBUG_ENTRY_INFO("Tree=%s", A65_STRING_CHECK(tree.to_string()));
 
-	// TODO
+	entry = a65_lexer::token();
+
+	if(tree.has_root()) {
+		tree.move_child(tree.add_child(type, entry.id()));
+	} else {
+		tree.add_root(type, entry.id());
+	}
+
+	if(!a65_lexer::has_next()) {
+		A65_THROW_EXCEPTION_INFO("Unterminated directive", "%s", A65_STRING_CHECK(entry.to_string()));
+	}
+
+	a65_lexer::move_next();
+
+	// TODO: implement directive elseif parsing
+
+	if(tree.has_parent()) {
+		tree.move_parent();
+	}
 
 	A65_DEBUG_EXIT();
 }
@@ -441,9 +528,30 @@ a65_parser::enumerate_directive_if(
 	__inout a65_tree &tree
 	)
 {
+	a65_token entry;
+	int type = A65_NODE_DIRECTIVE;
+
 	A65_DEBUG_ENTRY_INFO("Tree=%s", A65_STRING_CHECK(tree.to_string()));
 
-	// TODO
+	entry = a65_lexer::token();
+
+	if(tree.has_root()) {
+		tree.move_child(tree.add_child(type, entry.id()));
+	} else {
+		tree.add_root(type, entry.id());
+	}
+
+	if(!a65_lexer::has_next()) {
+		A65_THROW_EXCEPTION_INFO("Unterminated directive", "%s", A65_STRING_CHECK(entry.to_string()));
+	}
+
+	a65_lexer::move_next();
+
+	// TODO: implement directive if parsing
+
+	if(tree.has_parent()) {
+		tree.move_parent();
+	}
 
 	A65_DEBUG_EXIT();
 }
@@ -453,9 +561,30 @@ a65_parser::enumerate_directive_if_define(
 	__inout a65_tree &tree
 	)
 {
+	a65_token entry;
+	int type = A65_NODE_DIRECTIVE;
+
 	A65_DEBUG_ENTRY_INFO("Tree=%s", A65_STRING_CHECK(tree.to_string()));
 
-	// TODO
+	entry = a65_lexer::token();
+
+	if(tree.has_root()) {
+		tree.move_child(tree.add_child(type, entry.id()));
+	} else {
+		tree.add_root(type, entry.id());
+	}
+
+	if(!a65_lexer::has_next()) {
+		A65_THROW_EXCEPTION_INFO("Unterminated directive", "%s", A65_STRING_CHECK(entry.to_string()));
+	}
+
+	a65_lexer::move_next();
+
+	// TODO: implement directive ifdef parsing
+
+	if(tree.has_parent()) {
+		tree.move_parent();
+	}
 
 	A65_DEBUG_EXIT();
 }
@@ -466,19 +595,28 @@ a65_parser::enumerate_directive_origin(
 	)
 {
 	a65_token entry;
+	int type = A65_NODE_DIRECTIVE;
 
 	A65_DEBUG_ENTRY_INFO("Tree=%s", A65_STRING_CHECK(tree.to_string()));
 
 	entry = a65_lexer::token();
-	tree.add_root(A65_NODE_DIRECTIVE, entry.id());
+
+	if(tree.has_root()) {
+		tree.move_child(tree.add_child(type, entry.id()));
+	} else {
+		tree.add_root(type, entry.id());
+	}
 
 	if(!a65_lexer::has_next()) {
-		A65_THROW_EXCEPTION_INFO("Unterminated directive", "%s (%s:%u)", A65_STRING_CHECK(entry.to_string()), A65_TOKEN_STRING(entry.type()),
-			A65_STRING_CHECK(entry.path()), entry.line());
+		A65_THROW_EXCEPTION_INFO("Unterminated directive", "%s", A65_STRING_CHECK(entry.to_string()));
 	}
 
 	a65_lexer::move_next();
 	enumerate_expression(tree);
+
+	if(tree.has_parent()) {
+		tree.move_parent();
+	}
 
 	A65_DEBUG_EXIT();
 }
@@ -489,19 +627,28 @@ a65_parser::enumerate_directive_reserve(
 	)
 {
 	a65_token entry;
+	int type = A65_NODE_DIRECTIVE;
 
 	A65_DEBUG_ENTRY_INFO("Tree=%s", A65_STRING_CHECK(tree.to_string()));
 
 	entry = a65_lexer::token();
-	tree.add_root(A65_NODE_DIRECTIVE, entry.id());
+
+	if(tree.has_root()) {
+		tree.move_child(tree.add_child(type, entry.id()));
+	} else {
+		tree.add_root(type, entry.id());
+	}
 
 	if(!a65_lexer::has_next()) {
-		A65_THROW_EXCEPTION_INFO("Unterminated directive", "%s (%s:%u)", A65_STRING_CHECK(entry.to_string()), A65_TOKEN_STRING(entry.type()),
-			A65_STRING_CHECK(entry.path()), entry.line());
+		A65_THROW_EXCEPTION_INFO("Unterminated directive", "%s", A65_STRING_CHECK(entry.to_string()));
 	}
 
 	a65_lexer::move_next();
 	enumerate_expression(tree);
+
+	if(tree.has_parent()) {
+		tree.move_parent();
+	}
 
 	A65_DEBUG_EXIT();
 }
@@ -512,29 +659,37 @@ a65_parser::enumerate_directive_undefine(
 	)
 {
 	a65_token entry;
+	int type = A65_NODE_DIRECTIVE;
 
 	A65_DEBUG_ENTRY_INFO("Tree=%s", A65_STRING_CHECK(tree.to_string()));
 
 	entry = a65_lexer::token();
-	tree.add_root(A65_NODE_DIRECTIVE, entry.id());
+
+	if(tree.has_root()) {
+		tree.move_child(tree.add_child(type, entry.id()));
+	} else {
+		tree.add_root(type, entry.id());
+	}
 
 	if(!a65_lexer::has_next()) {
-		A65_THROW_EXCEPTION_INFO("Unterminated directive", "%s (%s:%u)", A65_STRING_CHECK(entry.to_string()), A65_TOKEN_STRING(entry.type()),
-			A65_STRING_CHECK(entry.path()), entry.line());
+		A65_THROW_EXCEPTION_INFO("Unterminated directive", "%s", A65_STRING_CHECK(entry.to_string()));
 	}
 
 	a65_lexer::move_next();
 
 	entry = a65_lexer::token();
 	if(!entry.match(A65_TOKEN_IDENTIFIER)) {
-		A65_THROW_EXCEPTION_INFO("Expecting identifier", "%s (%s:%u)", A65_STRING_CHECK(entry.to_string()), A65_TOKEN_STRING(entry.type()),
-			A65_STRING_CHECK(entry.path()), entry.line());
+		A65_THROW_EXCEPTION_INFO("Expecting identifier", "%s", A65_STRING_CHECK(entry.to_string()));
 	}
 
 	tree.add_child(A65_NODE_LEAF, entry.id());
 
 	if(a65_lexer::has_next()) {
 		a65_lexer::move_next();
+	}
+
+	if(tree.has_parent()) {
+		tree.move_parent();
 	}
 
 	A65_DEBUG_EXIT();
@@ -547,7 +702,7 @@ a65_parser::enumerate_expression(
 {
 	A65_DEBUG_ENTRY_INFO("Tree=%s", A65_STRING_CHECK(tree.to_string()));
 
-	// TODO
+	// TODO: implement expression parsing
 
 	A65_DEBUG_EXIT();
 }
@@ -559,7 +714,7 @@ a65_parser::enumerate_expression_condition(
 {
 	A65_DEBUG_ENTRY_INFO("Tree=%s", A65_STRING_CHECK(tree.to_string()));
 
-	// TODO
+	// TODO: implement expression condition parsing
 
 	A65_DEBUG_EXIT();
 }
@@ -571,7 +726,7 @@ a65_parser::enumerate_expression_list(
 {
 	A65_DEBUG_ENTRY_INFO("Tree=%s", A65_STRING_CHECK(tree.to_string()));
 
-	// TODO
+	// TODO: implement expression list parsing
 
 	A65_DEBUG_EXIT();
 }
@@ -583,7 +738,9 @@ a65_parser::enumerate_statement_list(
 {
 	A65_DEBUG_ENTRY_INFO("Tree=%s", A65_STRING_CHECK(tree.to_string()));
 
-	// TODO
+	/*while(is_statement()) {
+		// TODO: implement statement list parsing
+	}*/
 
 	A65_DEBUG_EXIT();
 }
@@ -593,12 +750,25 @@ a65_parser::enumerate_label(
 	__inout a65_tree &tree
 	)
 {
+	a65_token entry;
+	int type = A65_NODE_LABEL;
+
 	A65_DEBUG_ENTRY_INFO("Tree=%s", A65_STRING_CHECK(tree.to_string()));
 
-	tree.add_root(A65_NODE_LABEL, token().id());
+	entry = a65_lexer::token();
+
+	if(tree.has_root()) {
+		tree.move_child(tree.add_child(type, entry.id()));
+	} else {
+		tree.add_root(type, entry.id());
+	}
 
 	if(a65_lexer::has_next()) {
 		a65_lexer::move_next();
+	}
+
+	if(tree.has_parent()) {
+		tree.move_parent();
 	}
 
 	A65_DEBUG_EXIT();
@@ -613,26 +783,101 @@ a65_parser::enumerate_pragma(
 
 	A65_DEBUG_ENTRY_INFO("Tree=%s", A65_STRING_CHECK(tree.to_string()));
 
+	entry = a65_lexer::token();
+
+	switch(entry.subtype()) {
+		case A65_TOKEN_PRAGMA_INCLUDE_BINARY:
+			enumerate_pragma_include_binary(tree);
+			break;
+		case A65_TOKEN_PRAGMA_INCLUDE_SOURCE:
+			enumerate_pragma_include_source(tree);
+			break;
+		default:
+			A65_THROW_EXCEPTION_INFO("Unsupported pragma", "%s", A65_STRING_CHECK(entry.to_string()));
+	}
+
+	A65_DEBUG_EXIT();
+}
+
+void
+a65_parser::enumerate_pragma_include_binary(
+	__inout a65_tree &tree
+	)
+{
+	a65_token entry;
+	int type = A65_NODE_PRAGMA;
+
+	A65_DEBUG_ENTRY_INFO("Tree=%s", A65_STRING_CHECK(tree.to_string()));
+
 	entry = token();
-	tree.add_root(A65_NODE_PRAGMA, entry.id());
+
+	if(tree.has_root()) {
+		tree.move_child(tree.add_child(type, entry.id()));
+	} else {
+		tree.add_root(type, entry.id());
+	}
 
 	if(!a65_lexer::has_next()) {
-		A65_THROW_EXCEPTION_INFO("Unterminated pragma", "%s (%s:%u)", A65_STRING_CHECK(entry.to_string()), A65_TOKEN_STRING(entry.type()),
-			A65_STRING_CHECK(entry.path()), entry.line());
+		A65_THROW_EXCEPTION_INFO("Unterminated pragma", "%s", A65_STRING_CHECK(entry.to_string()));
 	}
 
 	a65_lexer::move_next();
 
 	entry = token();
 	if(!entry.match(A65_TOKEN_LITERAL)) {
-		A65_THROW_EXCEPTION_INFO("Expecting literal", "%s (%s:%u)", A65_STRING_CHECK(entry.to_string()), A65_TOKEN_STRING(entry.type()),
-			A65_STRING_CHECK(entry.path()), entry.line());
+		A65_THROW_EXCEPTION_INFO("Expecting literal", "%s", A65_STRING_CHECK(entry.to_string()));
 	}
 
 	tree.add_child(A65_NODE_LEAF, entry.id());
 
 	if(a65_lexer::has_next()) {
 		a65_lexer::move_next();
+	}
+
+	if(tree.has_parent()) {
+		tree.move_parent();
+	}
+
+	A65_DEBUG_EXIT();
+}
+
+void
+a65_parser::enumerate_pragma_include_source(
+	__inout a65_tree &tree
+	)
+{
+	a65_token entry;
+	int type = A65_NODE_PRAGMA;
+
+	A65_DEBUG_ENTRY_INFO("Tree=%s", A65_STRING_CHECK(tree.to_string()));
+
+	entry = token();
+
+	if(tree.has_root()) {
+		tree.move_child(tree.add_child(type, entry.id()));
+	} else {
+		tree.add_root(type, entry.id());
+	}
+
+	if(!a65_lexer::has_next()) {
+		A65_THROW_EXCEPTION_INFO("Unterminated pragma", "%s", A65_STRING_CHECK(entry.to_string()));
+	}
+
+	a65_lexer::move_next();
+
+	entry = token();
+	if(!entry.match(A65_TOKEN_LITERAL)) {
+		A65_THROW_EXCEPTION_INFO("Expecting literal", "%s", A65_STRING_CHECK(entry.to_string()));
+	}
+
+	tree.add_child(A65_NODE_LEAF, entry.id());
+
+	if(a65_lexer::has_next()) {
+		a65_lexer::move_next();
+	}
+
+	if(tree.has_parent()) {
+		tree.move_parent();
 	}
 
 	A65_DEBUG_EXIT();
@@ -713,7 +958,14 @@ a65_parser::is_statement(void) const
 
 	entry = a65_lexer::token();
 	result = (entry.match(A65_TOKEN_COMMAND)
-			|| entry.match(A65_TOKEN_DIRECTIVE)
+			|| entry.match(A65_TOKEN_DIRECTIVE, A65_TOKEN_DIRECTIVE_DATA_BYTE)
+			|| entry.match(A65_TOKEN_DIRECTIVE, A65_TOKEN_DIRECTIVE_DATA_WORD)
+			|| entry.match(A65_TOKEN_DIRECTIVE, A65_TOKEN_DIRECTIVE_DEFINE)
+			|| entry.match(A65_TOKEN_DIRECTIVE, A65_TOKEN_DIRECTIVE_IF)
+			|| entry.match(A65_TOKEN_DIRECTIVE, A65_TOKEN_DIRECTIVE_IF_DEFINE)
+			|| entry.match(A65_TOKEN_DIRECTIVE, A65_TOKEN_DIRECTIVE_ORIGIN)
+			|| entry.match(A65_TOKEN_DIRECTIVE, A65_TOKEN_DIRECTIVE_RESERVE)
+			|| entry.match(A65_TOKEN_DIRECTIVE, A65_TOKEN_DIRECTIVE_UNDEFINE)
 			|| entry.match(A65_TOKEN_LABEL)
 			|| entry.match(A65_TOKEN_PRAGMA));
 
@@ -744,12 +996,11 @@ a65_parser::move_next(void)
 		A65_THROW_EXCEPTION("No next tree in parser");
 	}
 
+	if(a65_lexer::token().match(A65_TOKEN_BEGIN)) {
+		a65_lexer::move_next();
+	}
+
 	if(a65_lexer::has_next() && (m_tree_position <= (m_tree.size() - A65_TREE_SENTINEL_COUNT))) {
-
-		if(a65_lexer::token().match(A65_TOKEN_BEGIN)) {
-			a65_lexer::move_next();
-		}
-
 		add(enumerate());
 	}
 

@@ -50,9 +50,14 @@ Changelog
 
 Version 0.1.1838
 ----------------
+*Updated: 9/19/2018*
+
+* Implemented parser enumeration routines
+* Parser/lexer bug fixes
+
 *Updated: 9/18/2018*
 
-* Converted binary tree classes to d-ary tree class
+* Converted binary tree class to d-ary tree class
 
 Version 0.1.1837
 ----------------
@@ -64,16 +69,6 @@ Version 0.1.1837
 
 * Completed lexer class
 * Added parser node/tree classes
-
-Version 0.1.1836
-----------------
-*Updated: 9/9/2018*
-
-* Added lexer class
-
-*Updated: 9/5/2018*
-
-* Initial commit
 
 *Changelog truncated (see file history for full log)*
 

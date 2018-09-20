@@ -80,7 +80,7 @@ a65_tree::operator=(
 	return *this;
 }
 
-void
+size_t
 a65_tree::add_child(
 	__in int type,
 	__in uint32_t token,
@@ -88,6 +88,7 @@ a65_tree::add_child(
 	)
 {
 	uint32_t id;
+	size_t result;
 
 	A65_DEBUG_ENTRY_INFO("Type=%u(%s), Token=%u(%x), Position=%u", type, A65_NODE_STRING(type), token, token, position);
 
@@ -99,9 +100,10 @@ a65_tree::add_child(
 
 	id = node.id();
 	m_node_map.insert(std::make_pair(id, node));
-	find(m_node)->second.add_child(id, position);
+	result = find(m_node)->second.add_child(id, position);
 
-	A65_DEBUG_EXIT();
+	A65_DEBUG_EXIT_INFO("Result=%u", result);
+	return result;
 }
 
 void
@@ -115,7 +117,7 @@ a65_tree::add_root(
 	A65_DEBUG_ENTRY_INFO("Type=%u(%s), Token=%u(%x)", type, A65_NODE_STRING(type), token, token);
 
 	if(m_node_root != A65_UUID_INVALID) {
-		A65_THROW_EXCEPTION_INFO("Node redefined", "%u(%x)", token, token);
+		A65_THROW_EXCEPTION_INFO("Root node redefined", "%u(%x)", token, token);
 	}
 
 	a65_node node(type, token);

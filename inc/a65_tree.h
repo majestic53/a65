@@ -40,7 +40,7 @@ class a65_tree {
 			__in const a65_tree &other
 			);
 
-		void add_child(
+		size_t add_child(
 			__in int type,
 			__in uint32_t token,
 			__in_opt size_t position = A65_NODE_POSITION_UNDEFINED

@@ -85,29 +85,33 @@ a65_node::operator=(
 	return *this;
 }
 
-void
+size_t
 a65_node::add_child(
 	__in uint32_t id,
 	__in_opt size_t position
 	)
 {
+	size_t result;
+
 	A65_DEBUG_ENTRY_INFO("Id=%u(%x), Position=%u", id, id, position);
 
-	if(position == A65_NODE_POSITION_UNDEFINED) {
-		position = m_child.size();
+	result = position;
+	if(result == A65_NODE_POSITION_UNDEFINED) {
+		result = m_child.size();
 	}
 
-	if(position > m_child.size()) {
-		A65_THROW_EXCEPTION_INFO("Node child position too large", "%u (max=%u)", position, m_child.size());
+	if(result > m_child.size()) {
+		A65_THROW_EXCEPTION_INFO("Node child position too large", "%u (max=%u)", result, m_child.size());
 	}
 
-	if(position < m_child.size()) {
-		m_child.insert(m_child.begin() + position, id);
+	if(result < m_child.size()) {
+		m_child.insert(m_child.begin() + result, id);
 	} else {
 		m_child.push_back(id);
 	}
 
-	A65_DEBUG_EXIT();
+	A65_DEBUG_EXIT_INFO("Result=%u", result);
+	return result;
 }
 
 uint32_t
@@ -303,27 +307,6 @@ a65_node::remove_child(
 	}
 
 	m_child.erase(m_child.begin() + position);
-
-	A65_DEBUG_EXIT();
-}
-
-void
-a65_node::remove_child_id(
-	__in uint32_t id
-	)
-{
-	size_t position = 0;
-
-	A65_DEBUG_ENTRY_INFO("Id=%u(%x)", id, id);
-
-	for(; position < m_child.size(); ++position) {
-
-		if(id == m_child.at(position)) {
-			break;
-		}
-	}
-
-	remove_child(position);
 
 	A65_DEBUG_EXIT();
 }

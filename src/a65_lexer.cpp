@@ -802,13 +802,11 @@ a65_lexer::move_next(void)
 		A65_THROW_EXCEPTION("No next token in lexer");
 	}
 
-	if(a65_stream::has_next()) {
-		skip();
+	skip();
 
-		if(m_token_position <= (m_token.size() - A65_TOKEN_SENTINEL_COUNT)) {
-			add(enumerate());
-			skip();
-		}
+	if(a65_stream::has_next() && (m_token_position <= (m_token.size() - A65_TOKEN_SENTINEL_COUNT))) {
+		add(enumerate());
+		skip();
 	}
 
 	++m_token_position;
