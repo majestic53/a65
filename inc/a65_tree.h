@@ -42,13 +42,13 @@ class a65_tree {
 
 		size_t add_child(
 			__in int type,
-			__in uint32_t token,
+			__in_opt uint32_t token = A65_UUID_INVALID,
 			__in_opt size_t position = A65_NODE_POSITION_UNDEFINED
 			);
 
 		void add_root(
 			__in int type,
-			__in uint32_t token
+			__in_opt uint32_t token = A65_UUID_INVALID
 			);
 
 		bool empty(void) const;

@@ -24,22 +24,24 @@
 enum {
 	A65_NODE_BEGIN = 0,
 	A65_NODE_COMMAND,
+	A65_NODE_CONDITION,
 	A65_NODE_DIRECTIVE,
 	A65_NODE_END,
 	A65_NODE_EXPRESSION,
 	A65_NODE_LABEL,
-	A65_NODE_LEAF,
+	A65_NODE_LIST,
 	A65_NODE_PRAGMA,
 	A65_NODE_STATEMENT,
+	A65_NODE_VALUE,
 };
 
-#define A65_NODE_MAX A65_NODE_STATEMENT
+#define A65_NODE_MAX A65_NODE_VALUE
 
 #define A65_NODE_POSITION_UNDEFINED (-1)
 
 static const std::string A65_NODE_STR[] = {
-	"Begin", "Command", "Directive", "End", "Expression", "Label", "Leaf", "Pragma",
-	"Statement",
+	"Begin", "Command", "Condition", "Directive", "End", "Expression", "Label", "List", "Pragma",
+	"Statement", "Value",
 	};
 
 #define A65_NODE_STRING(_TYPE_) \

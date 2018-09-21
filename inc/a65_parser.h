@@ -92,7 +92,9 @@ class a65_parser :
 			__inout size_t tabs
 			) const;
 
-		a65_tree enumerate(void);
+		void enumerate(
+			__inout a65_tree &tree
+			);
 
 		void enumerate_command(
 			__inout a65_tree &tree
@@ -181,6 +183,8 @@ class a65_parser :
 		std::map<uint32_t, a65_tree>::iterator find(
 			__in uint32_t id
 			);
+
+		bool is_condition(void) const;
 
 		bool is_expression(void) const;
 

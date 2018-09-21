@@ -83,7 +83,7 @@ a65_tree::operator=(
 size_t
 a65_tree::add_child(
 	__in int type,
-	__in uint32_t token,
+	__in_opt uint32_t token,
 	__in_opt size_t position
 	)
 {
@@ -109,7 +109,7 @@ a65_tree::add_child(
 void
 a65_tree::add_root(
 	__in int type,
-	__in uint32_t token
+	__in_opt uint32_t token
 	)
 {
 	uint32_t id;
