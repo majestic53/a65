@@ -50,7 +50,7 @@ Changelog
 
 Version 0.1.1838
 ----------------
-*Updated: 9/19/2018*
+*Updated: 9/19-20/2018*
 
 * Implemented parser enumeration routines
 * Parser/lexer bug fixes
