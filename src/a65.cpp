@@ -33,9 +33,6 @@ a65_assemble(
 {
 	int result = EXIT_SUCCESS;
 
-	A65_DEBUG_MESSAGE_INFO(A65_DEBUG_LEVEL_INFORMATION, "A65", "Ver. %u.%u.%u",
-		A65_VERSION_MAJOR, A65_VERSION_MINOR, A65_VERSION_REVISION);
-
 	A65_DEBUG_ENTRY_INFO("Input=%p, Output=%p", input, output);
 
 	try {
