@@ -264,12 +264,17 @@ a65_parser::enumerate_command(
 	__inout a65_tree &tree
 	)
 {
+	size_t line;
 	a65_token entry;
-	int type = A65_NODE_COMMAND;
+	std::string path;
+	int cmd, mode = A65_TOKEN_COMMAND_MODE_IMPLIED, type = A65_NODE_COMMAND;
 
 	A65_DEBUG_ENTRY_INFO("Tree=%s", A65_STRING_CHECK(tree.to_string()));
 
 	entry = a65_lexer::token();
+	cmd = entry.subtype();
+	line = entry.line();
+	path = entry.path();
 
 	if(tree.has_root()) {
 		tree.move_child(tree.add_child(type, entry.id()));
@@ -283,11 +288,123 @@ a65_parser::enumerate_command(
 
 	a65_lexer::move_next();
 
-	// TODO: implement command parsing
+	entry = a65_lexer::token();
+	if(is_expression()) {
+		enumerate_expression(tree);
+
+		if(!A65_IS_TOKEN_COMMAND_RELATIVE(cmd)) {
+			mode = A65_TOKEN_COMMAND_MODE_ABSOLUTE;
+
+			entry = a65_lexer::token();
+			if(entry.match(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_SEPERATOR)) {
+
+				if(!a65_lexer::has_next()) {
+					A65_THROW_EXCEPTION_INFO("Unterminated command", "%s", A65_STRING_CHECK(entry.to_string()));
+				}
+
+				a65_lexer::move_next();
+
+				entry = a65_lexer::token();
+				if(entry.match(A65_TOKEN_REGISTER, A65_TOKEN_REGISTER_INDEX_X)) {
+					mode = A65_TOKEN_COMMAND_MODE_ABSOLUTE_INDEX_X;
+				} else if(entry.match(A65_TOKEN_REGISTER, A65_TOKEN_REGISTER_INDEX_Y)) {
+					mode = A65_TOKEN_COMMAND_MODE_ABSOLUTE_INDEX_Y;
+				} else {
+					A65_THROW_EXCEPTION_INFO("Expecting index register", "%s", A65_STRING_CHECK(entry.to_string()));
+				}
+
+				if(a65_lexer::has_next()) {
+					a65_lexer::move_next();
+				}
+			}
+		} else {
+			mode = A65_TOKEN_COMMAND_MODE_RELATIVE;
+		}
+	} else if(entry.match(A65_TOKEN_REGISTER, A65_TOKEN_REGISTER_ACCUMULATOR)) {
+		mode = A65_TOKEN_COMMAND_MODE_ACCUMULATOR;
+
+		if(a65_lexer::has_next()) {
+			a65_lexer::move_next();
+		}
+	} else if(entry.match(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_BRACE_SQUARE_OPEN)) {
+
+		if(!a65_lexer::has_next()) {
+			A65_THROW_EXCEPTION_INFO("Unterminated command", "%s", A65_STRING_CHECK(entry.to_string()));
+		}
+
+		a65_lexer::move_next();
+		enumerate_expression(tree);
+
+		entry = a65_lexer::token();
+		if(entry.match(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_BRACE_SQUARE_CLOSE)) {
+			mode = A65_TOKEN_COMMAND_MODE_ABSOLUTE_INDIRECT;
+
+			if(a65_lexer::has_next()) {
+				a65_lexer::move_next();
+
+				entry = a65_lexer::token();
+				if(entry.match(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_SEPERATOR)) {
+					mode = A65_TOKEN_COMMAND_MODE_ZEROPAGE_INDIRECT_INDEX;
+					a65_lexer::move_next();
+
+					entry = a65_lexer::token();
+					if(!entry.match(A65_TOKEN_REGISTER, A65_TOKEN_REGISTER_INDEX_Y)) {
+						A65_THROW_EXCEPTION_INFO("Expecting index-y register", "%s", A65_STRING_CHECK(entry.to_string()));
+					}
+
+					a65_lexer::move_next();
+				}
+			}
+		} else if(entry.match(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_SEPERATOR)) {
+			mode = A65_TOKEN_COMMAND_MODE_ABSOLUTE_INDEX_INDIRECT;
+
+			if(!a65_lexer::has_next()) {
+				A65_THROW_EXCEPTION_INFO("Unterminated command", "%s", A65_STRING_CHECK(entry.to_string()));
+			}
+
+			a65_lexer::move_next();
+
+			entry = a65_lexer::token();
+			if(!entry.match(A65_TOKEN_REGISTER, A65_TOKEN_REGISTER_INDEX_X)) {
+				A65_THROW_EXCEPTION_INFO("Expecting index-x register", "%s", A65_STRING_CHECK(entry.to_string()));
+			}
+
+			if(!a65_lexer::has_next()) {
+				A65_THROW_EXCEPTION_INFO("Unterminated command", "%s", A65_STRING_CHECK(entry.to_string()));
+			}
+
+			a65_lexer::move_next();
+
+			entry = a65_lexer::token();
+			if(!entry.match(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_BRACE_SQUARE_CLOSE)) {
+				A65_THROW_EXCEPTION_INFO("Unterminated command", "%s", A65_STRING_CHECK(entry.to_string()));
+			}
+
+			if(a65_lexer::has_next()) {
+				a65_lexer::move_next();
+			}
+		}
+	} else if(entry.match(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_IMMEDIATE)) {
+		mode = A65_TOKEN_COMMAND_MODE_IMMEDIATE;
+
+		if(!a65_lexer::has_next()) {
+			A65_THROW_EXCEPTION_INFO("Unterminated command", "%s", A65_STRING_CHECK(entry.to_string()));
+		}
+
+		a65_lexer::move_next();
+		enumerate_expression(tree);
+	}
 
 	if(tree.has_parent()) {
 		tree.move_parent();
 	}
+
+	if(!is_valid_command_mode(cmd, mode)) {
+		A65_THROW_EXCEPTION_INFO("Unsupported command mode", "%s %s (%s:%u)", A65_TOKEN_COMMAND_STRING(cmd),
+			A65_TOKEN_COMMAND_MODE_STRING(mode), A65_STRING_CHECK(path), line);
+	}
+
+	a65_lexer::token(tree.node().token()).set_mode(mode);
 
 	A65_DEBUG_EXIT();
 }
@@ -1120,6 +1237,70 @@ a65_parser::is_statement(void) const
 			|| entry.match(A65_TOKEN_DIRECTIVE, A65_TOKEN_DIRECTIVE_UNDEFINE)
 			|| entry.match(A65_TOKEN_LABEL)
 			|| entry.match(A65_TOKEN_PRAGMA));
+
+	A65_DEBUG_EXIT_INFO("Result=%x", result);
+	return result;
+}
+
+bool
+a65_parser::is_valid_command_mode(
+	__in int command,
+	__in int mode
+	) const
+{
+	bool result = false;
+
+	A65_DEBUG_ENTRY_INFO("Command=%u(%s), Mode=%u(%s)", command, A65_TOKEN_COMMAND_STRING(command), mode, A65_TOKEN_COMMAND_MODE_STRING(mode));
+
+	switch(mode) {
+		case A65_TOKEN_COMMAND_MODE_ABSOLUTE:
+			result = A65_IS_TOKEN_COMMAND_ABSOLUTE(command);
+			break;
+		case A65_TOKEN_COMMAND_MODE_ABSOLUTE_INDEX_INDIRECT:
+			result = A65_IS_TOKEN_COMMAND_ABSOLUTE_INDEX_INDIRECT(command);
+			break;
+		case A65_TOKEN_COMMAND_MODE_ABSOLUTE_INDEX_X:
+			result = A65_IS_TOKEN_COMMAND_ABSOLUTE_INDEX_X(command);
+			break;
+		case A65_TOKEN_COMMAND_MODE_ABSOLUTE_INDEX_Y:
+			result = A65_IS_TOKEN_COMMAND_ABSOLUTE_INDEX_Y(command);
+			break;
+		case A65_TOKEN_COMMAND_MODE_ABSOLUTE_INDIRECT:
+			result = A65_IS_TOKEN_COMMAND_ABSOLUTE_INDIRECT(command);
+			break;
+		case A65_TOKEN_COMMAND_MODE_ACCUMULATOR:
+			result = A65_IS_TOKEN_COMMAND_ACCUMULATOR(command);
+			break;
+		case A65_TOKEN_COMMAND_MODE_IMMEDIATE:
+			result = A65_IS_TOKEN_COMMAND_IMMEDIATE(command);
+			break;
+		case A65_TOKEN_COMMAND_MODE_IMPLIED:
+			result = A65_IS_TOKEN_COMMAND_IMPLIED(command);
+			break;
+		case A65_TOKEN_COMMAND_MODE_RELATIVE:
+			result = A65_IS_TOKEN_COMMAND_RELATIVE(command);
+			break;
+		case A65_TOKEN_COMMAND_MODE_ZEROPAGE:
+			result = A65_IS_TOKEN_COMMAND_ZEROPAGE(command);
+			break;
+		case A65_TOKEN_COMMAND_MODE_ZEROPAGE_INDEX_INDIRECT:
+			result = A65_IS_TOKEN_COMMAND_ZEROPAGE_INDEX_INDIRECT(command);
+			break;
+		case A65_TOKEN_COMMAND_MODE_ZEROPAGE_INDEX_X:
+			result = A65_IS_TOKEN_COMMAND_ZEROPAGE_INDEX_X(command);
+			break;
+		case A65_TOKEN_COMMAND_MODE_ZEROPAGE_INDEX_Y:
+			result = A65_IS_TOKEN_COMMAND_ZEROPAGE_INDEX_Y(command);
+			break;
+		case A65_TOKEN_COMMAND_MODE_ZEROPAGE_INDIRECT:
+			result = A65_IS_TOKEN_COMMAND_ZEROPAGE_INDIRECT(command);
+			break;
+		case A65_TOKEN_COMMAND_MODE_ZEROPAGE_INDIRECT_INDEX:
+			result = A65_IS_TOKEN_COMMAND_ZEROPAGE_INDIRECT_INDEX(command);
+			break;
+		default:
+			break;
+	}
 
 	A65_DEBUG_EXIT_INFO("Result=%x", result);
 	return result;

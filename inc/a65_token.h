@@ -75,6 +75,10 @@ class a65_token {
 			__in size_t line
 			);
 
+		void set_mode(
+			__in int mode
+			);
+
 		void set_scalar(
 			__in uint16_t scalar
 			);

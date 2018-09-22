@@ -45,7 +45,7 @@ command_absolute_indirect_opcode ::= jmp
 
 command_accumulator ::= <command_accumulator_opcode> a
 
-command_accumulator_opcode ::= asl | dea | ina | lsr | rol | ror
+command_accumulator_opcode ::= asl | dec | inc | lsr | rol | ror
 
 command_immediate ::= <command_immediate_opcode> #<expression>
 

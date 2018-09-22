@@ -31,7 +31,8 @@ a65_token::a65_token(
 		m_subtype(subtype),
 		m_type(type)
 {
-	A65_DEBUG_ENTRY_INFO("Type=%u(%s), Subtype=%u(%x), Mode=%u(%x)", type, A65_TOKEN_STRING(type), subtype, subtype, mode, mode);
+	A65_DEBUG_ENTRY_INFO("Type=%u(%s), Subtype=%u(%x), Mode=%u(%s)", type, A65_TOKEN_STRING(type), subtype, subtype, mode,
+		A65_TOKEN_COMMAND_MODE_STRING(mode));
 
 	generate();
 
@@ -160,7 +161,8 @@ a65_token::match(
 {
 	bool result;
 
-	A65_DEBUG_ENTRY_INFO("Type=%u(%s), Subtype=%u(%x), Mode=%u(%x)", type, A65_TOKEN_STRING(type), subtype, subtype, mode, mode);
+	A65_DEBUG_ENTRY_INFO("Type=%u(%s), Subtype=%u(%x), Mode=%u(%s)", type, A65_TOKEN_STRING(type), subtype, subtype, mode,
+		A65_TOKEN_COMMAND_MODE_STRING(mode));
 
 	result = (type == m_type);
 	if(result && (subtype != A65_TOKEN_SUBTYPE_UNDEFINED)) {
@@ -206,7 +208,8 @@ a65_token::set(
 	__in_opt int mode
 	)
 {
-	A65_DEBUG_ENTRY_INFO("Type=%u(%s), Subtype=%u(%x), Mode=%u(%x)", type, A65_TOKEN_STRING(type), subtype, subtype, mode, mode);
+	A65_DEBUG_ENTRY_INFO("Type=%u(%s), Subtype=%u(%x), Mode=%u(%s)", type, A65_TOKEN_STRING(type), subtype, subtype, mode,
+		A65_TOKEN_COMMAND_MODE_STRING(mode));
 
 	m_mode = mode;
 	m_subtype = subtype;
@@ -237,6 +240,18 @@ a65_token::set_metadata(
 
 	m_line = line;
 	m_path = path;
+
+	A65_DEBUG_EXIT();
+}
+
+void
+a65_token::set_mode(
+	__in int mode
+	)
+{
+	A65_DEBUG_ENTRY_INFO("Mode=%u(%s)", mode, A65_TOKEN_COMMAND_MODE_STRING(mode));
+
+	m_mode = mode;
 
 	A65_DEBUG_EXIT();
 }
