@@ -64,6 +64,11 @@ class a65_lexer :
 
 		virtual void reset(void) override;
 
+		void set_mode(
+			__in uint32_t id,
+			__in int mode
+			);
+
 		virtual std::string to_string(void) const override;
 
 		a65_token token(

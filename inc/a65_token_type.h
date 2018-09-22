@@ -369,8 +369,8 @@ enum {
 #define A65_TOKEN_COMMAND_MODE_MAX A65_TOKEN_COMMAND_MODE_ZEROPAGE_INDIRECT_INDEX
 
 static const std::string A65_TOKEN_COMMAND_MODE_STR[] = {
-	"abs", "(abs, x)", "abs, x", "abs, y", "(abs)", "acc", "imm", "imp", "rel", "zp", "(zp, x)",
-	"zp, x", "zp, y", "(zp)", "(zp), y",
+	"abs", "[abs, x]", "abs, x", "abs, y", "[abs]", "acc", "imm", "imp", "rel", "zp", "[zp, x]",
+	"zp, x", "zp, y", "[zp]", "[zp], y",
 	};
 
 #define A65_TOKEN_COMMAND_MODE_STRING(_TYPE_) \

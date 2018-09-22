@@ -839,6 +839,19 @@ a65_lexer::reset(void)
 }
 
 void
+a65_lexer::set_mode(
+	__in uint32_t id,
+	__in int mode
+	)
+{
+	A65_DEBUG_ENTRY_INFO("Id=%u(%x), Mode=%u(%s)", id, id, mode, A65_TOKEN_COMMAND_MODE_STRING(mode));
+
+	find(id)->second.set_mode(mode);
+
+	A65_DEBUG_EXIT();
+}
+
+void
 a65_lexer::skip(void)
 {
 	A65_DEBUG_ENTRY();

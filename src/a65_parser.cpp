@@ -264,17 +264,13 @@ a65_parser::enumerate_command(
 	__inout a65_tree &tree
 	)
 {
-	size_t line;
 	a65_token entry;
-	std::string path;
 	int cmd, mode = A65_TOKEN_COMMAND_MODE_IMPLIED, type = A65_NODE_COMMAND;
 
 	A65_DEBUG_ENTRY_INFO("Tree=%s", A65_STRING_CHECK(tree.to_string()));
 
 	entry = a65_lexer::token();
 	cmd = entry.subtype();
-	line = entry.line();
-	path = entry.path();
 
 	if(tree.has_root()) {
 		tree.move_child(tree.add_child(type, entry.id()));
@@ -395,16 +391,11 @@ a65_parser::enumerate_command(
 		enumerate_expression(tree);
 	}
 
+	set_mode(tree.node().token(), mode);
+
 	if(tree.has_parent()) {
 		tree.move_parent();
 	}
-
-	if(!is_valid_command_mode(cmd, mode)) {
-		A65_THROW_EXCEPTION_INFO("Unsupported command mode", "%s %s (%s:%u)", A65_TOKEN_COMMAND_STRING(cmd),
-			A65_TOKEN_COMMAND_MODE_STRING(mode), A65_STRING_CHECK(path), line);
-	}
-
-	a65_lexer::token(tree.node().token()).set_mode(mode);
 
 	A65_DEBUG_EXIT();
 }
