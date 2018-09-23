@@ -231,7 +231,7 @@ a65_parser::enumerate(
 {
 	a65_token entry;
 
-	A65_DEBUG_ENTRY_INFO("Tree=%s", A65_STRING_CHECK(tree.to_string()));
+	A65_DEBUG_ENTRY_INFO("Tree=%p", &tree);
 
 	if(!tree.has_root()) {
 		tree.set(A65_TREE_STATEMENT);
@@ -253,7 +253,7 @@ a65_parser::enumerate(
 			enumerate_pragma(tree);
 			break;
 		default:
-			A65_THROW_EXCEPTION_INFO("Unexpected token type", "%s", A65_STRING_CHECK(entry.to_string()));
+			A65_THROW_EXCEPTION_INFO("Unsupported token type", "%s", A65_STRING_CHECK(entry.to_string()));
 	}
 
 	A65_DEBUG_EXIT();
@@ -267,7 +267,7 @@ a65_parser::enumerate_command(
 	a65_token entry;
 	int cmd, mode = A65_TOKEN_COMMAND_MODE_IMPLIED, type = A65_NODE_COMMAND;
 
-	A65_DEBUG_ENTRY_INFO("Tree=%s", A65_STRING_CHECK(tree.to_string()));
+	A65_DEBUG_ENTRY_INFO("Tree=%p", &tree);
 
 	entry = a65_lexer::token();
 	cmd = entry.subtype();
@@ -407,7 +407,7 @@ a65_parser::enumerate_directive(
 {
 	a65_token entry;
 
-	A65_DEBUG_ENTRY_INFO("Tree=%s", A65_STRING_CHECK(tree.to_string()));
+	A65_DEBUG_ENTRY_INFO("Tree=%p", &tree);
 
 	entry = a65_lexer::token();
 
@@ -425,6 +425,7 @@ a65_parser::enumerate_directive(
 			enumerate_directive_if(tree);
 			break;
 		case A65_TOKEN_DIRECTIVE_IF_DEFINE:
+		case A65_TOKEN_DIRECTIVE_IF_DEFINE_NOT:
 			enumerate_directive_if_define(tree);
 			break;
 		case A65_TOKEN_DIRECTIVE_ORIGIN:
@@ -451,7 +452,7 @@ a65_parser::enumerate_directive_data_byte(
 	a65_token entry;
 	int type = A65_NODE_DIRECTIVE;
 
-	A65_DEBUG_ENTRY_INFO("Tree=%s", A65_STRING_CHECK(tree.to_string()));
+	A65_DEBUG_ENTRY_INFO("Tree=%p", &tree);
 
 	entry = a65_lexer::token();
 
@@ -483,7 +484,7 @@ a65_parser::enumerate_directive_data_word(
 	a65_token entry;
 	int type = A65_NODE_DIRECTIVE;
 
-	A65_DEBUG_ENTRY_INFO("Tree=%s", A65_STRING_CHECK(tree.to_string()));
+	A65_DEBUG_ENTRY_INFO("Tree=%p", &tree);
 
 	entry = a65_lexer::token();
 
@@ -515,7 +516,7 @@ a65_parser::enumerate_directive_define(
 	a65_token entry;
 	int type = A65_NODE_DIRECTIVE;
 
-	A65_DEBUG_ENTRY_INFO("Tree=%s", A65_STRING_CHECK(tree.to_string()));
+	A65_DEBUG_ENTRY_INFO("Tree=%p", &tree);
 
 	entry = a65_lexer::token();
 
@@ -561,7 +562,7 @@ a65_parser::enumerate_directive_else(
 	a65_token entry;
 	int type = A65_NODE_DIRECTIVE;
 
-	A65_DEBUG_ENTRY_INFO("Tree=%s", A65_STRING_CHECK(tree.to_string()));
+	A65_DEBUG_ENTRY_INFO("Tree=%p", &tree);
 
 	entry = a65_lexer::token();
 
@@ -593,7 +594,7 @@ a65_parser::enumerate_directive_elseif(
 	a65_token entry;
 	int type = A65_NODE_DIRECTIVE;
 
-	A65_DEBUG_ENTRY_INFO("Tree=%s", A65_STRING_CHECK(tree.to_string()));
+	A65_DEBUG_ENTRY_INFO("Tree=%p", &tree);
 
 	entry = a65_lexer::token();
 
@@ -623,7 +624,7 @@ a65_parser::enumerate_directive_end(
 	__inout a65_tree &tree
 	)
 {
-	A65_DEBUG_ENTRY_INFO("Tree=%s", A65_STRING_CHECK(tree.to_string()));
+	A65_DEBUG_ENTRY_INFO("Tree=%p", &tree);
 
 	if(a65_lexer::has_next()) {
 		a65_lexer::move_next();
@@ -640,7 +641,7 @@ a65_parser::enumerate_directive_if(
 	a65_token entry;
 	int type = A65_NODE_DIRECTIVE;
 
-	A65_DEBUG_ENTRY_INFO("Tree=%s", A65_STRING_CHECK(tree.to_string()));
+	A65_DEBUG_ENTRY_INFO("Tree=%p", &tree);
 
 	entry = a65_lexer::token();
 
@@ -690,7 +691,7 @@ a65_parser::enumerate_directive_if_define(
 	a65_token entry;
 	int type = A65_NODE_DIRECTIVE;
 
-	A65_DEBUG_ENTRY_INFO("Tree=%s", A65_STRING_CHECK(tree.to_string()));
+	A65_DEBUG_ENTRY_INFO("Tree=%p", &tree);
 
 	entry = a65_lexer::token();
 
@@ -747,7 +748,7 @@ a65_parser::enumerate_directive_origin(
 	a65_token entry;
 	int type = A65_NODE_DIRECTIVE;
 
-	A65_DEBUG_ENTRY_INFO("Tree=%s", A65_STRING_CHECK(tree.to_string()));
+	A65_DEBUG_ENTRY_INFO("Tree=%p", &tree);
 
 	entry = a65_lexer::token();
 
@@ -779,7 +780,7 @@ a65_parser::enumerate_directive_reserve(
 	a65_token entry;
 	int type = A65_NODE_DIRECTIVE;
 
-	A65_DEBUG_ENTRY_INFO("Tree=%s", A65_STRING_CHECK(tree.to_string()));
+	A65_DEBUG_ENTRY_INFO("Tree=%p", &tree);
 
 	entry = a65_lexer::token();
 
@@ -811,7 +812,7 @@ a65_parser::enumerate_directive_undefine(
 	a65_token entry;
 	int type = A65_NODE_DIRECTIVE;
 
-	A65_DEBUG_ENTRY_INFO("Tree=%s", A65_STRING_CHECK(tree.to_string()));
+	A65_DEBUG_ENTRY_INFO("Tree=%p", &tree);
 
 	entry = a65_lexer::token();
 
@@ -850,34 +851,47 @@ a65_parser::enumerate_expression(
 	__inout a65_tree &tree
 	)
 {
-	int type = A65_NODE_EXPRESSION;
+	A65_DEBUG_ENTRY_INFO("Tree=%p", &tree);
 
-	A65_DEBUG_ENTRY_INFO("Tree=%s", A65_STRING_CHECK(tree.to_string()));
-
-	if(tree.has_root()) {
-		tree.move_child(tree.add_child(type));
-	} else {
-		tree.add_root(type);
-	}
-
-	// TODO: implement expression parsing
-	a65_token entry;
-
-	entry = a65_lexer::token();
-	if(!entry.match(A65_TOKEN_SCALAR)) {
-		A65_THROW_EXCEPTION_INFO("Expecting scalar", "%s", A65_STRING_CHECK(entry.to_string()));
-	}
-
-	tree.node().set_token(entry.id());
-
-	if(a65_lexer::has_next()) {
-		a65_lexer::move_next();
-	}
+	// TODO: enumerate expression
+	enumerate_expression_factor(tree);
 	// ---
 
-	if(tree.has_parent()) {
-		tree.move_parent();
-	}
+	A65_DEBUG_EXIT();
+}
+
+void
+a65_parser::enumerate_expression_arithmetic_0(
+	__inout a65_tree &tree
+	)
+{
+	A65_DEBUG_ENTRY_INFO("Tree=%p", &tree);
+
+	// TODO: enumerate expression arithmetic operators
+
+	A65_DEBUG_EXIT();
+}
+
+void
+a65_parser::enumerate_expression_arithmetic_1(
+	__inout a65_tree &tree
+	)
+{
+	A65_DEBUG_ENTRY_INFO("Tree=%p", &tree);
+
+	// TODO: enumerate expression arithmetic operators
+
+	A65_DEBUG_EXIT();
+}
+
+void
+a65_parser::enumerate_expression_binary(
+	__inout a65_tree &tree
+	)
+{
+	A65_DEBUG_ENTRY_INFO("Tree=%p", &tree);
+
+	// TODO: enumerate expression binary operators
 
 	A65_DEBUG_EXIT();
 }
@@ -889,7 +903,7 @@ a65_parser::enumerate_expression_condition(
 {
 	int type = A65_NODE_CONDITION;
 
-	A65_DEBUG_ENTRY_INFO("Tree=%s", A65_STRING_CHECK(tree.to_string()));
+	A65_DEBUG_ENTRY_INFO("Tree=%p", &tree);
 
 	if(tree.has_root()) {
 		tree.move_child(tree.add_child(type));
@@ -921,6 +935,100 @@ a65_parser::enumerate_expression_condition(
 }
 
 void
+a65_parser::enumerate_expression_factor(
+	__inout a65_tree &tree
+	)
+{
+	a65_token entry;
+	int type = A65_NODE_EXPRESSION;
+
+	A65_DEBUG_ENTRY_INFO("Tree=%p", &tree);
+
+	if(tree.has_root()) {
+		tree.move_child(tree.add_child(type));
+	} else {
+		tree.add_root(type);
+	}
+
+	entry = a65_lexer::token();
+	if(entry.match(A65_TOKEN_CONSTANT)
+			|| entry.match(A65_TOKEN_SCALAR)) {
+		tree.node().set_token(entry.id());
+		tree.node().set(A65_NODE_VALUE);
+
+		if(a65_lexer::has_next()) {
+			a65_lexer::move_next();
+		}
+	} else if(entry.match(A65_TOKEN_IDENTIFIER)
+			|| entry.match(A65_TOKEN_LITERAL)) {
+		tree.node().set_token(entry.id());
+		tree.node().set(A65_NODE_VALUE);
+
+		if(!a65_lexer::has_next()) {
+			A65_THROW_EXCEPTION_INFO("Unterminated expression", "%s", A65_STRING_CHECK(entry.to_string()));
+		}
+
+		a65_lexer::move_next();
+
+		entry = a65_lexer::token();
+		if(entry.match(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_BRACE_CURLY_OPEN)) {
+
+			if(!a65_lexer::has_next()) {
+				A65_THROW_EXCEPTION_INFO("Unterminated expression", "%s", A65_STRING_CHECK(entry.to_string()));
+			}
+
+			a65_lexer::move_next();
+			enumerate_expression(tree);
+
+			entry = a65_lexer::token();
+			if(!entry.match(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_BRACE_CURLY_CLOSE)) {
+				A65_THROW_EXCEPTION_INFO("Unterminated expression", "%s", A65_STRING_CHECK(entry.to_string()));
+			}
+
+			if(a65_lexer::has_next()) {
+				a65_lexer::move_next();
+			}
+		}
+	} else if(entry.match(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_PARENTHESIS_OPEN)) {
+
+		if(!a65_lexer::has_next()) {
+			A65_THROW_EXCEPTION_INFO("Unterminated expression", "%s", A65_STRING_CHECK(entry.to_string()));
+		}
+
+		a65_lexer::move_next();
+		enumerate_expression(tree);
+
+		entry = a65_lexer::token();
+		if(!entry.match(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_PARENTHESIS_CLOSE)) {
+			A65_THROW_EXCEPTION_INFO("Unterminated expression", "%s", A65_STRING_CHECK(entry.to_string()));
+		}
+
+		if(a65_lexer::has_next()) {
+			a65_lexer::move_next();
+		}
+	} else if(entry.match(A65_TOKEN_MACRO)
+			|| entry.match(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_UNARY_NEGATION)
+			|| entry.match(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_UNARY_NOT)) {
+		tree.node().set_token(entry.id());
+
+		if(!a65_lexer::has_next()) {
+			A65_THROW_EXCEPTION_INFO("Unterminated expression", "%s", A65_STRING_CHECK(entry.to_string()));
+		}
+
+		a65_lexer::move_next();
+		enumerate_expression(tree);
+	} else {
+		A65_THROW_EXCEPTION_INFO("Expecting expression", "%s", A65_STRING_CHECK(entry.to_string()));
+	}
+
+	if(tree.has_parent()) {
+		tree.move_parent();
+	}
+
+	A65_DEBUG_EXIT();
+}
+
+void
 a65_parser::enumerate_expression_list(
 	__inout a65_tree &tree
 	)
@@ -928,7 +1036,7 @@ a65_parser::enumerate_expression_list(
 	a65_token entry;
 	int type = A65_NODE_LIST;
 
-	A65_DEBUG_ENTRY_INFO("Tree=%s", A65_STRING_CHECK(tree.to_string()));
+	A65_DEBUG_ENTRY_INFO("Tree=%p", &tree);
 
 	if(tree.has_root()) {
 		tree.move_child(tree.add_child(type));
@@ -958,6 +1066,18 @@ a65_parser::enumerate_expression_list(
 }
 
 void
+a65_parser::enumerate_expression_logical(
+	__inout a65_tree &tree
+	)
+{
+	A65_DEBUG_ENTRY_INFO("Tree=%p", &tree);
+
+	// TODO: enumerate expression logical operators
+
+	A65_DEBUG_EXIT();
+}
+
+void
 a65_parser::enumerate_label(
 	__inout a65_tree &tree
 	)
@@ -965,7 +1085,7 @@ a65_parser::enumerate_label(
 	a65_token entry;
 	int type = A65_NODE_LABEL;
 
-	A65_DEBUG_ENTRY_INFO("Tree=%s", A65_STRING_CHECK(tree.to_string()));
+	A65_DEBUG_ENTRY_INFO("Tree=%p", &tree);
 
 	entry = a65_lexer::token();
 
@@ -993,7 +1113,7 @@ a65_parser::enumerate_pragma(
 {
 	a65_token entry;
 
-	A65_DEBUG_ENTRY_INFO("Tree=%s", A65_STRING_CHECK(tree.to_string()));
+	A65_DEBUG_ENTRY_INFO("Tree=%p", &tree);
 
 	entry = a65_lexer::token();
 
@@ -1019,7 +1139,7 @@ a65_parser::enumerate_pragma_include_binary(
 	a65_token entry;
 	int type = A65_NODE_PRAGMA;
 
-	A65_DEBUG_ENTRY_INFO("Tree=%s", A65_STRING_CHECK(tree.to_string()));
+	A65_DEBUG_ENTRY_INFO("Tree=%p", &tree);
 
 	entry = token();
 
@@ -1061,7 +1181,7 @@ a65_parser::enumerate_pragma_include_source(
 	a65_token entry;
 	int type = A65_NODE_PRAGMA;
 
-	A65_DEBUG_ENTRY_INFO("Tree=%s", A65_STRING_CHECK(tree.to_string()));
+	A65_DEBUG_ENTRY_INFO("Tree=%p", &tree);
 
 	entry = token();
 
@@ -1102,7 +1222,7 @@ a65_parser::enumerate_statement_list(
 {
 	int type = A65_NODE_LIST;
 
-	A65_DEBUG_ENTRY_INFO("Tree=%s", A65_STRING_CHECK(tree.to_string()));
+	A65_DEBUG_ENTRY_INFO("Tree=%p", &tree);
 
 	if(tree.has_root()) {
 		tree.move_child(tree.add_child(type));

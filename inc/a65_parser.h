@@ -152,11 +152,31 @@ class a65_parser :
 			__inout a65_tree &tree
 			);
 
+		void enumerate_expression_arithmetic_0(
+			__inout a65_tree &tree
+			);
+
+		void enumerate_expression_arithmetic_1(
+			__inout a65_tree &tree
+			);
+
+		void enumerate_expression_binary(
+			__inout a65_tree &tree
+			);
+
 		void enumerate_expression_condition(
 			__inout a65_tree &tree
 			);
 
+		void enumerate_expression_factor(
+			__inout a65_tree &tree
+			);
+
 		void enumerate_expression_list(
+			__inout a65_tree &tree
+			);
+
+		void enumerate_expression_logical(
 			__inout a65_tree &tree
 			);
 
