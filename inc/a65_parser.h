@@ -86,6 +86,23 @@ class a65_parser :
 			__in_opt size_t position = A65_TREE_POSITION_UNDEFINED
 			);
 
+		void add_child(
+			__inout a65_tree &tree,
+			__in int type,
+			__in_opt uint32_t id = A65_UUID_INVALID
+			);
+
+		void add_child_subtree(
+			__inout a65_tree &tree,
+			__in int type,
+			__in_opt uint32_t id = A65_UUID_INVALID
+			);
+
+		void add_child_subtree(
+			__inout a65_tree &tree,
+			__in a65_tree &subtree
+			);
+
 		void as_string(
 			__in a65_tree &tree,
 			__inout std::stringstream &stream,
@@ -214,6 +231,10 @@ class a65_parser :
 			__in int command,
 			__in int mode
 			) const;
+
+		void return_parent_tree(
+			__inout a65_tree &tree
+			);
 
 		std::vector<uint32_t> m_tree;
 
