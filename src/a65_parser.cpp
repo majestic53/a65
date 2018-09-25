@@ -129,7 +129,7 @@ a65_parser::add(
 {
 	uint32_t id;
 
-	A65_DEBUG_ENTRY_INFO("Tree=%s, Position=%u", A65_STRING_CHECK(tree.to_string()), position);
+	A65_DEBUG_ENTRY_INFO("Tree=%p, Position=%u", &tree, position);
 
 	if(position == A65_TREE_POSITION_UNDEFINED) {
 		position = (m_tree_position + 1);
@@ -228,38 +228,54 @@ a65_parser::add_child_subtree(
 	A65_DEBUG_EXIT();
 }
 
-void
+std::string
+a65_parser::as_source(
+	__in a65_tree &tree
+	) const
+{
+	std::stringstream result;
+
+	A65_DEBUG_ENTRY_INFO("Tree=%p", &tree);
+
+	// TODO: convert tree into equiv. source
+
+	A65_DEBUG_EXIT();
+	return result.str();
+}
+
+std::string
 a65_parser::as_string(
 	__in a65_tree &tree,
-	__inout std::stringstream &stream,
 	__inout size_t tabs
 	) const
 {
 	a65_node node;
+	std::stringstream result;
 	size_t child = 0, tab = 0;
 
-	A65_DEBUG_ENTRY_INFO("Tree=%s, Stream=%p, Tabs=%u", A65_STRING_CHECK(tree.to_string()), &stream, tabs);
+	A65_DEBUG_ENTRY_INFO("Tree=%p, Tabs=%u", &tree, tabs);
 
-	stream << std::endl;
+	result << std::endl;
 
 	for(; tab < tabs; ++tab) {
-		stream << "\t";
+		result << "\t";
 	}
 
 	node = tree.node();
-	stream << node.to_string();
+	result << node.to_string();
 
 	if(node.has_token()) {
-		stream << " " << a65_lexer::token(node.token()).to_string();
+		result << " " << a65_lexer::token(node.token()).to_string();
 	}
 
 	while(tree.has_child(child)) {
 		tree.move_child(child++);
-		as_string(tree, stream, tabs + 1);
+		result << as_string(tree, tabs + 1);
 		tree.move_parent();
 	}
 
 	A65_DEBUG_EXIT();
+	return result.str();
 }
 
 void
@@ -348,7 +364,14 @@ a65_parser::enumerate_command(
 	a65_lexer::move_next();
 
 	entry = a65_lexer::token();
-	if(is_expression()) {
+	if(entry.match(A65_TOKEN_CONSTANT)
+			|| entry.match(A65_TOKEN_IDENTIFIER)
+			|| entry.match(A65_TOKEN_LITERAL)
+			|| entry.match(A65_TOKEN_MACRO)
+			|| entry.match(A65_TOKEN_SCALAR)
+			|| entry.match(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_PARENTHESIS_OPEN)
+			|| entry.match(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_UNARY_NEGATION)
+			|| entry.match(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_UNARY_NOT)) {
 		enumerate_expression(tree);
 
 		if(!A65_IS_TOKEN_COMMAND_RELATIVE(cmd)) {
@@ -578,7 +601,15 @@ a65_parser::enumerate_directive_define(
 	if(a65_lexer::has_next()) {
 		a65_lexer::move_next();
 
-		if(is_expression()) {
+		entry = a65_lexer::token();
+		if(entry.match(A65_TOKEN_CONSTANT)
+				|| entry.match(A65_TOKEN_IDENTIFIER)
+				|| entry.match(A65_TOKEN_LITERAL)
+				|| entry.match(A65_TOKEN_MACRO)
+				|| entry.match(A65_TOKEN_SCALAR)
+				|| entry.match(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_PARENTHESIS_OPEN)
+				|| entry.match(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_UNARY_NEGATION)
+				|| entry.match(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_UNARY_NOT)) {
 			enumerate_expression(tree);
 		}
 	}
@@ -837,9 +868,29 @@ a65_parser::enumerate_expression_arithmetic_0(
 	__inout a65_tree &tree
 	)
 {
+	a65_token entry;
+	a65_tree subtree;
+
 	A65_DEBUG_ENTRY_INFO("Tree=%p", &tree);
 
-	// TODO: enumerate expression arithmetic operators
+	enumerate_expression_arithmetic_1(subtree);
+
+	entry = a65_lexer::token();
+	if(entry.match(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_ARITHMETIC_ADDITION)
+			|| entry.match(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_ARITHMETIC_SUBTRACTION)) {
+		add_child_subtree(tree, A65_NODE_OPERATOR, entry.id());
+		add_child_subtree(tree, subtree);
+
+		if(!a65_lexer::has_next()) {
+			A65_THROW_EXCEPTION_INFO("Unterminated expression", "%s", A65_STRING_CHECK(entry.to_string()));
+		}
+
+		a65_lexer::move_next();
+		enumerate_expression_arithmetic_0(tree);
+		return_parent_tree(tree);
+	} else {
+		add_child_subtree(tree, subtree);
+	}
 
 	A65_DEBUG_EXIT();
 }
@@ -849,9 +900,30 @@ a65_parser::enumerate_expression_arithmetic_1(
 	__inout a65_tree &tree
 	)
 {
+	a65_token entry;
+	a65_tree subtree;
+
 	A65_DEBUG_ENTRY_INFO("Tree=%p", &tree);
 
-	// TODO: enumerate expression arithmetic operators
+	enumerate_expression_factor(subtree);
+
+	entry = a65_lexer::token();
+	if(entry.match(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_ARITHMETIC_DIVIDE)
+			|| entry.match(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_ARITHMETIC_MODULUS)
+			|| entry.match(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_ARITHMETIC_MULTIPLY)) {
+		add_child_subtree(tree, A65_NODE_OPERATOR, entry.id());
+		add_child_subtree(tree, subtree);
+
+		if(!a65_lexer::has_next()) {
+			A65_THROW_EXCEPTION_INFO("Unterminated expression", "%s", A65_STRING_CHECK(entry.to_string()));
+		}
+
+		a65_lexer::move_next();
+		enumerate_expression_arithmetic_1(tree);
+		return_parent_tree(tree);
+	} else {
+		add_child_subtree(tree, subtree);
+	}
 
 	A65_DEBUG_EXIT();
 }
@@ -880,7 +952,7 @@ a65_parser::enumerate_expression_binary(
 		}
 
 		a65_lexer::move_next();
-		enumerate_expression_logical(tree);
+		enumerate_expression_binary(tree);
 		return_parent_tree(tree);
 	} else {
 		add_child_subtree(tree, subtree);
@@ -894,15 +966,22 @@ a65_parser::enumerate_expression_condition(
 	__inout a65_tree &tree
 	)
 {
+	a65_token entry;
+
 	A65_DEBUG_ENTRY_INFO("Tree=%p", &tree);
 
 	add_child_subtree(tree, A65_NODE_CONDITION);
 	enumerate_expression(tree);
 
-	if(is_condition()) {
-		a65_token entry;
-
-		entry = a65_lexer::token();
+	entry = a65_lexer::token();
+	if(entry.match(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_OPERATOR_AND)
+			|| entry.match(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_OPERATOR_OR)
+			|| entry.match(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_OPERATOR_EQUALS)
+			|| entry.match(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_OPERATOR_GREATER_THAN)
+			|| entry.match(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_OPERATOR_GREATER_THAN_EQUALS)
+			|| entry.match(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_OPERATOR_LESS_THAN)
+			|| entry.match(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_OPERATOR_LESS_THAN_EQUALS)
+			|| entry.match(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_OPERATOR_NOT_EQUALS)) {
 
 		if(!a65_lexer::has_next()) {
 			A65_THROW_EXCEPTION_INFO("Unterminated condition", "%s", A65_STRING_CHECK(entry.to_string()));
@@ -1045,11 +1124,29 @@ a65_parser::enumerate_expression_logical(
 	__inout a65_tree &tree
 	)
 {
+	a65_token entry;
+	a65_tree subtree;
+
 	A65_DEBUG_ENTRY_INFO("Tree=%p", &tree);
 
-	// TODO: enumerate expression logical operators
-	enumerate_expression_factor(tree);
-	// ---
+	enumerate_expression_arithmetic_0(subtree);
+
+	entry = a65_lexer::token();
+	if(entry.match(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_LOGICAL_SHIFT_LEFT)
+			|| entry.match(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_LOGICAL_SHIFT_RIGHT)) {
+		add_child_subtree(tree, A65_NODE_OPERATOR, entry.id());
+		add_child_subtree(tree, subtree);
+
+		if(!a65_lexer::has_next()) {
+			A65_THROW_EXCEPTION_INFO("Unterminated expression", "%s", A65_STRING_CHECK(entry.to_string()));
+		}
+
+		a65_lexer::move_next();
+		enumerate_expression_logical(tree);
+		return_parent_tree(tree);
+	} else {
+		add_child_subtree(tree, subtree);
+	}
 
 	A65_DEBUG_EXIT();
 }
@@ -1173,12 +1270,26 @@ a65_parser::enumerate_statement_list(
 	__inout a65_tree &tree
 	)
 {
+	a65_token entry;
+
 	A65_DEBUG_ENTRY_INFO("Tree=%p", &tree);
 
 	add_child_subtree(tree, A65_NODE_LIST);
 
-	while(is_statement()) {
+	entry = a65_lexer::token();
+	while(entry.match(A65_TOKEN_COMMAND)
+			|| entry.match(A65_TOKEN_DIRECTIVE, A65_TOKEN_DIRECTIVE_DATA_BYTE)
+			|| entry.match(A65_TOKEN_DIRECTIVE, A65_TOKEN_DIRECTIVE_DATA_WORD)
+			|| entry.match(A65_TOKEN_DIRECTIVE, A65_TOKEN_DIRECTIVE_DEFINE)
+			|| entry.match(A65_TOKEN_DIRECTIVE, A65_TOKEN_DIRECTIVE_IF)
+			|| entry.match(A65_TOKEN_DIRECTIVE, A65_TOKEN_DIRECTIVE_IF_DEFINE)
+			|| entry.match(A65_TOKEN_DIRECTIVE, A65_TOKEN_DIRECTIVE_ORIGIN)
+			|| entry.match(A65_TOKEN_DIRECTIVE, A65_TOKEN_DIRECTIVE_RESERVE)
+			|| entry.match(A65_TOKEN_DIRECTIVE, A65_TOKEN_DIRECTIVE_UNDEFINE)
+			|| entry.match(A65_TOKEN_LABEL)
+			|| entry.match(A65_TOKEN_PRAGMA)) {
 		enumerate(tree);
+		entry = a65_lexer::token();
 	}
 
 	return_parent_tree(tree);
@@ -1225,74 +1336,6 @@ a65_parser::has_previous(void) const
 	A65_DEBUG_ENTRY();
 
 	result = (m_tree_position > 0);
-
-	A65_DEBUG_EXIT_INFO("Result=%x", result);
-	return result;
-}
-
-bool
-a65_parser::is_condition(void) const
-{
-	bool result;
-	a65_token entry;
-
-	A65_DEBUG_ENTRY();
-
-	entry = a65_lexer::token();
-	result = (entry.match(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_LOGICAL_AND)
-			|| entry.match(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_LOGICAL_OR)
-			|| entry.match(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_LOGICAL_EQUALS)
-			|| entry.match(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_LOGICAL_GREATER_THAN)
-			|| entry.match(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_LOGICAL_GREATER_THAN_EQUALS)
-			|| entry.match(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_LOGICAL_LESS_THAN)
-			|| entry.match(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_LOGICAL_LESS_THAN_EQUALS)
-			|| entry.match(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_LOGICAL_NOT_EQUALS));
-
-	A65_DEBUG_EXIT_INFO("Result=%x", result);
-	return result;
-}
-
-bool
-a65_parser::is_expression(void) const
-{
-	bool result;
-	a65_token entry;
-
-	A65_DEBUG_ENTRY();
-
-	entry = a65_lexer::token();
-	result = (entry.match(A65_TOKEN_CONSTANT)
-			|| entry.match(A65_TOKEN_IDENTIFIER)
-			|| entry.match(A65_TOKEN_MACRO)
-			|| entry.match(A65_TOKEN_SCALAR)
-			|| entry.match(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_PARENTHESIS_OPEN)
-			|| entry.match(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_UNARY_NEGATION)
-			|| entry.match(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_UNARY_NOT));
-
-	A65_DEBUG_EXIT_INFO("Result=%x", result);
-	return result;
-}
-
-bool
-a65_parser::is_statement(void) const
-{
-	bool result;
-	a65_token entry;
-
-	A65_DEBUG_ENTRY();
-
-	entry = a65_lexer::token();
-	result = (entry.match(A65_TOKEN_COMMAND)
-			|| entry.match(A65_TOKEN_DIRECTIVE, A65_TOKEN_DIRECTIVE_DATA_BYTE)
-			|| entry.match(A65_TOKEN_DIRECTIVE, A65_TOKEN_DIRECTIVE_DATA_WORD)
-			|| entry.match(A65_TOKEN_DIRECTIVE, A65_TOKEN_DIRECTIVE_DEFINE)
-			|| entry.match(A65_TOKEN_DIRECTIVE, A65_TOKEN_DIRECTIVE_IF)
-			|| entry.match(A65_TOKEN_DIRECTIVE, A65_TOKEN_DIRECTIVE_IF_DEFINE)
-			|| entry.match(A65_TOKEN_DIRECTIVE, A65_TOKEN_DIRECTIVE_ORIGIN)
-			|| entry.match(A65_TOKEN_DIRECTIVE, A65_TOKEN_DIRECTIVE_RESERVE)
-			|| entry.match(A65_TOKEN_DIRECTIVE, A65_TOKEN_DIRECTIVE_UNDEFINE)
-			|| entry.match(A65_TOKEN_LABEL)
-			|| entry.match(A65_TOKEN_PRAGMA));
 
 	A65_DEBUG_EXIT_INFO("Result=%x", result);
 	return result;
@@ -1455,7 +1498,7 @@ a65_parser::to_string(void) const
 	result << "[" << m_tree_position << "] " << entry.to_string();
 
 	if(!entry.empty()) {
-		as_string(entry, result, A65_TREE_STRING_OFFSET_START);
+		result << as_string(entry, A65_TREE_STRING_OFFSET_START);
 	}
 
 	A65_DEBUG_EXIT();

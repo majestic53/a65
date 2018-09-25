@@ -119,20 +119,20 @@ directive_undefine ::= .undef <identifier>
 
 expression ::= <expression_binary>
 
-expression_arithmetic_0 ::= <expression_arithmetic_1> [+ | -] <expression_arithmetic_1>
+expression_arithmetic_0 ::= <expression_arithmetic_1> [+ | -] <expression_arithmetic_0>
 	| <expression_arithmetic_1>
 
-expression_arithmetic_1 ::= <expression_factor> [* | / | %] <expression_factor>
+expression_arithmetic_1 ::= <expression_factor> [* | / | %] <expression_arithmetic_1>
 	| <expression_factor>
 
-expression_binary ::= <expression_logical> [& | | | ^] <expression_logical>
+expression_binary ::= <expression_logical> [& | | | ^] <expression_binary>
 	| <expression_logical>
 
 expression_condition ::= <expression> [== | != | < | <= | > | >= | && | ||] <expression> | <expression>
 
 expression_factor ::= [! | ~]? <macro>? [(<expression>) | <constant> | <identifier> | <literal_character> | <scalar>]
 
-expression_logical ::= <expression_arithmetic_0> [<< | >>] <expression_arithmetic_0>
+expression_logical ::= <expression_arithmetic_0> [<< | >>] <expression_logical>
 	| <expression_arithmetic_0>
 
 expression_list ::= <expression>,<expression_list> | <expression>

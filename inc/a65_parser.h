@@ -103,9 +103,12 @@ class a65_parser :
 			__in a65_tree &subtree
 			);
 
-		void as_string(
+		std::string as_source(
+			__in a65_tree &tree
+			) const;
+
+		std::string as_string(
 			__in a65_tree &tree,
-			__inout std::stringstream &stream,
 			__inout size_t tabs
 			) const;
 
@@ -220,12 +223,6 @@ class a65_parser :
 		std::map<uint32_t, a65_tree>::iterator find(
 			__in uint32_t id
 			);
-
-		bool is_condition(void) const;
-
-		bool is_expression(void) const;
-
-		bool is_statement(void) const;
 
 		bool is_valid_command_mode(
 			__in int command,
