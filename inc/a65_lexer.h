@@ -111,7 +111,8 @@ class a65_lexer :
 			);
 
 		void enumerate_digit(
-			__inout a65_token &token
+			__inout a65_token &token,
+			__in_opt bool negative = false
 			);
 
 		uint16_t enumerate_digit_binary(void);

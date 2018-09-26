@@ -495,12 +495,13 @@ a65_lexer::enumerate_alpha_pragma(
 
 void
 a65_lexer::enumerate_digit(
-	__inout a65_token &token
+	__inout a65_token &token,
+	__in_opt bool negative
 	)
 {
 	uint16_t scalar = 0;
 
-	A65_DEBUG_ENTRY_INFO("Token=%s", A65_STRING_CHECK(token.to_string()));
+	A65_DEBUG_ENTRY_INFO("Token=%s, Negative=%x", A65_STRING_CHECK(token.to_string()), negative);
 
 	if(a65_stream::has_next() && a65_stream::match(A65_STREAM_CHARACTER_DIGIT, A65_CHARACTER_ZERO)) {
 		a65_stream::move_next();
@@ -535,7 +536,7 @@ a65_lexer::enumerate_digit(
 	}
 
 	token.set(A65_TOKEN_SCALAR);
-	token.set_scalar(scalar);
+	token.set_scalar((negative ? -1 : 1) * scalar);
 
 	A65_DEBUG_ENTRY_INFO("Result=%s", A65_STRING_CHECK(token.to_string()));
 }
@@ -707,29 +708,37 @@ a65_lexer::enumerate_symbol(
 			|| a65_stream::match(A65_STREAM_CHARACTER_SYMBOL, A65_CHARACTER_UNDERSCORE)) {
 		enumerate_alpha(token);
 	} else {
+		bool negate;
 		std::string literal;
 
 		literal += character();
+		negate = a65_stream::match(A65_STREAM_CHARACTER_SYMBOL, A65_CHARACTER_NEGATION);
 
 		if(a65_stream::has_next()) {
 			a65_stream::move_next();
 
-			if(a65_stream::match(A65_STREAM_CHARACTER_SYMBOL)) {
+			if(negate && a65_stream::match(A65_STREAM_CHARACTER_DIGIT)) {
+				enumerate_digit(token, negate);
+			} else {
 
-				literal += character();
-				if(!A65_IS_TOKEN_SYMBOL(literal)) {
-					literal.erase(literal.end() - 1);
-				} else {
-					a65_stream::move_next();
+				if(a65_stream::match(A65_STREAM_CHARACTER_SYMBOL)) {
+
+					literal += character();
+					if(!A65_IS_TOKEN_SYMBOL(literal)) {
+						literal.erase(literal.end() - 1);
+					} else {
+						a65_stream::move_next();
+					}
 				}
+
+				if(!A65_IS_TOKEN_SYMBOL(literal)) {
+					A65_THROW_EXCEPTION_INFO("Unsupported symbol", "%s (%s:%u)", A65_STRING_CHECK(literal),
+						A65_STRING_CHECK(path()), line());
+				}
+
+				token.set(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_ID(literal));
 			}
 		}
-
-		if(!A65_IS_TOKEN_SYMBOL(literal)) {
-			A65_THROW_EXCEPTION_INFO("Unsupported symbol", "%s (%s:%u)", A65_STRING_CHECK(literal), A65_STRING_CHECK(path()), line());
-		}
-
-		token.set(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_ID(literal));
 	}
 
 	A65_DEBUG_ENTRY_INFO("Result=%s", A65_STRING_CHECK(token.to_string()));

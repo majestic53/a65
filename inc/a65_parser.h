@@ -103,10 +103,6 @@ class a65_parser :
 			__in a65_tree &subtree
 			);
 
-		std::string as_source(
-			__in a65_tree &tree
-			) const;
-
 		std::string as_string(
 			__in a65_tree &tree,
 			__inout size_t tabs

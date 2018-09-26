@@ -229,21 +229,6 @@ a65_parser::add_child_subtree(
 }
 
 std::string
-a65_parser::as_source(
-	__in a65_tree &tree
-	) const
-{
-	std::stringstream result;
-
-	A65_DEBUG_ENTRY_INFO("Tree=%p", &tree);
-
-	// TODO: convert tree into equiv. source
-
-	A65_DEBUG_EXIT();
-	return result.str();
-}
-
-std::string
 a65_parser::as_string(
 	__in a65_tree &tree,
 	__inout size_t tabs

@@ -48,6 +48,14 @@ TBD
 Changelog
 =========
 
+Version 0.1.1839
+----------------
+*Updated: 9/25/2018*
+
+* Added assembler class
+* Added section class
+* Added negative scalar support
+
 Version 0.1.1838
 ----------------
 *Updated: 9/19-20/2018*
