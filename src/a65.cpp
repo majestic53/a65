@@ -17,11 +17,8 @@
  */
 
 #include "../inc/a65.h"
+#include "../inc/a65_assembler.h"
 #include "../inc/a65_utility.h"
-
-// TODO: debugging
-#include "../inc/a65_parser.h"
-// ---
 
 static std::string g_error;
 

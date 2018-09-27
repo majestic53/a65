@@ -49,6 +49,9 @@
 #define __inout_opt
 #endif // __inout_opt
 
+#define A65_FLOAT_PREC(_PREC_, _VALUE_) \
+	std::right << std::setprecision(_PREC_) << std::fixed << (_VALUE_) << std::defaultfloat
+
 #define A65_STRING_EMPTY "<Empty>"
 #define A65_STRING_MALFORMED "<Malformed>"
 #define A65_STRING_UNKNOWN "<Unknown>"
@@ -70,6 +73,6 @@
 
 #define A65_VERSION_MAJOR 0
 #define A65_VERSION_MINOR 1
-#define A65_VERSION_REVISION 22
+#define A65_VERSION_REVISION 23
 
 #endif // A65_DEFINE_H_

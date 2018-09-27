@@ -21,4 +21,8 @@
 
 #include "./a65_define.h"
 
+#define A65_SECTION_KB_LENGTH 1024.f
+
+#define A65_SECTION_POSITION_UNDEFINED (-1)
+
 #endif // A65_SECTION_TYPE_H_

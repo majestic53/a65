@@ -20,7 +20,7 @@
 #define A65_SECTION_H_
 
 #include "./a65_section_type.h"
-#include "./a65_uuid.h"
+#include "./a65_tree.h"
 
 class a65_section {
 
@@ -42,12 +42,14 @@ class a65_section {
 
 		void add(
 			__in const std::vector<uint8_t> &data,
-			__in const std::string &listing
+			__in uint32_t listing
 			);
 
 		void clear(void);
 
-		std::vector<uint8_t> data(void) const;
+		std::vector<uint8_t> data(
+			__in_opt size_t position = A65_SECTION_POSITION_UNDEFINED
+			) const;
 
 		bool empty(void) const;
 
@@ -57,7 +59,9 @@ class a65_section {
 
 		uint32_t id(void) const;
 
-		std::string listing(void) const;
+		uint32_t listing(
+			__in_opt size_t position = A65_SECTION_POSITION_UNDEFINED
+			) const;
 
 		void move_next(void);
 
@@ -66,6 +70,10 @@ class a65_section {
 		uint16_t origin(void) const;
 
 		void reset(void);
+
+		void set_origin(
+			__in uint16_t origin
+			);
 
 		size_t size(void) const;
 
@@ -83,9 +91,9 @@ class a65_section {
 
 		uint32_t m_id;
 
-		std::map<uint16_t, std::string> m_listing;
+		std::vector<uint32_t> m_listing;
 
-		std::vector<uint16_t> m_offset;
+		std::vector<std::pair<size_t, size_t>> m_offset;
 
 		size_t m_offset_position;
 

@@ -50,6 +50,10 @@ Changelog
 
 Version 0.1.1839
 ----------------
+*Updated: 9/26/2018*
+
+* Implemented section class
+
 *Updated: 9/25/2018*
 
 * Added assembler class
