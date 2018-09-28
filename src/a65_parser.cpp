@@ -26,7 +26,7 @@ a65_parser::a65_parser(
 		a65_lexer(input, is_path),
 		m_tree_position(0)
 {
-	A65_DEBUG_ENTRY_INFO("Input[%u]=%s (%s)", input.size(), A65_STRING_CHECK(input), is_path ? "Path" : "Raw");
+	A65_DEBUG_ENTRY_INFO("Input[%u]=%p (%s)", input.size(), &input, is_path ? "Path" : "Raw");
 
 	a65_parser::clear();
 
@@ -1396,7 +1396,7 @@ a65_parser::load(
 	__in_opt bool is_path
 	)
 {
-	A65_DEBUG_ENTRY_INFO("Input[%u]=%s (%s)", input.size(), A65_STRING_CHECK(input), is_path ? "Path" : "Raw");
+	A65_DEBUG_ENTRY_INFO("Input[%u]=%p (%s)", input.size(), &input, is_path ? "Path" : "Raw");
 
 	a65_lexer::load(input, is_path);
 	a65_parser::clear();

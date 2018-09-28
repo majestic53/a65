@@ -47,35 +47,31 @@ class a65_section {
 
 		void clear(void);
 
+		size_t count(void);
+
 		std::vector<uint8_t> data(
-			__in_opt size_t position = A65_SECTION_POSITION_UNDEFINED
+			__in size_t position
 			) const;
 
 		bool empty(void) const;
 
-		bool has_next(void) const;
-
-		bool has_previous(void) const;
-
 		uint32_t id(void) const;
 
 		uint32_t listing(
-			__in_opt size_t position = A65_SECTION_POSITION_UNDEFINED
+			__in size_t position
 			) const;
 
-		void move_next(void);
-
-		void move_previous(void);
+		uint16_t offset(
+			__in size_t position
+			) const;
 
 		uint16_t origin(void) const;
-
-		void reset(void);
 
 		void set_origin(
 			__in uint16_t origin
 			);
 
-		size_t size(void) const;
+		uint16_t size(void) const;
 
 		virtual std::string to_string(void) const;
 
@@ -83,19 +79,19 @@ class a65_section {
 
 		void decrement(void);
 
+		std::tuple<std::vector<uint8_t>, uint16_t, uint32_t> find(
+			__in size_t position
+			) const;
+
 		void generate(void);
 
 		void increment(void);
 
-		std::vector<uint8_t> m_data;
-
 		uint32_t m_id;
 
-		std::vector<uint32_t> m_listing;
+		std::vector<std::tuple<std::vector<uint8_t>, uint16_t, uint32_t>> m_listing;
 
-		std::vector<std::pair<size_t, size_t>> m_offset;
-
-		size_t m_offset_position;
+		uint16_t m_offset;
 
 		uint16_t m_origin;
 };

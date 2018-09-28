@@ -31,7 +31,7 @@ main(
 
 	// TODO: parse user parameters
 
-	result = a65_assemble("./doc/example.asm", "./bin");
+	result = a65_assemble("./doc/example.asm", "./bin", A65_BINARY | A65_IHEX | A65_LISTING);
 	if(result) {
 		std::cerr << "A65: " << a65_error() << std::endl;
 		result = EXIT_FAILURE;

@@ -50,6 +50,11 @@ Changelog
 
 Version 0.1.1839
 ----------------
+*Updated: 9/27/2018*
+
+* Implemented assembler class
+* General code cleanup
+
 *Updated: 9/26/2018*
 
 * Implemented section class
@@ -70,17 +75,6 @@ Version 0.1.1838
 *Updated: 9/18/2018*
 
 * Converted binary tree class to d-ary tree class
-
-Version 0.1.1837
-----------------
-*Updated: 9/13/2018*
-
-* Implemented parser node/tree classes
-
-*Updated: 9/11/2018*
-
-* Completed lexer class
-* Added parser node/tree classes
 
 *Changelog truncated (see file history for full log)*
 

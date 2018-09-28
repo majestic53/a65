@@ -26,7 +26,7 @@ a65_lexer::a65_lexer(
 		a65_stream(input, is_path),
 		m_token_position(0)
 {
-	A65_DEBUG_ENTRY_INFO("Input[%u]=%s (%s)", input.size(), A65_STRING_CHECK(input), is_path ? "File" : "Raw");
+	A65_DEBUG_ENTRY_INFO("Input[%u]=%p (%s)", input.size(), &input, is_path ? "File" : "Raw");
 
 	a65_lexer::clear();
 
@@ -794,7 +794,7 @@ a65_lexer::load(
 	__in_opt bool is_path
 	)
 {
-	A65_DEBUG_ENTRY_INFO("Input[%u]=%s (%s)", input.size(), A65_STRING_CHECK(input), is_path ? "File" : "Raw");
+	A65_DEBUG_ENTRY_INFO("Input[%u]=%p (%s)", input.size(), &input, is_path ? "File" : "Raw");
 
 	a65_stream::load(input, is_path);
 	a65_lexer::clear();

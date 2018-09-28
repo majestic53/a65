@@ -28,11 +28,7 @@ class a65_assembler :
 
 	public:
 
-		a65_assembler(
-			__in const std::string &output,
-			__in_opt const std::string &input = std::string(),
-			__in_opt bool is_path = true
-			);
+		explicit a65_assembler(void);
 
 		a65_assembler(
 			__in const a65_assembler &other
@@ -46,13 +42,11 @@ class a65_assembler :
 
 		virtual void clear(void) override;
 
-		virtual void evaluate(
-			__in const std::string &output,
-			__in const std::string &input,
-			__in_opt bool is_path = true
+		virtual void run(
+			__in_opt const std::string &input = std::string(),
+			__in_opt const std::string &output = std::string(),
+			__in_opt int options = A65_ASSEMBLER_OPTION_DEFAULT
 			);
-
-		virtual std::string to_string(void) const override;
 
 	protected:
 
@@ -64,9 +58,17 @@ class a65_assembler :
 
 		// TODO: add additional evaluation routines
 
-		void listing(void);
+		void form_binary(void);
+
+		void form_ihex(void);
+
+		void form_listing(void);
 
 		void preprocess(void);
+
+		std::string m_input;
+
+		std::string m_output;
 
 		std::map<uint16_t, a65_section> m_section;
 };
