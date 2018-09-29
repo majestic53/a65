@@ -152,6 +152,36 @@ a65_token::literal(void) const
 	return m_literal;
 }
 
+std::string
+a65_token::literal_formatted(void) const
+{
+	std::stringstream result;
+
+	A65_DEBUG_ENTRY();
+
+	for(std::string::const_iterator ch = m_literal.begin(); ch != m_literal.end(); ++ch) {
+
+		if(A65_IS_CHARACTER_ESCAPE_VALUE(*ch)) {
+			int type = A65_CHARACTER_ESCAPE_VALUE_ID(*ch);
+
+			if(type == A65_CHARACTER_ESCAPE_HEXIDECIMAL) {
+				result << A65_CHARACTER_ESCAPE_STRING(A65_CHARACTER_ESCAPE_HEXIDECIMAL)
+					<< A65_STRING_HEX(uint8_t, *ch);
+			} else {
+				result << A65_CHARACTER_ESCAPE_STRING(type);
+			}
+		} else if(!std::isprint(*ch)) {
+			result << A65_CHARACTER_ESCAPE_STRING(A65_CHARACTER_ESCAPE_HEXIDECIMAL)
+				<< A65_STRING_HEX(uint8_t, *ch);
+		} else {
+			result << *ch;
+		}
+	}
+
+	A65_DEBUG_EXIT_INFO("Result[%u]=%s", result.str().size(), A65_STRING_CHECK(result.str()));
+	return result.str();
+}
+
 bool
 a65_token::match(
 	__in int type,
@@ -301,28 +331,7 @@ a65_token::to_string(void) const
 					}
 					break;
 				case A65_TOKEN_LITERAL:
-					result << "[" << m_literal.size() << "] \"";
-
-					for(std::string::const_iterator ch = m_literal.begin(); ch != m_literal.end(); ++ch) {
-
-						if(A65_IS_CHARACTER_ESCAPE_VALUE(*ch)) {
-							int type = A65_CHARACTER_ESCAPE_VALUE_ID(*ch);
-
-							if(type == A65_CHARACTER_ESCAPE_HEXIDECIMAL) {
-								result << A65_CHARACTER_ESCAPE_STRING(A65_CHARACTER_ESCAPE_HEXIDECIMAL)
-									<< A65_STRING_HEX(uint8_t, *ch);
-							} else {
-								result << A65_CHARACTER_ESCAPE_STRING(type);
-							}
-						} else if(!std::isprint(*ch)) {
-							result << A65_CHARACTER_ESCAPE_STRING(A65_CHARACTER_ESCAPE_HEXIDECIMAL)
-								<< A65_STRING_HEX(uint8_t, *ch);
-						} else {
-							result << *ch;
-						}
-					}
-
-					result << "\"";
+					result << "[" << m_literal.size() << "] \"" << literal_formatted() << "\"";
 					break;
 				case A65_TOKEN_SCALAR:
 					result << " " << m_scalar << "(" << A65_STRING_HEX(uint16_t, m_scalar) << ")";

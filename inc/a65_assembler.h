@@ -54,6 +54,22 @@ class a65_assembler :
 			__in a65_tree &tree
 			) const;
 
+		std::string as_source_command(
+			__in a65_tree &tree
+			) const;
+
+		std::string as_source_directive(
+			__in a65_tree &tree
+			) const;
+
+		std::string as_source_expression(
+			__in a65_tree &tree
+			) const;
+
+		std::string as_source_pragma(
+			__in a65_tree &tree
+			) const;
+
 		void evaluate(void);
 
 		// TODO: add additional evaluation routines

@@ -70,11 +70,110 @@ a65_assembler::as_source(
 	__in a65_tree &tree
 	) const
 {
+	a65_token entry;
 	std::stringstream result;
 
 	A65_DEBUG_ENTRY_INFO("Tree=%p", &tree);
 
-	// TODO: parse tree and form source string
+	entry = a65_lexer::token(tree.node().token());
+	result << A65_TOKEN_PRAGMA_STRING(A65_TOKEN_PRAGMA_METADATA)
+		<< " " << A65_CHARACTER_LITERAL << entry.path() << A65_CHARACTER_LITERAL
+		<< " " << entry.line() << std::endl;
+
+	switch(entry.type()) {
+		case A65_TOKEN_COMMAND:
+			result << as_source_command(tree);
+			break;
+		case A65_TOKEN_CONSTANT:
+			result << A65_TOKEN_CONSTANT_STRING(entry.subtype());
+			break;
+		case A65_TOKEN_DIRECTIVE:
+			result << as_source_directive(tree);
+			break;
+		case A65_TOKEN_IDENTIFIER:
+			result << entry.literal();
+			break;
+		case A65_TOKEN_LABEL:
+			result << entry.literal() << A65_CHARACTER_LABEL;
+			break;
+		case A65_TOKEN_LITERAL:
+			result << A65_CHARACTER_LITERAL << entry.literal_formatted() << A65_CHARACTER_LITERAL;
+			break;
+		case A65_TOKEN_MACRO:
+			result << A65_TOKEN_MACRO_STRING(entry.subtype());
+			break;
+		case A65_TOKEN_PRAGMA:
+			result << as_source_pragma(tree);
+			break;
+		case A65_TOKEN_SCALAR:
+			result << entry.scalar();
+			break;
+		case A65_TOKEN_SYMBOL:
+			result << A65_TOKEN_SYMBOL_STRING(entry.subtype());
+			break;
+		default:
+			A65_THROW_EXCEPTION_INFO("Malformed tree", "%s", A65_STRING_CHECK(entry.to_string()));
+	}
+
+	A65_DEBUG_EXIT();
+	return result.str();
+}
+
+std::string
+a65_assembler::as_source_command(
+	__in a65_tree &tree
+	) const
+{
+	std::stringstream result;
+
+	A65_DEBUG_ENTRY_INFO("Tree=%p", &tree);
+
+	// TODO: form command string
+
+	A65_DEBUG_EXIT();
+	return result.str();
+}
+
+std::string
+a65_assembler::as_source_directive(
+	__in a65_tree &tree
+	) const
+{
+	std::stringstream result;
+
+	A65_DEBUG_ENTRY_INFO("Tree=%p", &tree);
+
+	// TODO: form directive string
+
+	A65_DEBUG_EXIT();
+	return result.str();
+}
+
+std::string
+a65_assembler::as_source_expression(
+	__in a65_tree &tree
+	) const
+{
+	std::stringstream result;
+
+	A65_DEBUG_ENTRY_INFO("Tree=%p", &tree);
+
+	// TODO: form expression string
+
+	A65_DEBUG_EXIT();
+	return result.str();
+}
+
+std::string
+a65_assembler::as_source_pragma(
+	__in a65_tree &tree
+	) const
+{
+	std::stringstream result;
+
+	A65_DEBUG_ENTRY_INFO("Tree=%p", &tree);
+
+	// TODO: form pragma string
 
 	A65_DEBUG_EXIT();
 	return result.str();
@@ -100,11 +199,15 @@ a65_assembler::evaluate(void)
 
 	// TODO: evaluate parser contents
 	while(a65_parser::has_next()) {
-		std::cout << a65_parser::to_string() << std::endl;
+		a65_tree tree = a65_parser::tree();
+
+		if(!tree.node().match(A65_NODE_BEGIN)
+				&& !tree.node().match(A65_NODE_END)) {
+			std::cout << /*a65_parser::to_string()*/ as_source(tree) << std::endl;
+		}
+
 		a65_parser::move_next();
 	}
-
-	std::cout << a65_parser::to_string() << std::endl;
 	// ---
 
 	A65_DEBUG_EXIT();

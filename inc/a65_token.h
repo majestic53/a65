@@ -48,6 +48,8 @@ class a65_token {
 
 		std::string literal(void) const;
 
+		std::string literal_formatted(void) const;
+
 		bool match(
 			__in int type,
 			__in_opt int subtype = A65_TOKEN_SUBTYPE_UNDEFINED,

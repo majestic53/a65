@@ -326,6 +326,20 @@ a65_stream::reset(void)
 	A65_DEBUG_EXIT();
 }
 
+void
+a65_stream::set_metadata(
+	__in const std::string &path,
+	__in size_t line
+	)
+{
+	A65_DEBUG_ENTRY_INFO("Path[%u]=%s, Line=%u", path.size(), A65_STRING_CHECK(path), line);
+
+	m_path = path;
+	m_line = line;
+
+	A65_DEBUG_EXIT();
+}
+
 std::string
 a65_stream::to_string(void) const
 {
