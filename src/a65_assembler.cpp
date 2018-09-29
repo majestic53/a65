@@ -70,6 +70,7 @@ a65_assembler::as_source(
 	__in a65_tree &tree
 	) const
 {
+	uint16_t scalar;
 	a65_token entry;
 	std::stringstream result;
 
@@ -82,19 +83,19 @@ a65_assembler::as_source(
 
 	switch(entry.type()) {
 		case A65_TOKEN_COMMAND:
-			result << as_source_command(tree);
+			result << as_source_command(tree) << std::endl;
 			break;
 		case A65_TOKEN_CONSTANT:
 			result << A65_TOKEN_CONSTANT_STRING(entry.subtype());
 			break;
 		case A65_TOKEN_DIRECTIVE:
-			result << as_source_directive(tree);
+			result << as_source_directive(tree) << std::endl;
 			break;
 		case A65_TOKEN_IDENTIFIER:
 			result << entry.literal();
 			break;
 		case A65_TOKEN_LABEL:
-			result << entry.literal() << A65_CHARACTER_LABEL;
+			result << entry.literal() << A65_CHARACTER_LABEL << std::endl;
 			break;
 		case A65_TOKEN_LITERAL:
 			result << A65_CHARACTER_LITERAL << entry.literal_formatted() << A65_CHARACTER_LITERAL;
@@ -103,13 +104,19 @@ a65_assembler::as_source(
 			result << A65_TOKEN_MACRO_STRING(entry.subtype());
 			break;
 		case A65_TOKEN_PRAGMA:
-			result << as_source_pragma(tree);
+			result << as_source_pragma(tree) << std::endl;
 			break;
 		case A65_TOKEN_REGISTER:
 			result << A65_TOKEN_REGISTER_STRING(entry.subtype());
 			break;
 		case A65_TOKEN_SCALAR:
-			result << entry.scalar();
+
+			scalar = entry.scalar();
+			if(scalar > UINT8_MAX) {
+				result << A65_STRING_HEX(uint16_t, entry.scalar());
+			} else {
+				result << A65_STRING_HEX(uint8_t, entry.scalar());
+			}
 			break;
 		case A65_TOKEN_SYMBOL:
 			result << A65_TOKEN_SYMBOL_STRING(entry.subtype());
@@ -127,11 +134,113 @@ a65_assembler::as_source_command(
 	__in a65_tree &tree
 	) const
 {
+	int mode, type;
+	a65_token entry;
 	std::stringstream result;
 
 	A65_DEBUG_ENTRY_INFO("Tree=%p", &tree);
 
-	// TODO: form command string
+	entry = a65_lexer::token(tree.node().token());
+	type = entry.subtype();
+	mode = entry.mode();
+
+	result << A65_TOKEN_COMMAND_STRING(type);
+	if(type == A65_TOKEN_COMMAND_CMD) {
+		result << A65_TOKEN_SYMBOL_STRING(A65_TOKEN_SYMBOL_BRACE_CURLY_OPEN) << entry.scalar()
+			<< A65_TOKEN_SYMBOL_STRING(A65_TOKEN_SYMBOL_BRACE_CURLY_CLOSE);
+	}
+
+	switch(mode) {
+		case A65_TOKEN_COMMAND_MODE_ABSOLUTE:
+		case A65_TOKEN_COMMAND_MODE_RELATIVE:
+		case A65_TOKEN_COMMAND_MODE_ZEROPAGE:
+		case A65_TOKEN_COMMAND_MODE_ABSOLUTE_INDEX_X:
+		case A65_TOKEN_COMMAND_MODE_ABSOLUTE_INDEX_Y:
+		case A65_TOKEN_COMMAND_MODE_ZEROPAGE_INDEX_X:
+		case A65_TOKEN_COMMAND_MODE_ZEROPAGE_INDEX_Y:
+
+			if(!tree.has_child(0)) {
+				A65_THROW_EXCEPTION_INFO("Malformed command tree", "%s", A65_STRING_CHECK(entry.to_string()));
+			}
+
+			tree.move_child(0);
+			result << " " << as_source_expression(tree);
+			tree.move_parent();
+
+			switch(mode) {
+				case A65_TOKEN_COMMAND_MODE_ABSOLUTE_INDEX_X:
+				case A65_TOKEN_COMMAND_MODE_ZEROPAGE_INDEX_X:
+					result << A65_TOKEN_SYMBOL_STRING(A65_TOKEN_SYMBOL_SEPERATOR)
+						<< " " << A65_TOKEN_REGISTER_STRING(A65_TOKEN_REGISTER_INDEX_X);
+					break;
+				case A65_TOKEN_COMMAND_MODE_ABSOLUTE_INDEX_Y:
+				case A65_TOKEN_COMMAND_MODE_ZEROPAGE_INDEX_Y:
+					result << A65_TOKEN_SYMBOL_STRING(A65_TOKEN_SYMBOL_SEPERATOR)
+						<< " " << A65_TOKEN_REGISTER_STRING(A65_TOKEN_REGISTER_INDEX_Y);
+					break;
+				default:
+					break;
+			}
+			break;
+		case A65_TOKEN_COMMAND_MODE_ABSOLUTE_INDEX_INDIRECT:
+		case A65_TOKEN_COMMAND_MODE_ABSOLUTE_INDIRECT:
+		case A65_TOKEN_COMMAND_MODE_ZEROPAGE_INDEX_INDIRECT:
+		case A65_TOKEN_COMMAND_MODE_ZEROPAGE_INDIRECT:
+			result << " " << A65_TOKEN_SYMBOL_STRING(A65_TOKEN_SYMBOL_BRACE_SQUARE_OPEN);
+
+			if(!tree.has_child(0)) {
+				A65_THROW_EXCEPTION_INFO("Malformed command tree", "%s", A65_STRING_CHECK(entry.to_string()));
+			}
+
+			tree.move_child(0);
+			result << " " << as_source_expression(tree);
+			tree.move_parent();
+
+			switch(mode) {
+				case A65_TOKEN_COMMAND_MODE_ABSOLUTE_INDEX_INDIRECT:
+				case A65_TOKEN_COMMAND_MODE_ZEROPAGE_INDEX_INDIRECT:
+					result << A65_TOKEN_SYMBOL_STRING(A65_TOKEN_SYMBOL_SEPERATOR)
+						<< " " << A65_TOKEN_REGISTER_STRING(A65_TOKEN_REGISTER_INDEX_X);
+					break;
+				default:
+					break;
+			}
+
+			result << A65_TOKEN_SYMBOL_STRING(A65_TOKEN_SYMBOL_BRACE_SQUARE_CLOSE);
+			break;
+		case A65_TOKEN_COMMAND_MODE_ACCUMULATOR:
+			result << " " << A65_TOKEN_REGISTER_STRING(A65_TOKEN_REGISTER_ACCUMULATOR);
+			break;
+		case A65_TOKEN_COMMAND_MODE_IMMEDIATE:
+			result << " " << A65_TOKEN_SYMBOL_STRING(A65_TOKEN_SYMBOL_IMMEDIATE);
+
+			if(!tree.has_child(0)) {
+				A65_THROW_EXCEPTION_INFO("Malformed command tree", "%s", A65_STRING_CHECK(entry.to_string()));
+			}
+
+			tree.move_child(0);
+			result << " " << as_source_expression(tree);
+			tree.move_parent();
+			break;
+		case A65_TOKEN_COMMAND_MODE_IMPLIED:
+			break;
+		case A65_TOKEN_COMMAND_MODE_ZEROPAGE_INDIRECT_INDEX:
+			result << " " << A65_TOKEN_SYMBOL_STRING(A65_TOKEN_SYMBOL_BRACE_SQUARE_OPEN);
+
+			if(!tree.has_child(0)) {
+				A65_THROW_EXCEPTION_INFO("Malformed command tree", "%s", A65_STRING_CHECK(entry.to_string()));
+			}
+
+			tree.move_child(0);
+			result << " " << as_source_expression(tree);
+			tree.move_parent();
+			result << A65_TOKEN_SYMBOL_STRING(A65_TOKEN_SYMBOL_BRACE_SQUARE_CLOSE)
+				<< A65_TOKEN_SYMBOL_STRING(A65_TOKEN_SYMBOL_SEPERATOR)
+				<< " " << A65_TOKEN_REGISTER_STRING(A65_TOKEN_REGISTER_INDEX_Y);
+			break;
+		default:
+			A65_THROW_EXCEPTION_INFO("Malformed command tree", "%s", A65_STRING_CHECK(entry.to_string()));
+	}
 
 	A65_DEBUG_EXIT();
 	return result.str();
@@ -142,11 +251,47 @@ a65_assembler::as_source_directive(
 	__in a65_tree &tree
 	) const
 {
+	int type;
+	a65_token entry;
 	std::stringstream result;
 
 	A65_DEBUG_ENTRY_INFO("Tree=%p", &tree);
 
-	// TODO: form directive string
+	entry = a65_lexer::token(tree.node().token());
+	type = entry.subtype();
+	result << A65_TOKEN_DIRECTIVE_STRING(type);
+
+	switch(type) {
+		case A65_TOKEN_DIRECTIVE_DATA_BYTE:
+			// TODO
+			break;
+		case A65_TOKEN_DIRECTIVE_DATA_WORD:
+			// TODO
+			break;
+		case A65_TOKEN_DIRECTIVE_DEFINE:
+			// TODO
+			break;
+		case A65_TOKEN_DIRECTIVE_IF:
+			// TODO
+			break;
+		case A65_TOKEN_DIRECTIVE_IF_DEFINE:
+			// TODO
+			break;
+		case A65_TOKEN_DIRECTIVE_IF_DEFINE_NOT:
+			// TODO
+			break;
+		case A65_TOKEN_DIRECTIVE_ORIGIN:
+			// TODO
+			break;
+		case A65_TOKEN_DIRECTIVE_RESERVE:
+			// TODO
+			break;
+		case A65_TOKEN_DIRECTIVE_UNDEFINE:
+			// TODO
+			break;
+		default:
+			A65_THROW_EXCEPTION_INFO("Malformed directive tree", "%s", A65_STRING_CHECK(entry.to_string()));
+	}
 
 	A65_DEBUG_EXIT();
 	return result.str();
@@ -172,11 +317,43 @@ a65_assembler::as_source_pragma(
 	__in a65_tree &tree
 	) const
 {
+	int type;
+	a65_token entry;
 	std::stringstream result;
 
 	A65_DEBUG_ENTRY_INFO("Tree=%p", &tree);
 
-	// TODO: form pragma string
+	entry = a65_lexer::token(tree.node().token());
+	type = entry.subtype();
+	result << A65_TOKEN_PRAGMA_STRING(type);
+
+	switch(type) {
+		case A65_TOKEN_PRAGMA_INCLUDE_BINARY:
+		case A65_TOKEN_PRAGMA_INCLUDE_SOURCE:
+		case A65_TOKEN_PRAGMA_METADATA:
+
+			if(!tree.has_child(0)) {
+				A65_THROW_EXCEPTION_INFO("Malformed pragma tree", "%s", A65_STRING_CHECK(entry.to_string()));
+			}
+
+			tree.move_child(0);
+			result << " " << as_source(tree);
+			tree.move_parent();
+
+			if(type == A65_TOKEN_PRAGMA_METADATA) {
+
+				if(!tree.has_child(1)) {
+					A65_THROW_EXCEPTION_INFO("Malformed pragma tree", "%s", A65_STRING_CHECK(entry.to_string()));
+				}
+
+				tree.move_child(1);
+				result << " " << as_source(tree);
+				tree.move_parent();
+			}
+			break;
+		default:
+			A65_THROW_EXCEPTION_INFO("Malformed pragma tree", "%s", A65_STRING_CHECK(entry.to_string()));
+	}
 
 	A65_DEBUG_EXIT();
 	return result.str();
@@ -206,7 +383,7 @@ a65_assembler::evaluate(void)
 
 		if(!tree.node().match(A65_NODE_BEGIN)
 				&& !tree.node().match(A65_NODE_END)) {
-			std::cout << /*a65_parser::to_string()*/ as_source(tree) << std::endl;
+			std::cout << /*a65_parser::to_string() << std::endl*/ as_source(tree);
 		}
 
 		a65_parser::move_next();
@@ -275,15 +452,15 @@ a65_assembler::run(
 	preprocess();
 	evaluate();
 
-	if(options & A65_ASSEMBLER_BINARY) {
+	if(options & A65_BINARY) {
 		form_binary();
 	}
 
-	if(options & A65_ASSEMBLER_IHEX) {
+	if(options & A65_IHEX) {
 		form_ihex();
 	}
 
-	if(options & A65_ASSEMBLER_LISTING) {
+	if(options & A65_LISTING) {
 		form_listing();
 	}
 
