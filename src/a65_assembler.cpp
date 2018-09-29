@@ -105,6 +105,9 @@ a65_assembler::as_source(
 		case A65_TOKEN_PRAGMA:
 			result << as_source_pragma(tree);
 			break;
+		case A65_TOKEN_REGISTER:
+			result << A65_TOKEN_REGISTER_STRING(entry.subtype());
+			break;
 		case A65_TOKEN_SCALAR:
 			result << entry.scalar();
 			break;
