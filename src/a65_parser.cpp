@@ -348,6 +348,10 @@ a65_parser::enumerate_command(
 
 	a65_lexer::move_next();
 
+	if(cmd == A65_TOKEN_COMMAND_CMD) {
+		enumerate_command_custom(tree);
+	}
+
 	entry = a65_lexer::token();
 	if(entry.match(A65_TOKEN_CONSTANT)
 			|| entry.match(A65_TOKEN_IDENTIFIER)
@@ -464,6 +468,57 @@ a65_parser::enumerate_command(
 
 	set_mode(tree.node().token(), mode);
 	return_parent_tree(tree);
+
+	A65_DEBUG_EXIT();
+}
+
+void
+a65_parser::enumerate_command_custom(
+	__inout a65_tree &tree
+	)
+{
+	uint16_t scalar;
+	a65_token entry;
+
+	A65_DEBUG_ENTRY_INFO("Tree=%p", &tree);
+
+	entry = a65_lexer::token();
+	if(!entry.match(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_BRACE_CURLY_OPEN)) {
+		A65_THROW_EXCEPTION_INFO("Unterminated command", "%s", A65_STRING_CHECK(entry.to_string()));
+	}
+
+	if(!a65_lexer::has_next()) {
+		A65_THROW_EXCEPTION_INFO("Unterminated command", "%s", A65_STRING_CHECK(entry.to_string()));
+	}
+
+	a65_lexer::move_next();
+
+	entry = a65_lexer::token();
+	if(!entry.match(A65_TOKEN_SCALAR)) {
+		A65_THROW_EXCEPTION_INFO("Expecting scalar", "%s", A65_STRING_CHECK(entry.to_string()));
+	}
+
+	scalar = entry.scalar();
+	if(scalar > UINT8_MAX) {
+		A65_THROW_EXCEPTION_INFO("Scalar too large", "%s (max=%u)", A65_STRING_CHECK(entry.to_string()), UINT8_MAX);
+	}
+
+	set_scalar(tree.node().token(), scalar);
+
+	if(!a65_lexer::has_next()) {
+		A65_THROW_EXCEPTION_INFO("Unterminated command", "%s", A65_STRING_CHECK(entry.to_string()));
+	}
+
+	a65_lexer::move_next();
+
+	entry = a65_lexer::token();
+	if(!entry.match(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_BRACE_CURLY_CLOSE)) {
+		A65_THROW_EXCEPTION_INFO("Unterminated command", "%s", A65_STRING_CHECK(entry.to_string()));
+	}
+
+	if(a65_lexer::has_next()) {
+		a65_lexer::move_next();
+	}
 
 	A65_DEBUG_EXIT();
 }
@@ -1175,6 +1230,9 @@ a65_parser::enumerate_pragma(
 		case A65_TOKEN_PRAGMA_INCLUDE_SOURCE:
 			enumerate_pragma_include_source(tree);
 			break;
+		case A65_TOKEN_PRAGMA_METADATA:
+			enumerate_pragma_metadata(tree);
+			break;
 		default:
 			A65_THROW_EXCEPTION_INFO("Unsupported pragma", "%s", A65_STRING_CHECK(entry.to_string()));
 	}
@@ -1237,6 +1295,53 @@ a65_parser::enumerate_pragma_include_source(
 	entry = token();
 	if(!entry.match(A65_TOKEN_LITERAL)) {
 		A65_THROW_EXCEPTION_INFO("Expecting literal", "%s", A65_STRING_CHECK(entry.to_string()));
+	}
+
+	add_child(tree, A65_NODE_CONSTANT, entry.id());
+
+	if(a65_lexer::has_next()) {
+		a65_lexer::move_next();
+	}
+
+	return_parent_tree(tree);
+
+	A65_DEBUG_EXIT();
+}
+
+void
+a65_parser::enumerate_pragma_metadata(
+	__inout a65_tree &tree
+	)
+{
+	a65_token entry;
+
+	A65_DEBUG_ENTRY_INFO("Tree=%p", &tree);
+
+	entry = token();
+	add_child_subtree(tree, A65_NODE_PRAGMA, entry.id());
+
+	if(!a65_lexer::has_next()) {
+		A65_THROW_EXCEPTION_INFO("Unterminated pragma", "%s", A65_STRING_CHECK(entry.to_string()));
+	}
+
+	a65_lexer::move_next();
+
+	entry = token();
+	if(!entry.match(A65_TOKEN_LITERAL)) {
+		A65_THROW_EXCEPTION_INFO("Expecting literal", "%s", A65_STRING_CHECK(entry.to_string()));
+	}
+
+	add_child(tree, A65_NODE_CONSTANT, entry.id());
+
+	if(!a65_lexer::has_next()) {
+		A65_THROW_EXCEPTION_INFO("Unterminated pragma", "%s", A65_STRING_CHECK(entry.to_string()));
+	}
+
+	a65_lexer::move_next();
+
+	entry = token();
+	if(!entry.match(A65_TOKEN_SCALAR)) {
+		A65_THROW_EXCEPTION_INFO("Expecting scalar", "%s", A65_STRING_CHECK(entry.to_string()));
 	}
 
 	add_child(tree, A65_NODE_CONSTANT, entry.id());

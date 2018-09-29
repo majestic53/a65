@@ -50,6 +50,11 @@ Changelog
 
 Version 0.1.1839
 ----------------
+*Updated: 9/28/2018*
+
+* Added custom command syntax: ```cmd{<SCALAR>} <MODE>```
+* Added metadata pragma for preprocessor
+
 *Updated: 9/27/2018*
 
 * Implemented assembler class

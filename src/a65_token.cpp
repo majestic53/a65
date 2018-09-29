@@ -337,6 +337,10 @@ a65_token::to_string(void) const
 					case A65_TOKEN_COMMAND:
 						result << " " << A65_TOKEN_COMMAND_STRING(m_subtype);
 
+						if(m_subtype == A65_TOKEN_COMMAND_CMD) {
+							result << "<" << m_scalar << "(" << A65_STRING_HEX(uint8_t, m_scalar) << ")>";
+						}
+
 						if(m_mode != A65_TOKEN_MODE_UNDEFINED) {
 							result << " " << A65_TOKEN_COMMAND_MODE_STRING(m_mode);
 						}

@@ -69,6 +69,11 @@ class a65_lexer :
 			__in int mode
 			);
 
+		void set_scalar(
+			__in uint32_t id,
+			__in uint16_t scalar
+			);
+
 		virtual std::string to_string(void) const override;
 
 		a65_token token(

@@ -861,6 +861,19 @@ a65_lexer::set_mode(
 }
 
 void
+a65_lexer::set_scalar(
+	__in uint32_t id,
+	__in uint16_t scalar
+	)
+{
+	A65_DEBUG_ENTRY_INFO("Id=%u(%x), Scalar=%u(%04x)", id, id, scalar, scalar);
+
+	find(id)->second.set_scalar(scalar);
+
+	A65_DEBUG_EXIT();
+}
+
+void
 a65_lexer::skip(void)
 {
 	A65_DEBUG_ENTRY();

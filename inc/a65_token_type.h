@@ -158,6 +158,7 @@ enum {
 	A65_TOKEN_COMMAND_CLD,
 	A65_TOKEN_COMMAND_CLI,
 	A65_TOKEN_COMMAND_CLV,
+	A65_TOKEN_COMMAND_CMD,
 	A65_TOKEN_COMMAND_CMP,
 	A65_TOKEN_COMMAND_CPX,
 	A65_TOKEN_COMMAND_CPY,
@@ -230,7 +231,7 @@ static const std::string A65_TOKEN_COMMAND_STR[] = {
 	"adc", "and", "asl", "bbr0", "bbr1", "bbr2", "bbr3", "bbr4", "bbr5", "bbr6", "bbr7",
 	"bbs0", "bbs1", "bbs2", "bbs3", "bbs4", "bbs5", "bbs6", "bbs7", "bcc", "bcs", "beq",
 	"bit", "bmi", "bne", "bpl", "bra", "brk", "bvc", "bvs", "clc", "cld", "cli", "clv",
-	"cmp", "cpx", "cpy", "dec", "dex", "dey", "eor", "inc", "inx", "iny", "jmp", "jsr",
+	"cmd", "cmp", "cpx", "cpy", "dec", "dex", "dey", "eor", "inc", "inx", "iny", "jmp", "jsr",
 	"lda", "ldx", "ldy", "lsr", "nop", "ora", "pha", "php", "phx", "phy", "pla", "plp", "plx", "ply",
 	"rmb0", "rmb1", "rmb2", "rmb3", "rmb4", "rmb5", "rmb6", "rmb7", "rol", "ror", "rti", "rts",
 	"sbc", "sec", "sed", "sei", "smb0", "smb1", "smb2", "smb3", "smb4", "smb5", "smb6", "smb7",
@@ -276,6 +277,7 @@ static const std::map<std::string, int> A65_TOKEN_COMMAND_MAP = {
 	std::make_pair(A65_TOKEN_COMMAND_STRING(A65_TOKEN_COMMAND_CLD), A65_TOKEN_COMMAND_CLD),
 	std::make_pair(A65_TOKEN_COMMAND_STRING(A65_TOKEN_COMMAND_CLI), A65_TOKEN_COMMAND_CLI),
 	std::make_pair(A65_TOKEN_COMMAND_STRING(A65_TOKEN_COMMAND_CLV), A65_TOKEN_COMMAND_CLV),
+	std::make_pair(A65_TOKEN_COMMAND_STRING(A65_TOKEN_COMMAND_CMD), A65_TOKEN_COMMAND_CMD),
 	std::make_pair(A65_TOKEN_COMMAND_STRING(A65_TOKEN_COMMAND_CMP), A65_TOKEN_COMMAND_CMP),
 	std::make_pair(A65_TOKEN_COMMAND_STRING(A65_TOKEN_COMMAND_CPX), A65_TOKEN_COMMAND_CPX),
 	std::make_pair(A65_TOKEN_COMMAND_STRING(A65_TOKEN_COMMAND_CPY), A65_TOKEN_COMMAND_CPY),
@@ -652,12 +654,13 @@ static const std::map<std::string, int> A65_TOKEN_MACRO_MAP = {
 enum {
 	A65_TOKEN_PRAGMA_INCLUDE_BINARY = 0,
 	A65_TOKEN_PRAGMA_INCLUDE_SOURCE,
+	A65_TOKEN_PRAGMA_METADATA,
 };
 
-#define A65_TOKEN_PRAGMA_MAX A65_TOKEN_PRAGMA_INCLUDE_SOURCE
+#define A65_TOKEN_PRAGMA_MAX A65_TOKEN_PRAGMA_METADATA
 
 static const std::string A65_TOKEN_PRAGMA_STR[] = {
-	"@incb", "@inc",
+	"@incb", "@inc", "@meta",
 	};
 
 #define A65_TOKEN_PRAGMA_STRING(_TYPE_) \
@@ -667,6 +670,7 @@ static const std::string A65_TOKEN_PRAGMA_STR[] = {
 static const std::map<std::string, int> A65_TOKEN_PRAGMA_MAP = {
 	std::make_pair(A65_TOKEN_PRAGMA_STRING(A65_TOKEN_PRAGMA_INCLUDE_BINARY), A65_TOKEN_PRAGMA_INCLUDE_BINARY),
 	std::make_pair(A65_TOKEN_PRAGMA_STRING(A65_TOKEN_PRAGMA_INCLUDE_SOURCE), A65_TOKEN_PRAGMA_INCLUDE_SOURCE),
+	std::make_pair(A65_TOKEN_PRAGMA_STRING(A65_TOKEN_PRAGMA_METADATA), A65_TOKEN_PRAGMA_METADATA),
 	};
 
 #define A65_TOKEN_PRAGMA_ID(_STRING_) \

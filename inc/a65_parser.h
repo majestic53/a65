@@ -116,6 +116,10 @@ class a65_parser :
 			__inout a65_tree &tree
 			);
 
+		void enumerate_command_custom(
+			__inout a65_tree &tree
+			);
+
 		void enumerate_directive(
 			__inout a65_tree &tree
 			);
@@ -209,6 +213,10 @@ class a65_parser :
 			);
 
 		void enumerate_pragma_include_source(
+			__inout a65_tree &tree
+			);
+
+		void enumerate_pragma_metadata(
 			__inout a65_tree &tree
 			);
 
