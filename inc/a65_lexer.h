@@ -24,7 +24,7 @@
 #include "./a65_token.h"
 
 class a65_lexer :
-		protected a65_stream {
+		public a65_stream {
 
 	public:
 

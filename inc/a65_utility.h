@@ -36,6 +36,10 @@ class a65_utility {
 			...
 			);
 
+		static std::string file_prefix(
+			__in const std::string &path
+			);
+
 		static size_t read_file(
 			__in const std::string &path,
 			__inout std::string &data

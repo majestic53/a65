@@ -50,6 +50,10 @@ Changelog
 
 Version 0.1.1839
 ----------------
+*Updated: 9/30/2018*
+
+* Implemented pragma preprocessing
+
 *Updated: 9/28/2018*
 
 * Added custom command syntax: ```cmd{<SCALAR>} <MODE>```

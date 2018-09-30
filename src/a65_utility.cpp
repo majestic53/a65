@@ -121,6 +121,21 @@ a65_utility::debug_print(
 	}
 }
 
+std::string
+a65_utility::file_prefix(
+	__in const std::string &path
+	)
+{
+	std::string result;
+
+	A65_DEBUG_ENTRY_INFO("Path[%u]=%s", path.size(), A65_STRING_CHECK(path));
+
+	result = path.substr(0, path.find_last_of("/\\"));
+
+	A65_DEBUG_EXIT_INFO("Result[%u]=%s", result.size(), A65_STRING_CHECK(result));
+	return result;
+}
+
 size_t
 a65_utility::read_file(
 	__in const std::string &path,

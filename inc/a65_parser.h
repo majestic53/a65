@@ -24,7 +24,7 @@
 #include "./a65_tree.h"
 
 class a65_parser :
-		protected a65_lexer {
+		public a65_lexer {
 
 	public:
 

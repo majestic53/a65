@@ -49,6 +49,9 @@
 #define __inout_opt
 #endif // __inout_opt
 
+#define A65 "A65"
+#define A65_NOTICE "Copyright (C) 2018 David Jolly"
+
 #define A65_FLOAT_PREC(_PREC_, _VALUE_) \
 	std::right << std::setprecision(_PREC_) << std::fixed << (_VALUE_) << std::defaultfloat
 
@@ -73,6 +76,6 @@
 
 #define A65_VERSION_MAJOR 0
 #define A65_VERSION_MINOR 1
-#define A65_VERSION_REVISION 26
+#define A65_VERSION_REVISION 27
 
 #endif // A65_DEFINE_H_

@@ -24,7 +24,7 @@
 #include "./a65_section.h"
 
 class a65_assembler :
-		protected a65_parser {
+		public a65_parser {
 
 	public:
 
@@ -50,26 +50,6 @@ class a65_assembler :
 
 	protected:
 
-		std::string as_source(
-			__in a65_tree &tree
-			) const;
-
-		std::string as_source_command(
-			__in a65_tree &tree
-			) const;
-
-		std::string as_source_directive(
-			__in a65_tree &tree
-			) const;
-
-		std::string as_source_expression(
-			__in a65_tree &tree
-			) const;
-
-		std::string as_source_pragma(
-			__in a65_tree &tree
-			) const;
-
 		void evaluate(void);
 
 		// TODO: add additional evaluation routines
@@ -80,7 +60,30 @@ class a65_assembler :
 
 		void form_listing(void);
 
-		void preprocess(void);
+		std::string preprocess(
+			__in_opt const std::string &input = std::string()
+			);
+
+		std::string preprocess(
+			__in a65_parser &parser,
+			__in a65_tree &tree
+			) const;
+
+		std::string preprocess_command(
+			__in a65_tree &tree
+			) const;
+
+		std::string preprocess_directive(
+			__in a65_tree &tree
+			) const;
+
+		std::string preprocess_expression(
+			__in a65_tree &tree
+			) const;
+
+		std::string preprocess_pragma(
+			__in a65_tree &tree
+			) const;
 
 		std::string m_input;
 
