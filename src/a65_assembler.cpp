@@ -237,14 +237,9 @@ a65_assembler::preprocess_command(
 		case A65_TOKEN_COMMAND_MODE_ABSOLUTE_INDEX_Y:
 		case A65_TOKEN_COMMAND_MODE_ZEROPAGE_INDEX_X:
 		case A65_TOKEN_COMMAND_MODE_ZEROPAGE_INDEX_Y:
-
-			if(!tree.has_child(0)) {
-				A65_THROW_EXCEPTION_INFO("Malformed command tree", "%s", A65_STRING_CHECK(entry.to_string()));
-			}
-
-			tree.move_child(0);
+			a65_tree::move_child(tree, 0);
 			result << " " << preprocess_expression(tree);
-			tree.move_parent();
+			a65_tree::move_parent(tree);
 
 			switch(mode) {
 				case A65_TOKEN_COMMAND_MODE_ABSOLUTE_INDEX_X:
@@ -267,13 +262,9 @@ a65_assembler::preprocess_command(
 		case A65_TOKEN_COMMAND_MODE_ZEROPAGE_INDIRECT:
 			result << " " << A65_TOKEN_SYMBOL_STRING(A65_TOKEN_SYMBOL_BRACE_SQUARE_OPEN);
 
-			if(!tree.has_child(0)) {
-				A65_THROW_EXCEPTION_INFO("Malformed command tree", "%s", A65_STRING_CHECK(entry.to_string()));
-			}
-
-			tree.move_child(0);
+			a65_tree::move_child(tree, 0);
 			result << " " << preprocess_expression(tree);
-			tree.move_parent();
+			a65_tree::move_parent(tree);
 
 			switch(mode) {
 				case A65_TOKEN_COMMAND_MODE_ABSOLUTE_INDEX_INDIRECT:
@@ -293,26 +284,18 @@ a65_assembler::preprocess_command(
 		case A65_TOKEN_COMMAND_MODE_IMMEDIATE:
 			result << " " << A65_TOKEN_SYMBOL_STRING(A65_TOKEN_SYMBOL_IMMEDIATE);
 
-			if(!tree.has_child(0)) {
-				A65_THROW_EXCEPTION_INFO("Malformed command tree", "%s", A65_STRING_CHECK(entry.to_string()));
-			}
-
-			tree.move_child(0);
+			a65_tree::move_child(tree, 0);
 			result << " " << preprocess_expression(tree);
-			tree.move_parent();
+			a65_tree::move_parent(tree);
 			break;
 		case A65_TOKEN_COMMAND_MODE_IMPLIED:
 			break;
 		case A65_TOKEN_COMMAND_MODE_ZEROPAGE_INDIRECT_INDEX:
 			result << " " << A65_TOKEN_SYMBOL_STRING(A65_TOKEN_SYMBOL_BRACE_SQUARE_OPEN);
 
-			if(!tree.has_child(0)) {
-				A65_THROW_EXCEPTION_INFO("Malformed command tree", "%s", A65_STRING_CHECK(entry.to_string()));
-			}
-
-			tree.move_child(0);
+			a65_tree::move_child(tree, 0);
 			result << " " << preprocess_expression(tree);
-			tree.move_parent();
+			a65_tree::move_parent(tree);
 			result << A65_TOKEN_SYMBOL_STRING(A65_TOKEN_SYMBOL_BRACE_SQUARE_CLOSE)
 				<< A65_TOKEN_SYMBOL_STRING(A65_TOKEN_SYMBOL_SEPERATOR)
 				<< " " << A65_TOKEN_REGISTER_STRING(A65_TOKEN_REGISTER_INDEX_Y);
@@ -320,6 +303,21 @@ a65_assembler::preprocess_command(
 		default:
 			A65_THROW_EXCEPTION_INFO("Malformed command tree", "%s", A65_STRING_CHECK(entry.to_string()));
 	}
+
+	A65_DEBUG_EXIT();
+	return result.str();
+}
+
+std::string
+a65_assembler::preprocess_condition(
+	__in a65_tree &tree
+	) const
+{
+	std::stringstream result;
+
+	A65_DEBUG_ENTRY_INFO("Tree=%p", &tree);
+
+	// TODO
 
 	A65_DEBUG_EXIT();
 	return result.str();
@@ -342,31 +340,62 @@ a65_assembler::preprocess_directive(
 
 	switch(type) {
 		case A65_TOKEN_DIRECTIVE_DATA_BYTE:
-			// TODO
-			break;
 		case A65_TOKEN_DIRECTIVE_DATA_WORD:
-			// TODO
+			a65_tree::move_child(tree, 0);
+
+			for(size_t child = 0; child < tree.node().child_count(); ++child) {
+				a65_tree::move_child(tree, child);
+
+				if(child) {
+					result << ",";
+				}
+
+				result << " " << preprocess_expression(tree);
+				a65_tree::move_parent(tree);
+			}
+
+			a65_tree::move_parent(tree);
 			break;
 		case A65_TOKEN_DIRECTIVE_DEFINE:
-			// TODO
+			a65_tree::move_child(tree, 0);
+
+			entry = a65_lexer::token(tree.node().token());
+			if(!entry.match(A65_TOKEN_IDENTIFIER)) {
+				A65_THROW_EXCEPTION_INFO("Malformed directive tree", "%s", A65_STRING_CHECK(entry.to_string()));
+			}
+
+			result << " " << entry.literal();
+			a65_tree::move_parent(tree);
+
+			if(tree.has_child(1)) {
+				a65_tree::move_child(tree, 1);
+				result << " " << preprocess_expression(tree);
+				a65_tree::move_parent(tree);
+			}
 			break;
 		case A65_TOKEN_DIRECTIVE_IF:
 			// TODO
 			break;
 		case A65_TOKEN_DIRECTIVE_IF_DEFINE:
-			// TODO
-			break;
 		case A65_TOKEN_DIRECTIVE_IF_DEFINE_NOT:
 			// TODO
 			break;
 		case A65_TOKEN_DIRECTIVE_ORIGIN:
-			// TODO
-			break;
 		case A65_TOKEN_DIRECTIVE_RESERVE:
-			// TODO
+			a65_tree::move_child(tree, 0);
+			result << " " << preprocess_expression(tree);
+			a65_tree::move_parent(tree);
 			break;
 		case A65_TOKEN_DIRECTIVE_UNDEFINE:
-			// TODO
+			a65_tree::move_child(tree, 0);
+
+			entry = a65_lexer::token(tree.node().token());
+			if(!entry.match(A65_TOKEN_IDENTIFIER)) {
+				A65_THROW_EXCEPTION_INFO("Malformed directive tree", "%s", A65_STRING_CHECK(entry.to_string()));
+			}
+
+			result << " " << entry.literal();
+			a65_tree::move_parent(tree);
 			break;
 		default:
 			A65_THROW_EXCEPTION_INFO("Malformed directive tree", "%s", A65_STRING_CHECK(entry.to_string()));
@@ -413,14 +442,10 @@ a65_assembler::preprocess_pragma(
 				size_t size;
 				std::string data;
 
-				if(!tree.has_child(0)) {
-					A65_THROW_EXCEPTION_INFO("Malformed pragma tree", "%s", A65_STRING_CHECK(entry.to_string()));
-				}
-
-				tree.move_child(0);
+				a65_tree::move_child(tree, 0);
 				entry = a65_lexer::token(tree.node().token());
 				path << m_input << "/" << entry.literal();
-				tree.move_parent();
+				a65_tree::move_parent(tree);
 
 				size = a65_utility::read_file(path.str(), data);
 				if(size) {
@@ -447,15 +472,10 @@ a65_assembler::preprocess_pragma(
 			}
 			break;
 		case A65_TOKEN_PRAGMA_INCLUDE_SOURCE:
-
-			if(!tree.has_child(0)) {
-				A65_THROW_EXCEPTION_INFO("Malformed pragma tree", "%s", A65_STRING_CHECK(entry.to_string()));
-			}
-
-			tree.move_child(0);
+			a65_tree::move_child(tree, 0);
 			entry = a65_lexer::token(tree.node().token());
 			path << m_input << "/" << entry.literal();
-			tree.move_parent();
+			a65_tree::move_parent(tree);
 
 			result << A65_TOKEN_PRAGMA_STRING(A65_TOKEN_PRAGMA_METADATA)
 				<< " " << A65_CHARACTER_LITERAL << path.str() << A65_CHARACTER_LITERAL << " " << A65_CHARACTER_ZERO

@@ -298,6 +298,23 @@ a65_tree::move_child(
 }
 
 void
+a65_tree::move_child(
+	__in a65_tree &tree,
+	__in size_t position
+	)
+{
+	A65_DEBUG_ENTRY_INFO("Tree=%p, Position=%u", &tree, position);
+
+	if(!tree.has_child(position)) {
+		A65_THROW_EXCEPTION_INFO("No child node found at position", "%u", position);
+	}
+
+	tree.move_child(position);
+
+	A65_DEBUG_EXIT();
+}
+
+void
 a65_tree::move_parent(void)
 {
 	A65_DEBUG_ENTRY();
@@ -307,6 +324,20 @@ a65_tree::move_parent(void)
 	}
 
 	m_node = find(m_node)->second.parent();
+
+	A65_DEBUG_EXIT();
+}
+
+void
+a65_tree::move_parent(
+	__in a65_tree &tree
+	)
+{
+	A65_DEBUG_ENTRY_INFO("Tree=%p", &tree);
+
+	if(tree.has_parent()) {
+		tree.move_parent();
+	}
 
 	A65_DEBUG_EXIT();
 }

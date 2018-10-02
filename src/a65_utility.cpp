@@ -244,3 +244,28 @@ a65_utility::throw_exception(
 	A65_DEBUG_MESSAGE(A65_DEBUG_LEVEL_ERROR, result.str());
 	throw std::runtime_error(result.str());
 }
+
+void
+a65_utility::write_file(
+	__in const std::string &path,
+	__in const std::string &data
+	)
+{
+	A65_DEBUG_ENTRY_INFO("Path[%u]=%s, Data[%u]=%p", path.size(), A65_STRING_CHECK(path), data.size(), &data);
+
+	if(!path.empty()) {
+
+		std::ofstream file(path.c_str(), std::ios::binary | std::ios::out | std::ios::trunc);
+		if(!file) {
+			A65_THROW_EXCEPTION_INFO("Failed to create file", "[%u]%s", path.size(), A65_STRING_CHECK(path));
+		}
+
+		if(!data.empty()) {
+			file.write((char *)&data[0], data.size());
+		}
+
+		file.close();
+	}
+
+	A65_DEBUG_EXIT();
+}

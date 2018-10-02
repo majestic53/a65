@@ -467,7 +467,7 @@ a65_parser::enumerate_command(
 	}
 
 	set_mode(tree.node().token(), mode);
-	return_parent_tree(tree);
+	a65_tree::move_parent(tree);
 
 	A65_DEBUG_EXIT();
 }
@@ -585,7 +585,7 @@ a65_parser::enumerate_directive_data_byte(
 
 	a65_lexer::move_next();
 	enumerate_expression_list(tree);
-	return_parent_tree(tree);
+	a65_tree::move_parent(tree);
 
 	A65_DEBUG_EXIT();
 }
@@ -608,7 +608,7 @@ a65_parser::enumerate_directive_data_word(
 
 	a65_lexer::move_next();
 	enumerate_expression_list(tree);
-	return_parent_tree(tree);
+	a65_tree::move_parent(tree);
 
 	A65_DEBUG_EXIT();
 }
@@ -654,7 +654,7 @@ a65_parser::enumerate_directive_define(
 		}
 	}
 
-	return_parent_tree(tree);
+	a65_tree::move_parent(tree);
 
 	A65_DEBUG_EXIT();
 }
@@ -677,7 +677,7 @@ a65_parser::enumerate_directive_else(
 
 	a65_lexer::move_next();
 	enumerate_statement_list(tree);
-	return_parent_tree(tree);
+	a65_tree::move_parent(tree);
 
 	A65_DEBUG_EXIT();
 }
@@ -701,7 +701,7 @@ a65_parser::enumerate_directive_elseif(
 	a65_lexer::move_next();
 	enumerate_expression_condition(tree);
 	enumerate_statement_list(tree);
-	return_parent_tree(tree);
+	a65_tree::move_parent(tree);
 
 	A65_DEBUG_EXIT();
 }
@@ -756,7 +756,7 @@ a65_parser::enumerate_directive_if(
 	}
 
 	enumerate_directive_end(tree);
-	return_parent_tree(tree);
+	a65_tree::move_parent(tree);
 
 	A65_DEBUG_EXIT();
 }
@@ -804,7 +804,7 @@ a65_parser::enumerate_directive_if_define(
 	}
 
 	enumerate_directive_end(tree);
-	return_parent_tree(tree);
+	a65_tree::move_parent(tree);
 
 	A65_DEBUG_EXIT();
 }
@@ -827,7 +827,7 @@ a65_parser::enumerate_directive_origin(
 
 	a65_lexer::move_next();
 	enumerate_expression(tree);
-	return_parent_tree(tree);
+	a65_tree::move_parent(tree);
 
 	A65_DEBUG_EXIT();
 }
@@ -850,7 +850,7 @@ a65_parser::enumerate_directive_reserve(
 
 	a65_lexer::move_next();
 	enumerate_expression(tree);
-	return_parent_tree(tree);
+	a65_tree::move_parent(tree);
 
 	A65_DEBUG_EXIT();
 }
@@ -884,7 +884,7 @@ a65_parser::enumerate_directive_undefine(
 		a65_lexer::move_next();
 	}
 
-	return_parent_tree(tree);
+	a65_tree::move_parent(tree);
 
 	A65_DEBUG_EXIT();
 }
@@ -898,7 +898,7 @@ a65_parser::enumerate_expression(
 
 	add_child_subtree(tree, A65_NODE_EXPRESSION);
 	enumerate_expression_binary(tree);
-	return_parent_tree(tree);
+	a65_tree::move_parent(tree);
 
 	A65_DEBUG_EXIT();
 }
@@ -927,7 +927,7 @@ a65_parser::enumerate_expression_arithmetic_0(
 
 		a65_lexer::move_next();
 		enumerate_expression_arithmetic_0(tree);
-		return_parent_tree(tree);
+		a65_tree::move_parent(tree);
 	} else {
 		add_child_subtree(tree, subtree);
 	}
@@ -960,7 +960,7 @@ a65_parser::enumerate_expression_arithmetic_1(
 
 		a65_lexer::move_next();
 		enumerate_expression_arithmetic_1(tree);
-		return_parent_tree(tree);
+		a65_tree::move_parent(tree);
 	} else {
 		add_child_subtree(tree, subtree);
 	}
@@ -993,7 +993,7 @@ a65_parser::enumerate_expression_binary(
 
 		a65_lexer::move_next();
 		enumerate_expression_binary(tree);
-		return_parent_tree(tree);
+		a65_tree::move_parent(tree);
 	} else {
 		add_child_subtree(tree, subtree);
 	}
@@ -1032,7 +1032,7 @@ a65_parser::enumerate_expression_condition(
 		enumerate_expression(tree);
 	}
 
-	return_parent_tree(tree);
+	a65_tree::move_parent(tree);
 
 	A65_DEBUG_EXIT();
 }
@@ -1084,7 +1084,7 @@ a65_parser::enumerate_expression_factor(
 			}
 		}
 
-		return_parent_tree(tree);
+		a65_tree::move_parent(tree);
 	} else if(entry.match(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_PARENTHESIS_OPEN)) {
 
 		if(!a65_lexer::has_next()) {
@@ -1111,7 +1111,7 @@ a65_parser::enumerate_expression_factor(
 
 		a65_lexer::move_next();
 		enumerate_expression_factor(tree);
-		return_parent_tree(tree);
+		a65_tree::move_parent(tree);
 	} else if(entry.match(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_UNARY_NEGATION)
 			|| entry.match(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_UNARY_NOT)) {
 		add_child_subtree(tree, A65_NODE_UNARY, entry.id());
@@ -1122,7 +1122,7 @@ a65_parser::enumerate_expression_factor(
 
 		a65_lexer::move_next();
 		enumerate_expression_factor(tree);
-		return_parent_tree(tree);
+		a65_tree::move_parent(tree);
 	} else {
 		A65_THROW_EXCEPTION_INFO("Expecting expression", "%s", A65_STRING_CHECK(entry.to_string()));
 	}
@@ -1154,7 +1154,7 @@ a65_parser::enumerate_expression_list(
 		entry = a65_lexer::token();
 	}
 
-	return_parent_tree(tree);
+	a65_tree::move_parent(tree);
 
 	A65_DEBUG_EXIT();
 }
@@ -1183,7 +1183,7 @@ a65_parser::enumerate_expression_logical(
 
 		a65_lexer::move_next();
 		enumerate_expression_logical(tree);
-		return_parent_tree(tree);
+		a65_tree::move_parent(tree);
 	} else {
 		add_child_subtree(tree, subtree);
 	}
@@ -1207,7 +1207,7 @@ a65_parser::enumerate_label(
 		a65_lexer::move_next();
 	}
 
-	return_parent_tree(tree);
+	a65_tree::move_parent(tree);
 
 	A65_DEBUG_EXIT();
 }
@@ -1269,7 +1269,7 @@ a65_parser::enumerate_pragma_include_binary(
 		a65_lexer::move_next();
 	}
 
-	return_parent_tree(tree);
+	a65_tree::move_parent(tree);
 
 	A65_DEBUG_EXIT();
 }
@@ -1303,7 +1303,7 @@ a65_parser::enumerate_pragma_include_source(
 		a65_lexer::move_next();
 	}
 
-	return_parent_tree(tree);
+	a65_tree::move_parent(tree);
 
 	A65_DEBUG_EXIT();
 }
@@ -1350,7 +1350,7 @@ a65_parser::enumerate_pragma_metadata(
 		a65_lexer::move_next();
 	}
 
-	return_parent_tree(tree);
+	a65_tree::move_parent(tree);
 
 	A65_DEBUG_EXIT();
 }
@@ -1382,7 +1382,7 @@ a65_parser::enumerate_statement_list(
 		entry = a65_lexer::token();
 	}
 
-	return_parent_tree(tree);
+	a65_tree::move_parent(tree);
 
 	A65_DEBUG_EXIT();
 }
@@ -1559,20 +1559,6 @@ a65_parser::reset(void)
 	A65_DEBUG_ENTRY();
 
 	m_tree_position = 0;
-
-	A65_DEBUG_EXIT();
-}
-
-void
-a65_parser::return_parent_tree(
-	__inout a65_tree &tree
-	)
-{
-	A65_DEBUG_ENTRY_INFO("Tree=%p", &tree);
-
-	if(tree.has_parent()) {
-		tree.move_parent();
-	}
 
 	A65_DEBUG_EXIT();
 }

@@ -233,10 +233,6 @@ class a65_parser :
 			__in int mode
 			) const;
 
-		void return_parent_tree(
-			__inout a65_tree &tree
-			);
-
 		std::vector<uint32_t> m_tree;
 
 		std::map<uint32_t, a65_tree> m_tree_map;

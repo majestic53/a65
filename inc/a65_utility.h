@@ -53,6 +53,11 @@ class a65_utility {
 			__in const char *format,
 			...
 			);
+
+		static void write_file(
+			__in const std::string &path,
+			__in const std::string &data
+			);
 };
 
 #endif // A65_UTILITY_H_

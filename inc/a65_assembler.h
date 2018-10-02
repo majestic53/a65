@@ -60,6 +60,11 @@ class a65_assembler :
 
 		void form_listing(void);
 
+		void move_child_tree(
+			__in a65_tree &tree,
+			__in size_t position
+			);
+
 		std::string preprocess(
 			__in_opt const std::string &input = std::string()
 			);
@@ -70,6 +75,10 @@ class a65_assembler :
 			) const;
 
 		std::string preprocess_command(
+			__in a65_tree &tree
+			) const;
+
+		std::string preprocess_condition(
 			__in a65_tree &tree
 			) const;
 

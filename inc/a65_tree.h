@@ -71,7 +71,16 @@ class a65_tree {
 			__in size_t position
 			);
 
+		static void move_child(
+			__in a65_tree &tree,
+			__in size_t position
+			);
+
 		void move_parent(void);
+
+		static void move_parent(
+			__in a65_tree &tree
+			);
 
 		void move_root(void);
 
