@@ -72,27 +72,32 @@ class a65_assembler :
 		std::string preprocess(
 			__in a65_parser &parser,
 			__in a65_tree &tree
-			) const;
+			);
 
 		std::string preprocess_command(
+			__in a65_parser &parser,
 			__in a65_tree &tree
-			) const;
+			);
 
 		std::string preprocess_condition(
+			__in a65_parser &parser,
 			__in a65_tree &tree
-			) const;
+			);
 
 		std::string preprocess_directive(
+			__in a65_parser &parser,
 			__in a65_tree &tree
-			) const;
+			);
 
 		std::string preprocess_expression(
+			__in a65_parser &parser,
 			__in a65_tree &tree
-			) const;
+			);
 
 		std::string preprocess_pragma(
+			__in a65_parser &parser,
 			__in a65_tree &tree
-			) const;
+			);
 
 		std::string m_input;
 
