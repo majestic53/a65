@@ -50,7 +50,9 @@ class a65_assembler :
 
 	protected:
 
-		void evaluate(void);
+		void evaluate(
+			__in const std::string &input
+			);
 
 		// TODO: add additional evaluation routines
 

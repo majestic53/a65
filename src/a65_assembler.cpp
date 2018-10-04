@@ -77,11 +77,27 @@ a65_assembler::clear(void)
 }
 
 void
-a65_assembler::evaluate(void)
+a65_assembler::evaluate(
+	__in const std::string &input
+	)
 {
-	A65_DEBUG_ENTRY();
+	A65_DEBUG_ENTRY_INFO("Input[%u]=%p", input.size(), &input);
 
-	// TODO: evaluate parser contents
+	a65_parser::load(input, false);
+
+	while(a65_parser::has_next()) {
+		a65_tree tree = a65_parser::tree();
+
+		if(!tree.node().match(A65_NODE_BEGIN)
+				&& !tree.node().match(A65_NODE_END)) {
+
+			// TODO: evaluate parser contents
+			std::cout << a65_parser::as_string(tree, 0) << std::endl;
+			// ---
+		}
+
+		a65_parser::move_next();
+	}
 
 	A65_DEBUG_EXIT();
 }
@@ -180,7 +196,12 @@ a65_assembler::preprocess(
 			result << A65_CHARACTER_LITERAL << entry.literal_formatted() << A65_CHARACTER_LITERAL;
 			break;
 		case A65_TOKEN_MACRO:
-			result << A65_TOKEN_MACRO_STRING(entry.subtype());
+			result << A65_TOKEN_MACRO_STRING(entry.subtype())
+				<< A65_TOKEN_SYMBOL_STRING(A65_TOKEN_SYMBOL_PARENTHESIS_OPEN);
+			a65_tree::move_child(tree, 0);
+			result << preprocess_expression(parser, tree);
+			a65_tree::move_parent(tree);
+			result << A65_TOKEN_SYMBOL_STRING(A65_TOKEN_SYMBOL_PARENTHESIS_CLOSE);
 			break;
 		case A65_TOKEN_PRAGMA:
 			result << A65_CHARACTER_TAB << preprocess_pragma(parser, tree);
@@ -198,7 +219,27 @@ a65_assembler::preprocess(
 			}
 			break;
 		case A65_TOKEN_SYMBOL:
-			result << A65_TOKEN_SYMBOL_STRING(entry.subtype());
+
+			switch(tree.node().type()) {
+				case A65_NODE_OPERATOR:
+					a65_tree::move_child(tree, 0);
+					result << preprocess_expression(*this, tree);
+					a65_tree::move_parent(tree);
+					result << " " << A65_TOKEN_SYMBOL_STRING(entry.subtype()) << " ";
+					a65_tree::move_child(tree, 1);
+					result << preprocess_expression(*this, tree);
+					a65_tree::move_parent(tree);
+					break;
+				case A65_NODE_UNARY:
+					result << A65_TOKEN_SYMBOL_STRING(entry.subtype());
+					a65_tree::move_child(tree, 0);
+					result << preprocess_expression(parser, tree);
+					a65_tree::move_parent(tree);
+					break;
+				default:
+					result << A65_TOKEN_SYMBOL_STRING(entry.subtype());
+					break;
+			}
 			break;
 		default:
 			A65_THROW_EXCEPTION_INFO("Malformed tree", "%s", A65_STRING_CHECK(entry.to_string()));
@@ -530,31 +571,27 @@ a65_assembler::preprocess_expression(
 	A65_DEBUG_ENTRY_INFO("Parser=%p, Tree=%p", &parser, &tree);
 
 	entry = tree.node();
-	if(entry.type() == A65_NODE_EXPRESSION) {
-		a65_tree::move_child(tree, 0);
+	switch(entry.type()) {
+		case A65_NODE_EXPRESSION:
+			a65_tree::move_child(tree, 0);
 
-		entry = tree.node();
-		switch(entry.type()) {
-			case A65_NODE_EXPRESSION:
-				// TODO
-				break;
-			case A65_NODE_MACRO:
-				// TODO
-				break;
-			case A65_NODE_OPERATOR:
-				// TODO
-				break;
-			case A65_NODE_UNARY:
-				// TODO
-				break;
-			default:
-				result << preprocess(*this, tree);
-				break;
-		}
+			entry = tree.node();
+			switch(entry.type()) {
+				case A65_NODE_EXPRESSION:
+					result << A65_TOKEN_SYMBOL_STRING(A65_TOKEN_SYMBOL_PARENTHESIS_OPEN)
+						<< preprocess_expression(parser, tree)
+						<< A65_TOKEN_SYMBOL_STRING(A65_TOKEN_SYMBOL_PARENTHESIS_CLOSE);
+					break;
+				default:
+					result << preprocess(*this, tree);
+					break;
+			}
 
-		a65_tree::move_parent(tree);
-	} else {
-		result << preprocess(*this, tree);
+			a65_tree::move_parent(tree);
+			break;
+		default:
+			result << preprocess(*this, tree);
+			break;
 	}
 
 	A65_DEBUG_EXIT();
@@ -675,13 +712,9 @@ a65_assembler::run(
 		<< " " << A65_CHARACTER_LITERAL << a65_stream::path() << A65_CHARACTER_LITERAL
 		<< " " << a65_stream::line() << preprocess();
 
-	// TODO
-	std::cout << source.str() << std::endl;
-	// ---
-
 	a65_parser::load(source.str(), false);
 	a65_assembler::clear();
-	evaluate();
+	evaluate(source.str());
 
 	if(options & A65_BINARY) {
 		form_binary();

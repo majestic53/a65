@@ -1092,7 +1092,9 @@ a65_parser::enumerate_expression_factor(
 		}
 
 		a65_lexer::move_next();
+		add_child_subtree(tree, A65_NODE_EXPRESSION);
 		enumerate_expression(tree);
+		a65_tree::move_parent(tree);
 
 		entry = a65_lexer::token();
 		if(!entry.match(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_PARENTHESIS_CLOSE)) {
