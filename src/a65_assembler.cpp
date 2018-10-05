@@ -33,7 +33,11 @@ a65_assembler::a65_assembler(
 	__in const a65_assembler &other
 	) :
 		a65_parser(other),
+		m_define(other.m_define),
 		m_input(other.m_input),
+		m_label(other.m_label),
+		m_offset(other.m_offset),
+		m_origin(other.m_origin),
 		m_output(other.m_output),
 		m_section(other.m_section)
 {
@@ -56,7 +60,11 @@ a65_assembler::operator=(
 
 	if(this != &other) {
 		a65_parser::operator=(other);
+		m_define = other.m_define;
 		m_input = other.m_input;
+		m_label = other.m_label;
+		m_offset = other.m_offset;
+		m_origin = other.m_origin;
 		m_output = other.m_output;
 		m_section = other.m_section;
 	}
@@ -66,14 +74,63 @@ a65_assembler::operator=(
 }
 
 void
+a65_assembler::add_command(
+	__in int type,
+	__in int mode,
+	__in_opt uint16_t immediate
+	)
+{
+	A65_DEBUG_ENTRY_INFO("Type=%u(%s), Mode=%u(%s), Immediate=%u(%04x)", type, A65_TOKEN_COMMAND_STRING(type),
+		mode, A65_TOKEN_COMMAND_MODE_STRING(mode), immediate, immediate);
+
+	// TODO: add command to section[origin][offset]
+
+	A65_DEBUG_EXIT();
+}
+
+void
 a65_assembler::clear(void)
 {
 	A65_DEBUG_ENTRY();
 
 	a65_parser::reset();
+	m_define.clear();
+	m_label.clear();
+	m_offset = 0;
+	m_origin = 0;
 	m_section.clear();
 
 	A65_DEBUG_EXIT();
+}
+
+bool
+a65_assembler::contains_define(
+	__in const std::string &name
+	) const
+{
+	bool result;
+
+	A65_DEBUG_ENTRY_INFO("Name[%u]=%s", name.size(), A65_STRING_CHECK(name));
+
+	result = (m_define.find(name) != m_define.end());
+
+	A65_DEBUG_EXIT_INFO("Result=%x", result);
+	return result;
+}
+
+bool
+a65_assembler::contains_label(
+	__in const std::string &name
+	) const
+{
+	bool result;
+
+	A65_DEBUG_ENTRY_INFO("Name[%u]=%s", name.size(), A65_STRING_CHECK(name));
+
+	result = (m_label.find(name) != m_label.end());
+
+	A65_DEBUG_EXIT_INFO("Result=%x", result);
+	return result;
 }
 
 void
@@ -102,34 +159,62 @@ a65_assembler::evaluate(
 	A65_DEBUG_EXIT();
 }
 
-void
-a65_assembler::form_binary(void)
+std::map<std::string, uint16_t>::iterator
+a65_assembler::find_define(
+	__in const std::string &name
+	)
 {
-	A65_DEBUG_ENTRY();
+	std::map<std::string, uint16_t>::iterator result;
 
-	// TODO: form binary file from sectors
+	A65_DEBUG_ENTRY_INFO("Name[%u]=%s", name.size(), A65_STRING_CHECK(name));
 
-	A65_DEBUG_EXIT();
+	result = m_define.find(name);
+	if(result == m_define.end()) {
+		A65_THROW_EXCEPTION_INFO("Define not found", "[%u]%s", name.size(), A65_STRING_CHECK(name));
+	}
+
+	A65_DEBUG_EXIT_INFO("Result={[%u]%s, %u(%04x)}", result->first.size(), A65_STRING_CHECK(result->first), result->second, result->second);
+	return result;
 }
 
-void
-a65_assembler::form_ihex(void)
+std::map<std::string, uint16_t>::iterator
+a65_assembler::find_label(
+	__in const std::string &name
+	)
 {
-	A65_DEBUG_ENTRY();
+	std::map<std::string, uint16_t>::iterator result;
 
-	// TODO: form ihex file sectors
+	A65_DEBUG_ENTRY_INFO("Name[%u]=%s", name.size(), A65_STRING_CHECK(name));
 
-	A65_DEBUG_EXIT();
+	result = m_label.find(name);
+	if(result == m_label.end()) {
+		A65_THROW_EXCEPTION_INFO("Label not found", "[%u]%s", name.size(), A65_STRING_CHECK(name));
+	}
+
+	A65_DEBUG_EXIT_INFO("Result={[%u]%s, %u(%04x)}", result->first.size(), A65_STRING_CHECK(result->first), result->second, result->second);
+	return result;
 }
 
-void
-a65_assembler::form_listing(void)
+bool
+a65_assembler::is_valid_command(
+	__in int type,
+	__in int mode
+	) const
 {
-	A65_DEBUG_ENTRY();
+	bool result;
+	std::map<int, std::map<int, std::pair<uint8_t, size_t>>>::const_iterator entry;
 
-	// TODO: form listing file sectors
+	A65_DEBUG_ENTRY_INFO("Type=%u(%s), Mode=%u(%s)", type, A65_TOKEN_COMMAND_STRING(type), mode, A65_TOKEN_COMMAND_MODE_STRING(mode));
 
-	A65_DEBUG_EXIT();
+	entry = A65_ASSEMBLER_COMMAND_MAP.find(mode);
+
+	result = (entry != A65_ASSEMBLER_COMMAND_MAP.end());
+	if(result) {
+		result = (entry->second.find(type) != entry->second.end());
+	}
+
+	A65_DEBUG_EXIT_INFO("Result=%x", result);
+	return result;
 }
 
 std::string
@@ -163,6 +248,36 @@ a65_assembler::preprocess(
 	return result.str();
 }
 
+void
+a65_assembler::output_binary(void)
+{
+	A65_DEBUG_ENTRY();
+
+	// TODO: output binary file from sectors
+
+	A65_DEBUG_EXIT();
+}
+
+void
+a65_assembler::output_ihex(void)
+{
+	A65_DEBUG_ENTRY();
+
+	// TODO: output ihex file sectors
+
+	A65_DEBUG_EXIT();
+}
+
+void
+a65_assembler::output_listing(void)
+{
+	A65_DEBUG_ENTRY();
+
+	// TODO: output listing file sectors
+
+	A65_DEBUG_EXIT();
+}
+
 std::string
 a65_assembler::preprocess(
 	__in a65_parser &parser,
@@ -178,13 +293,13 @@ a65_assembler::preprocess(
 	entry = parser.token(tree.node().token());
 	switch(entry.type()) {
 		case A65_TOKEN_COMMAND:
-			result << A65_CHARACTER_TAB << preprocess_command(parser, tree);
+			result << preprocess_command(parser, tree);
 			break;
 		case A65_TOKEN_CONSTANT:
 			result << A65_TOKEN_CONSTANT_STRING(entry.subtype());
 			break;
 		case A65_TOKEN_DIRECTIVE:
-			result << A65_CHARACTER_TAB << preprocess_directive(parser, tree);
+			result << preprocess_directive(parser, tree);
 			break;
 		case A65_TOKEN_IDENTIFIER:
 			result << entry.literal();
@@ -204,7 +319,7 @@ a65_assembler::preprocess(
 			result << A65_TOKEN_SYMBOL_STRING(A65_TOKEN_SYMBOL_PARENTHESIS_CLOSE);
 			break;
 		case A65_TOKEN_PRAGMA:
-			result << A65_CHARACTER_TAB << preprocess_pragma(parser, tree);
+			result << preprocess_pragma(parser, tree);
 			break;
 		case A65_TOKEN_REGISTER:
 			result << A65_TOKEN_REGISTER_STRING(entry.subtype());
@@ -628,7 +743,7 @@ a65_assembler::preprocess_pragma(
 
 				size = a65_utility::read_file(path.str(), data);
 				if(size) {
-					result << A65_CHARACTER_TAB << A65_TOKEN_PRAGMA_STRING(A65_TOKEN_PRAGMA_METADATA)
+					result << A65_TOKEN_PRAGMA_STRING(A65_TOKEN_PRAGMA_METADATA)
 						<< " " << A65_CHARACTER_LITERAL << path.str() << A65_CHARACTER_LITERAL << " " << A65_CHARACTER_ZERO
 						<< std::endl << A65_TOKEN_DIRECTIVE_STRING(A65_TOKEN_DIRECTIVE_DATA_BYTE);
 
@@ -642,7 +757,7 @@ a65_assembler::preprocess_pragma(
 					}
 
 					entry = parser.token(tree.node().token());
-					result << std::endl << A65_CHARACTER_TAB << A65_TOKEN_PRAGMA_STRING(A65_TOKEN_PRAGMA_METADATA)
+					result << std::endl << A65_TOKEN_PRAGMA_STRING(A65_TOKEN_PRAGMA_METADATA)
 						<< " " << A65_CHARACTER_LITERAL << entry.path() << A65_CHARACTER_LITERAL
 						<< " " << (entry.line() + 1);
 				}
@@ -656,12 +771,12 @@ a65_assembler::preprocess_pragma(
 			path << m_input << "/" << entry.literal();
 			a65_tree::move_parent(tree);
 
-			result << A65_CHARACTER_TAB << A65_TOKEN_PRAGMA_STRING(A65_TOKEN_PRAGMA_METADATA)
+			result << A65_TOKEN_PRAGMA_STRING(A65_TOKEN_PRAGMA_METADATA)
 				<< " " << A65_CHARACTER_LITERAL << path.str() << A65_CHARACTER_LITERAL << " " << A65_CHARACTER_ZERO
 				<< assembler.preprocess(path.str());
 
 			entry = parser.token(tree.node().token());
-			result << std::endl << A65_CHARACTER_TAB << A65_TOKEN_PRAGMA_STRING(A65_TOKEN_PRAGMA_METADATA)
+			result << std::endl << A65_TOKEN_PRAGMA_STRING(A65_TOKEN_PRAGMA_METADATA)
 				<< " " << A65_CHARACTER_LITERAL << entry.path() << A65_CHARACTER_LITERAL
 				<< " " << (entry.line() + 1);
 			break;
@@ -708,7 +823,7 @@ a65_assembler::run(
 		<< A65_VERSION_MAJOR << "." << A65_VERSION_MINOR << "." << A65_VERSION_REVISION
 		<< std::endl << A65_CHARACTER_COMMENT << " " << A65_NOTICE << std::endl << A65_CHARACTER_COMMENT
 		<< std::endl << A65_CHARACTER_COMMENT << " Input: " << m_input << ", Output: " << m_output
-		<< std::endl << std::endl << A65_CHARACTER_TAB << A65_TOKEN_PRAGMA_STRING(A65_TOKEN_PRAGMA_METADATA)
+		<< std::endl << std::endl << A65_TOKEN_PRAGMA_STRING(A65_TOKEN_PRAGMA_METADATA)
 		<< " " << A65_CHARACTER_LITERAL << a65_stream::path() << A65_CHARACTER_LITERAL
 		<< " " << a65_stream::line() << preprocess();
 
@@ -717,15 +832,15 @@ a65_assembler::run(
 	evaluate(source.str());
 
 	if(options & A65_BINARY) {
-		form_binary();
+		output_binary();
 	}
 
 	if(options & A65_IHEX) {
-		form_ihex();
+		output_ihex();
 	}
 
 	if(options & A65_LISTING) {
-		form_listing();
+		output_listing();
 	}
 
 	A65_DEBUG_EXIT();

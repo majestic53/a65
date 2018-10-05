@@ -228,11 +228,6 @@ class a65_parser :
 			__in uint32_t id
 			);
 
-		bool is_valid_command_mode(
-			__in int command,
-			__in int mode
-			) const;
-
 		std::vector<uint32_t> m_tree;
 
 		std::map<uint32_t, a65_tree> m_tree_map;

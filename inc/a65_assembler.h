@@ -50,22 +50,47 @@ class a65_assembler :
 
 	protected:
 
+		void add_command(
+			__in int type,
+			__in int mode,
+			__in_opt uint16_t immediate = 0
+			);
+
+		bool contains_define(
+			__in const std::string &name
+			) const;
+
+		bool contains_label(
+			__in const std::string &name
+			) const;
+
 		void evaluate(
 			__in const std::string &input
 			);
 
-		// TODO: add additional evaluation routines
+		std::map<std::string, uint16_t>::iterator find_define(
+			__in const std::string &name
+			);
 
-		void form_binary(void);
+		std::map<std::string, uint16_t>::iterator find_label(
+			__in const std::string &name
+			);
 
-		void form_ihex(void);
-
-		void form_listing(void);
+		bool is_valid_command(
+			__in int type,
+			__in int mode
+			) const;
 
 		void move_child_tree(
 			__in a65_tree &tree,
 			__in size_t position
 			);
+
+		void output_binary(void);
+
+		void output_ihex(void);
+
+		void output_listing(void);
 
 		std::string preprocess(
 			__in_opt const std::string &input = std::string()
@@ -101,7 +126,15 @@ class a65_assembler :
 			__in a65_tree &tree
 			);
 
+		std::map<std::string, uint16_t> m_define;
+
 		std::string m_input;
+
+		std::map<std::string, uint16_t> m_label;
+
+		uint16_t m_offset;
+
+		uint16_t m_origin;
 
 		std::string m_output;
 

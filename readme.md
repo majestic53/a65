@@ -48,6 +48,12 @@ TBD
 Changelog
 =========
 
+Version 0.1.1840
+----------------
+*Updated: 10/4/2018*
+
+* Added assembler command table
+
 Version 0.1.1839
 ----------------
 *Updated: 9/30/2018*
@@ -73,17 +79,6 @@ Version 0.1.1839
 * Added assembler class
 * Added section class
 * Added negative scalar support
-
-Version 0.1.1838
-----------------
-*Updated: 9/19-20/2018*
-
-* Implemented parser enumeration routines
-* Parser/lexer bug fixes
-
-*Updated: 9/18/2018*
-
-* Converted binary tree class to d-ary tree class
 
 *Changelog truncated (see file history for full log)*
 
