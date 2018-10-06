@@ -220,12 +220,13 @@ a65_assembler::preprocess(
 	__in_opt const std::string &input
 	)
 {
+	std::string name;
 	std::stringstream result;
 
 	A65_DEBUG_ENTRY_INFO("Input[%u]=%p", input.size(), &input);
 
 	if(!input.empty()) {
-		m_input = a65_utility::file_prefix(input);
+		m_input = a65_utility::file_prefix(input, name);
 		a65_parser::load(input);
 	} else {
 		a65_parser::reset();
@@ -247,11 +248,30 @@ a65_assembler::preprocess(
 }
 
 void
-a65_assembler::output_object(void)
+a65_assembler::output_object(
+	__in const std::string &name
+	)
 {
-	A65_DEBUG_ENTRY();
+	a65_object object;
+	std::stringstream path;
 
-	// TODO: output object file from sectors
+	A65_DEBUG_ENTRY_INFO("Name[%u]=%s", name.size(), A65_STRING_CHECK(name));
+
+	object.import(m_section);
+	path << m_output;
+
+	if(path.str().back() != A65_ASSEMBLER_OUTPUT_SEPERATOR) {
+		path << A65_ASSEMBLER_OUTPUT_SEPERATOR;
+	}
+
+	if(name.empty()) {
+		path << A65_ASSEMBLER_OUTPUT_NAME_DEFAULT << "_" << A65_STRING_HEX(int, std::rand());
+	} else {
+		path << name;
+	}
+
+	path << A65_ASSEMBLER_OUTPUT_EXTENSION;
+	object.write(path.str());
 
 	A65_DEBUG_EXIT();
 }
@@ -771,26 +791,25 @@ a65_assembler::preprocess_pragma(
 
 void
 a65_assembler::run(
-	__in_opt const std::string &input,
+	__in const std::string &input,
 	__in_opt const std::string &output
 	)
 {
+	std::string name;
 	std::stringstream source;
 
 	A65_DEBUG_ENTRY_INFO("Input[%u]=%p, Output[%u]=%p", input.size(), &input, output.size(), &output);
 
-	if(!input.empty()) {
-		m_input = a65_utility::file_prefix(input);
-		a65_parser::load(input);
-		a65_assembler::clear();
-	}
+	m_input = a65_utility::file_prefix(input, name);
+	a65_parser::load(input);
+	a65_assembler::clear();
 
 	if(output.empty()) {
 
 		if(!m_input.empty()) {
 			m_output = m_input;
 		} else {
-			m_output = A65_ASSEMBLER_OUPUT_DEFAULT;
+			m_output = A65_ASSEMBLER_OUTPUT_PATH_DEFAULT;
 		}
 	} else {
 		m_output = output;
@@ -807,8 +826,7 @@ a65_assembler::run(
 	a65_parser::load(source.str(), false);
 	a65_assembler::clear();
 	evaluate(source.str());
-
-	output_object();
+	output_object(name);
 
 	A65_DEBUG_EXIT();
 }

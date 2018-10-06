@@ -152,14 +152,29 @@ a65_utility::debug_print(
 
 std::string
 a65_utility::file_prefix(
-	__in const std::string &path
+	__in const std::string &path,
+	__inout std::string &name
 	)
 {
 	std::string result;
+	size_t extension, seperator;
 
-	A65_DEBUG_ENTRY_INFO("Path[%u]=%s", path.size(), A65_STRING_CHECK(path));
+	A65_DEBUG_ENTRY_INFO("Path[%u]=%s, Name[%u]=%p", path.size(), A65_STRING_CHECK(path), name.size(), &name);
 
-	result = path.substr(0, path.find_last_of("/\\"));
+	seperator = path.find_last_of("/\\");
+	if(seperator == std::string::npos) {
+		A65_THROW_EXCEPTION_INFO("Malformed file path", "[%u]%s", path.size(), A65_STRING_CHECK(path));
+	}
+
+	result = path.substr(0, seperator);
+	name = path.substr(seperator + 1, path.size() - seperator - 1);
+
+	extension = name.find_last_of(".");
+	if(extension == std::string::npos) {
+		A65_THROW_EXCEPTION_INFO("Malformed file path", "[%u]%s", path.size(), A65_STRING_CHECK(path));
+	}
+
+	name = name.substr(0, extension);
 
 	A65_DEBUG_EXIT_INFO("Result[%u]=%s", result.size(), A65_STRING_CHECK(result));
 	return result;

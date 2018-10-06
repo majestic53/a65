@@ -22,9 +22,10 @@
 #include "./a65.h"
 #include "./a65_token_type.h"
 
-#define A65_ASSEMBLER_OPTION_DEFAULT (A65_BINARY | A65_IHEX | A65_LISTING)
-
-#define A65_ASSEMBLER_OUPUT_DEFAULT "./"
+#define A65_ASSEMBLER_OUTPUT_EXTENSION ".o"
+#define A65_ASSEMBLER_OUTPUT_NAME_DEFAULT "obj"
+#define A65_ASSEMBLER_OUTPUT_PATH_DEFAULT "./"
+#define A65_ASSEMBLER_OUTPUT_SEPERATOR '/'
 
 static const std::map<int, std::pair<uint8_t, size_t>> A65_ASSEMBLER_COMMAND_ABSOLUTE_MAP = {
 	std::make_pair(A65_TOKEN_COMMAND_ADC, std::make_pair(0x6d, 3)),

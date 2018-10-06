@@ -43,7 +43,7 @@ class a65_assembler :
 		virtual void clear(void) override;
 
 		virtual void run(
-			__in_opt const std::string &input = std::string(),
+			__in const std::string &input,
 			__in_opt const std::string &output = std::string()
 			);
 
@@ -85,7 +85,9 @@ class a65_assembler :
 			__in size_t position
 			);
 
-		void output_object(void);
+		void output_object(
+			__in const std::string &name
+			);
 
 		std::string preprocess(
 			__in_opt const std::string &input = std::string()
