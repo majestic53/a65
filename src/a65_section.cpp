@@ -20,13 +20,19 @@
 #include "../inc/a65_utility.h"
 
 a65_section::a65_section(
+	__in const std::string &name,
 	__in_opt uint16_t origin
 	) :
 		m_id(A65_UUID_INVALID),
+		m_name(name),
 		m_offset(0),
 		m_origin(origin)
 {
-	A65_DEBUG_ENTRY_INFO("Origin=%u(%04x)", origin, origin);
+	A65_DEBUG_ENTRY_INFO("Name[%u]=%s, Origin=%u(%04x)", name.size(), A65_STRING_CHECK(name), origin, origin);
+
+	if(name.empty()) {
+		A65_THROW_EXCEPTION("Empty section name");
+	}
 
 	generate();
 
@@ -38,6 +44,7 @@ a65_section::a65_section(
 	) :
 		m_id(other.m_id),
 		m_listing(other.m_listing),
+		m_name(other.m_name),
 		m_offset(other.m_offset),
 		m_origin(other.m_origin)
 {
@@ -68,6 +75,7 @@ a65_section::operator=(
 		decrement();
 		m_id = other.m_id;
 		m_listing = other.m_listing;
+		m_name = other.m_name;
 		m_offset = other.m_offset;
 		m_origin = other.m_origin;
 		increment();
@@ -104,7 +112,7 @@ a65_section::clear(void)
 }
 
 size_t
-a65_section::count(void)
+a65_section::count(void) const
 {
 	size_t result;
 
@@ -229,6 +237,14 @@ a65_section::listing(
 	return result;
 }
 
+std::string
+a65_section::name(void) const
+{
+	A65_DEBUG_ENTRY();
+	A65_DEBUG_EXIT_INFO("Result[%u]=%s", m_name.size(), A65_STRING_CHECK(m_name));
+	return m_name;
+}
+
 uint16_t
 a65_section::offset(
 	__in size_t position
@@ -250,6 +266,22 @@ a65_section::origin(void) const
 	A65_DEBUG_ENTRY();
 	A65_DEBUG_EXIT_INFO("Result=%u(%04x)", m_origin, m_origin);
 	return m_origin;
+}
+
+void
+a65_section::set_name(
+	__in const std::string &name
+	)
+{
+	A65_DEBUG_ENTRY_INFO("Name[%u]=%s", name.size(), A65_STRING_CHECK(name));
+
+	if(name.empty()) {
+		A65_THROW_EXCEPTION("Empty section name");
+	}
+
+	m_name = name;
+
+	A65_DEBUG_EXIT();
 }
 
 void
@@ -279,7 +311,8 @@ a65_section::to_string(void) const
 
 	A65_DEBUG_ENTRY();
 
-	result << "{" << A65_STRING_HEX(uint32_t, m_id) << "} [" << A65_STRING_HEX(uint16_t, m_origin) << "] <" << m_listing.size() << ">";
+	result << "{" << A65_STRING_HEX(uint32_t, m_id) << "} [" << A65_STRING_CHECK(m_name) << "@" << A65_STRING_HEX(uint16_t, m_origin)
+		<< "] <" << m_listing.size() << ">";
 
 	if(!m_listing.empty()) {
 		result << " {" << A65_FLOAT_PREC(2, m_offset / A65_SECTION_KB_LENGTH) << " KB (" << m_offset << " bytes)}";

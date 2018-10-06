@@ -17,6 +17,7 @@
  */
 
 #include "../inc/a65_assembler.h"
+#include "../inc/a65_object.h"
 #include "../inc/a65_utility.h"
 
 a65_assembler::a65_assembler(void) :
@@ -36,7 +37,6 @@ a65_assembler::a65_assembler(
 		m_define(other.m_define),
 		m_input(other.m_input),
 		m_label(other.m_label),
-		m_offset(other.m_offset),
 		m_origin(other.m_origin),
 		m_output(other.m_output),
 		m_section(other.m_section)
@@ -63,7 +63,6 @@ a65_assembler::operator=(
 		m_define = other.m_define;
 		m_input = other.m_input;
 		m_label = other.m_label;
-		m_offset = other.m_offset;
 		m_origin = other.m_origin;
 		m_output = other.m_output;
 		m_section = other.m_section;
@@ -96,7 +95,6 @@ a65_assembler::clear(void)
 	a65_parser::reset();
 	m_define.clear();
 	m_label.clear();
-	m_offset = 0;
 	m_origin = 0;
 	m_section.clear();
 
@@ -249,31 +247,11 @@ a65_assembler::preprocess(
 }
 
 void
-a65_assembler::output_binary(void)
+a65_assembler::output_object(void)
 {
 	A65_DEBUG_ENTRY();
 
-	// TODO: output binary file from sectors
-
-	A65_DEBUG_EXIT();
-}
-
-void
-a65_assembler::output_ihex(void)
-{
-	A65_DEBUG_ENTRY();
-
-	// TODO: output ihex file sectors
-
-	A65_DEBUG_EXIT();
-}
-
-void
-a65_assembler::output_listing(void)
-{
-	A65_DEBUG_ENTRY();
-
-	// TODO: output listing file sectors
+	// TODO: output object file from sectors
 
 	A65_DEBUG_EXIT();
 }
@@ -794,13 +772,12 @@ a65_assembler::preprocess_pragma(
 void
 a65_assembler::run(
 	__in_opt const std::string &input,
-	__in_opt const std::string &output,
-	__in_opt int options
+	__in_opt const std::string &output
 	)
 {
 	std::stringstream source;
 
-	A65_DEBUG_ENTRY_INFO("Input[%u]=%p, Output[%u]=%p, Options=%u(%x)", input.size(), &input, output.size(), &output, options, options);
+	A65_DEBUG_ENTRY_INFO("Input[%u]=%p, Output[%u]=%p", input.size(), &input, output.size(), &output);
 
 	if(!input.empty()) {
 		m_input = a65_utility::file_prefix(input);
@@ -831,17 +808,7 @@ a65_assembler::run(
 	a65_assembler::clear();
 	evaluate(source.str());
 
-	if(options & A65_BINARY) {
-		output_binary();
-	}
-
-	if(options & A65_IHEX) {
-		output_ihex();
-	}
-
-	if(options & A65_LISTING) {
-		output_listing();
-	}
+	output_object();
 
 	A65_DEBUG_EXIT();
 }

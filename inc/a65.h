@@ -19,15 +19,11 @@
 #ifndef A65_H_
 #define A65_H_
 
-#define A65_BINARY 0x00000001
-#define A65_IHEX 0x00000002
-#define A65_LISTING 0x00000004
-
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
 
-extern int a65_assemble(const char *input, const char *output, int option);
+extern int a65_assemble(const char *input, const char *output);
 
 extern const char *a65_error(void);
 

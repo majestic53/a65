@@ -44,8 +44,7 @@ class a65_assembler :
 
 		virtual void run(
 			__in_opt const std::string &input = std::string(),
-			__in_opt const std::string &output = std::string(),
-			__in_opt int options = A65_ASSEMBLER_OPTION_DEFAULT
+			__in_opt const std::string &output = std::string()
 			);
 
 	protected:
@@ -86,11 +85,7 @@ class a65_assembler :
 			__in size_t position
 			);
 
-		void output_binary(void);
-
-		void output_ihex(void);
-
-		void output_listing(void);
+		void output_object(void);
 
 		std::string preprocess(
 			__in_opt const std::string &input = std::string()
@@ -131,8 +126,6 @@ class a65_assembler :
 		std::string m_input;
 
 		std::map<std::string, uint16_t> m_label;
-
-		uint16_t m_offset;
 
 		uint16_t m_origin;
 

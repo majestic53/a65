@@ -18,6 +18,35 @@
 
 #include "../inc/a65_utility.h"
 
+std::string
+a65_utility::data_as_string(
+	__in const std::vector<uint8_t> &data,
+	__in_opt uint16_t origin
+	)
+{
+	size_t iter;
+	std::stringstream result;
+
+	A65_DEBUG_ENTRY_INFO("Data[%u]=%p, Origin=%u(%04x)", data.size(), &data, origin, origin);
+
+	for(iter = 0; iter < data.size(); ++iter) {
+
+		if(!(iter % A65_DATA_BLOCK_LENGTH)) {
+
+			if(iter) {
+				result << std::endl;
+			}
+
+			result << A65_STRING_HEX(uint16_t, iter + origin) << " |";
+		}
+
+		result << " " << A65_STRING_HEX(uint8_t, data.at(iter));
+	}
+
+	A65_DEBUG_EXIT();
+	return result.str();
+}
+
 void
 a65_utility::debug_print(
 	__in int level,
@@ -143,6 +172,28 @@ a65_utility::read_file(
 	)
 {
 	size_t result = 0;
+	std::vector<uint8_t> raw;
+
+	A65_DEBUG_ENTRY_INFO("Path[%u]=%s, Data=%p", path.size(), A65_STRING_CHECK(path), &data);
+
+	result = read_file(path, raw);
+	if(result) {
+		data = std::string(raw.begin(), raw.end());
+	} else {
+		data.clear();
+	}
+
+	A65_DEBUG_EXIT_INFO("Result[%u]=%p", result, &data);
+	return result;
+}
+
+size_t
+a65_utility::read_file(
+	__in const std::string &path,
+	__inout std::vector<uint8_t> &data
+	)
+{
+	size_t result = 0;
 
 	A65_DEBUG_ENTRY_INFO("Path[%u]=%s, Data=%p", path.size(), A65_STRING_CHECK(path), &data);
 
@@ -249,6 +300,25 @@ void
 a65_utility::write_file(
 	__in const std::string &path,
 	__in const std::string &data
+	)
+{
+	std::vector<uint8_t> raw;
+
+	A65_DEBUG_ENTRY_INFO("Path[%u]=%s, Data[%u]=%p", path.size(), A65_STRING_CHECK(path), data.size(), &data);
+
+	if(!data.empty()) {
+		raw = std::vector<uint8_t>(data.begin(), data.end());
+	}
+
+	write_file(path, raw);
+
+	A65_DEBUG_EXIT();
+}
+
+void
+a65_utility::write_file(
+	__in const std::string &path,
+	__in const std::vector<uint8_t> &data
 	)
 {
 	A65_DEBUG_ENTRY_INFO("Path[%u]=%s, Data[%u]=%p", path.size(), A65_STRING_CHECK(path), data.size(), &data);

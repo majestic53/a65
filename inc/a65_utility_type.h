@@ -31,6 +31,8 @@
 #define A65_ASSERT(_CONDITION_)
 #endif // NDEBUG
 
+#define A65_DATA_BLOCK_LENGTH 16
+
 #define A65_DEBUG_ENTRY() \
 	A65_DEBUG_ENTRY_INFO("", "")
 #define A65_DEBUG_ENTRY_INFO(_FORMAT_, ...) \

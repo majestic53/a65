@@ -26,7 +26,8 @@ class a65_section {
 
 	public:
 
-		explicit a65_section(
+		a65_section(
+			__in const std::string &name,
 			__in_opt uint16_t origin = 0
 			);
 
@@ -47,7 +48,7 @@ class a65_section {
 
 		void clear(void);
 
-		size_t count(void);
+		size_t count(void) const;
 
 		std::vector<uint8_t> data(
 			__in size_t position
@@ -61,11 +62,17 @@ class a65_section {
 			__in size_t position
 			) const;
 
+		std::string name(void) const;
+
 		uint16_t offset(
 			__in size_t position
 			) const;
 
 		uint16_t origin(void) const;
+
+		void set_name(
+			__in const std::string &name
+			);
 
 		void set_origin(
 			__in uint16_t origin
@@ -90,6 +97,8 @@ class a65_section {
 		uint32_t m_id;
 
 		std::vector<std::tuple<std::vector<uint8_t>, uint16_t, uint32_t>> m_listing;
+
+		std::string m_name;
 
 		uint16_t m_offset;
 

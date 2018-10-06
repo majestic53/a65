@@ -25,6 +25,11 @@ class a65_utility {
 
 	public:
 
+		static std::string data_as_string(
+			__in const std::vector<uint8_t> &data,
+			__in_opt uint16_t origin = 0
+			);
+
 		static void debug_print(
 			__in int level,
 			__in const std::string &prefix,
@@ -45,6 +50,11 @@ class a65_utility {
 			__inout std::string &data
 			);
 
+		static size_t read_file(
+			__in const std::string &path,
+			__inout std::vector<uint8_t> &data
+			);
+
 		static void throw_exception(
 			__in const std::string &message,
 			__in const std::string &file,
@@ -57,6 +67,11 @@ class a65_utility {
 		static void write_file(
 			__in const std::string &path,
 			__in const std::string &data
+			);
+
+		static void write_file(
+			__in const std::string &path,
+			__in const std::vector<uint8_t> &data
 			);
 };
 

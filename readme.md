@@ -50,6 +50,10 @@ Changelog
 
 Version 0.1.1840
 ----------------
+*Updated: 10/6/2018*
+
+* Added assembler object class
+
 *Updated: 10/4/2018*
 
 * Added assembler command table
