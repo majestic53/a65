@@ -18,8 +18,7 @@
 
 #include <iostream>
 #include <stdexcept>
-#include "../inc/a65.h"
-#include "../inc/a65_utility.h"
+#include "./a65_type.h"
 
 int
 main(

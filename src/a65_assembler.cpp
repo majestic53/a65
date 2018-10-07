@@ -16,6 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <climits>
 #include "../inc/a65_assembler.h"
 #include "../inc/a65_object.h"
 #include "../inc/a65_utility.h"
@@ -37,6 +38,7 @@ a65_assembler::a65_assembler(
 		m_define(other.m_define),
 		m_input(other.m_input),
 		m_label(other.m_label),
+		m_name(other.m_name),
 		m_origin(other.m_origin),
 		m_output(other.m_output),
 		m_section(other.m_section)
@@ -63,6 +65,7 @@ a65_assembler::operator=(
 		m_define = other.m_define;
 		m_input = other.m_input;
 		m_label = other.m_label;
+		m_name = other.m_name;
 		m_origin = other.m_origin;
 		m_output = other.m_output;
 		m_section = other.m_section;
@@ -73,16 +76,61 @@ a65_assembler::operator=(
 }
 
 void
-a65_assembler::add_command(
-	__in int type,
-	__in int mode,
-	__in_opt uint16_t immediate
+a65_assembler::add_define(
+	__in const std::string &name,
+	__in uint16_t value
 	)
 {
-	A65_DEBUG_ENTRY_INFO("Type=%u(%s), Mode=%u(%s), Immediate=%u(%04x)", type, A65_TOKEN_COMMAND_STRING(type),
-		mode, A65_TOKEN_COMMAND_MODE_STRING(mode), immediate, immediate);
+	std::map<std::string, uint16_t>::iterator entry;
 
-	// TODO: add command to section[origin][offset]
+	A65_DEBUG_ENTRY_INFO("Name[%u]=%s, Value=%u(%04x)", name.size(), A65_STRING_CHECK(name), value, value);
+
+	entry = m_define.find(name);
+	if(entry != m_define.end()) {
+		A65_THROW_EXCEPTION_INFO("Duplicate define", "[%u]%s=%u(%04x)", name.size(), A65_STRING_CHECK(name), value, value);
+	}
+
+	m_define.insert(std::make_pair(name, value));
+
+	A65_DEBUG_EXIT();
+}
+
+void
+a65_assembler::add_label(
+	__in const std::string &name,
+	__in uint16_t origin
+	)
+{
+	std::map<std::string, uint16_t>::iterator entry;
+
+	A65_DEBUG_ENTRY_INFO("Name[%u]=%s, Origin=%u(%04x)", name.size(), A65_STRING_CHECK(name), origin, origin);
+
+	entry = m_label.find(name);
+	if(entry != m_label.end()) {
+		A65_THROW_EXCEPTION_INFO("Duplicate label", "[%u]%s=%u(%04x)", name.size(), A65_STRING_CHECK(name), origin, origin);
+	}
+
+	m_label.insert(std::make_pair(name, origin));
+
+	A65_DEBUG_EXIT();
+}
+
+void
+a65_assembler::add_section(
+	__in const std::string &name,
+	__in uint16_t origin
+	)
+{
+	std::map<uint16_t, a65_section>::iterator entry;
+
+	A65_DEBUG_ENTRY_INFO("Name[%u]=%s, Origin=%u(%04x)", name.size(), A65_STRING_CHECK(name), origin, origin);
+
+	entry = m_section.find(origin);
+	if(entry != m_section.end()) {
+		A65_THROW_EXCEPTION_INFO("Duplicate section", "[%u]%s=%u(%04x)", name.size(), A65_STRING_CHECK(name), origin, origin);
+	}
+
+	m_section.insert(std::make_pair(origin, a65_section(name, origin)));
 
 	A65_DEBUG_EXIT();
 }
@@ -95,6 +143,7 @@ a65_assembler::clear(void)
 	a65_parser::reset();
 	m_define.clear();
 	m_label.clear();
+	m_name.clear();
 	m_origin = 0;
 	m_section.clear();
 
@@ -131,6 +180,21 @@ a65_assembler::contains_label(
 	return result;
 }
 
+bool
+a65_assembler::contains_section(
+	__in uint16_t origin
+	) const
+{
+	bool result;
+
+	A65_DEBUG_ENTRY_INFO("Origin=%u(%04x)", origin, origin);
+
+	result = (m_section.find(origin) != m_section.end());
+
+	A65_DEBUG_EXIT_INFO("Result=%x", result);
+	return result;
+}
+
 void
 a65_assembler::evaluate(
 	__in const std::string &input,
@@ -152,10 +216,26 @@ a65_assembler::evaluate(
 
 		if(!tree.node().match(A65_NODE_BEGIN)
 				&& !tree.node().match(A65_NODE_END)) {
+			std::vector<uint8_t> data;
 
-			// TODO: evaluate parser contents
-			//std::cout << a65_parser::as_string(tree, 0) << std::endl;
-			// ---
+			data = evaluate(*this, tree);
+			if(!data.empty()) {
+
+				if(!contains_section(m_origin)) {
+
+					if(m_name.empty()) {
+						std::stringstream stream;
+
+						stream << A65_ASSEMBLER_SECTION_NAME_DEFAULT << "_" << A65_STRING_HEX(uint16_t, m_origin);
+						m_name = stream.str();
+					}
+
+					add_section(m_name, m_origin);
+					m_name.clear();
+				}
+
+				find_section(m_origin)->second.add(data, tree.id());
+			}
 		}
 
 		a65_parser::move_next();
@@ -168,6 +248,88 @@ a65_assembler::evaluate(
 	}
 
 	A65_DEBUG_EXIT();
+}
+
+std::vector<uint8_t>
+a65_assembler::evaluate(
+	__in a65_parser &parser,
+	__in a65_tree &tree
+	)
+{
+	a65_token entry;
+	std::vector<uint8_t> result;
+
+	A65_DEBUG_ENTRY_INFO("Parser=%p, Tree=%p", &parser, &tree);
+
+	entry = parser.token(tree.node().token());
+	switch(entry.type()) {
+		case A65_TOKEN_COMMAND:
+			result = evaluate_command(parser, tree);
+			break;
+		case A65_TOKEN_DIRECTIVE:
+			result = evaluate_directive(parser, tree);
+			break;
+		case A65_TOKEN_LABEL:
+			m_name = entry.literal();
+			add_label(m_name, m_origin);
+			break;
+		case A65_TOKEN_PRAGMA:
+			result = evaluate_pragma(parser, tree);
+			break;
+		default:
+			A65_THROW_EXCEPTION_INFO("Malformed tree", "%s", A65_STRING_CHECK(entry.to_string()));
+	}
+
+	A65_DEBUG_EXIT();
+	return result;
+}
+
+std::vector<uint8_t>
+a65_assembler::evaluate_command(
+	__in a65_parser &parser,
+	__in a65_tree &tree
+	)
+{
+	std::vector<uint8_t> result;
+
+	A65_DEBUG_ENTRY_INFO("Parser=%p, Tree=%p", &parser, &tree);
+
+	// TODO: evalaute command
+
+	A65_DEBUG_EXIT();
+	return result;
+}
+
+std::vector<uint8_t>
+a65_assembler::evaluate_directive(
+	__in a65_parser &parser,
+	__in a65_tree &tree
+	)
+{
+	std::vector<uint8_t> result;
+
+	A65_DEBUG_ENTRY_INFO("Parser=%p, Tree=%p", &parser, &tree);
+
+	// TODO: evalaute directive
+
+	A65_DEBUG_EXIT();
+	return result;
+}
+
+std::vector<uint8_t>
+a65_assembler::evaluate_pragma(
+	__in a65_parser &parser,
+	__in a65_tree &tree
+	)
+{
+	std::vector<uint8_t> result;
+
+	A65_DEBUG_ENTRY_INFO("Parser=%p, Tree=%p", &parser, &tree);
+
+	// TODO: evalaute pragma
+
+	A65_DEBUG_EXIT();
+	return result;
 }
 
 std::map<std::string, uint16_t>::iterator
@@ -203,6 +365,64 @@ a65_assembler::find_label(
 	}
 
 	A65_DEBUG_EXIT_INFO("Result={[%u]%s, %u(%04x)}", result->first.size(), A65_STRING_CHECK(result->first), result->second, result->second);
+	return result;
+}
+
+std::map<uint16_t, a65_section>::iterator
+a65_assembler::find_section(
+	__in uint16_t origin
+	)
+{
+	std::map<uint16_t, a65_section>::iterator result;
+
+	A65_DEBUG_ENTRY_INFO("Origin=%u(%04x), Name[%u]=%s", origin, origin);
+
+	result = m_section.find(origin);
+	if(result == m_section.end()) {
+		A65_THROW_EXCEPTION_INFO("Section not found", "%u(%04x)", origin, origin);
+	}
+
+	A65_DEBUG_EXIT_INFO("Result={%u(%04x), %p}", result->first, result->first, &result->second);
+	return result;
+}
+
+std::vector<uint8_t>
+a65_assembler::form_command(
+	__in int type,
+	__in int mode,
+	__in_opt uint16_t immediate
+	)
+{
+	size_t length;
+	std::vector<uint8_t> result;
+
+	A65_DEBUG_ENTRY_INFO("Type=%u(%s), Mode=%u(%s), Immediate=%u(%04x)", type, A65_TOKEN_COMMAND_STRING(type),
+		mode, A65_TOKEN_COMMAND_MODE_STRING(mode), immediate, immediate);
+
+	if(!is_valid_command(type, mode)) {
+		A65_THROW_EXCEPTION_INFO("Unsupported command type/mode", "%s %s, %u(%04x)", A65_TOKEN_COMMAND_STRING(type),
+			A65_TOKEN_COMMAND_MODE_STRING(mode), immediate, immediate);
+	}
+
+	result.push_back(A65_ASSEMBLER_COMMAND_OPCODE(type, mode));
+
+	length = A65_ASSEMBLER_COMMAND_LENGTH(type, mode);
+	switch(length) {
+		case A65_ASSEMBLER_COMMAND_IMMEDIATE_NONE:
+			break;
+		case A65_ASSEMBLER_COMMAND_IMMEDIATE_BYTE:
+			result.push_back(immediate & UINT8_MAX);
+			break;
+		case A65_ASSEMBLER_COMMAND_IMMEDIATE_WORD:
+			result.push_back(immediate & UINT8_MAX);
+			result.push_back((immediate >> CHAR_BIT) & UINT8_MAX);
+			break;
+		default:
+			A65_THROW_EXCEPTION_INFO("Unsupported command length", "%u", length);
+			break;
+	}
+
+	A65_DEBUG_EXIT();
 	return result;
 }
 
@@ -881,6 +1101,25 @@ a65_assembler::preprocess_pragma(
 
 	A65_DEBUG_EXIT();
 	return result.str();
+}
+
+void
+a65_assembler::remove_define(
+	__in const std::string &name
+	)
+{
+	std::map<std::string, uint16_t>::iterator entry;
+
+	A65_DEBUG_ENTRY_INFO("Name[%u]=%s", name.size(), A65_STRING_CHECK(name));
+
+	entry = m_define.find(name);
+	if(entry == m_define.end()) {
+		A65_THROW_EXCEPTION_INFO("Define not found", "[%u]%s", name.size(), A65_STRING_CHECK(name));
+	}
+
+	m_define.erase(entry);
+
+	A65_DEBUG_EXIT();
 }
 
 void

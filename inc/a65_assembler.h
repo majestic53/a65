@@ -51,10 +51,19 @@ class a65_assembler :
 
 	protected:
 
-		void add_command(
-			__in int type,
-			__in int mode,
-			__in_opt uint16_t immediate = 0
+		void add_define(
+			__in const std::string &name,
+			__in uint16_t value
+			);
+
+		void add_label(
+			__in const std::string &name,
+			__in uint16_t origin
+			);
+
+		void add_section(
+			__in const std::string &name,
+			__in uint16_t origin
 			);
 
 		bool contains_define(
@@ -65,9 +74,33 @@ class a65_assembler :
 			__in const std::string &name
 			) const;
 
+		bool contains_section(
+			__in uint16_t origin
+			) const;
+
 		void evaluate(
 			__in const std::string &input,
 			__in_opt bool verbose = false
+			);
+
+		std::vector<uint8_t> evaluate(
+			__in a65_parser &parser,
+			__in a65_tree &tree
+			);
+
+		std::vector<uint8_t> evaluate_command(
+			__in a65_parser &parser,
+			__in a65_tree &tree
+			);
+
+		std::vector<uint8_t> evaluate_directive(
+			__in a65_parser &parser,
+			__in a65_tree &tree
+			);
+
+		std::vector<uint8_t> evaluate_pragma(
+			__in a65_parser &parser,
+			__in a65_tree &tree
 			);
 
 		std::map<std::string, uint16_t>::iterator find_define(
@@ -76,6 +109,16 @@ class a65_assembler :
 
 		std::map<std::string, uint16_t>::iterator find_label(
 			__in const std::string &name
+			);
+
+		std::map<uint16_t, a65_section>::iterator find_section(
+			__in uint16_t origin
+			);
+
+		std::vector<uint8_t> form_command(
+			__in int type,
+			__in int mode,
+			__in_opt uint16_t immediate = 0
 			);
 
 		bool is_valid_command(
@@ -134,11 +177,17 @@ class a65_assembler :
 			__in a65_tree &tree
 			);
 
+		void remove_define(
+			__in const std::string &name
+			);
+
 		std::map<std::string, uint16_t> m_define;
 
 		std::string m_input;
 
 		std::map<std::string, uint16_t> m_label;
+
+		std::string m_name;
 
 		uint16_t m_origin;
 
