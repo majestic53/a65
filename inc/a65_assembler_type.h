@@ -22,10 +22,24 @@
 #include "./a65.h"
 #include "./a65_token_type.h"
 
-#define A65_ASSEMBLER_OUTPUT_EXTENSION ".o"
-#define A65_ASSEMBLER_OUTPUT_NAME_DEFAULT "obj"
+#define A65_ASSEMBLER_DIVIDER "============================================"
+
+#define A65_ASSEMBLER_EXIT "[Exiting]"
+
 #define A65_ASSEMBLER_OUTPUT_PATH_DEFAULT "./"
 #define A65_ASSEMBLER_OUTPUT_SEPERATOR '/'
+
+#define A65_ASSEMBLER_OUTPUT_OBJECT_NAME_DEFAULT "obj"
+#define A65_ASSEMBLER_OUTPUT_OBJECT_EXTENSION ".o"
+
+#define A65_ASSEMBLER_OUTPUT_SOURCE_NAME_DEFAULT "src"
+#define A65_ASSEMBLER_OUTPUT_SOURCE_EXTENSION ".S"
+
+#define A65_ASSEMBLER_SECTION_DONE "[Done]"
+#define A65_ASSEMBLER_SECTION_EVALUATE "Assembling object"
+#define A65_ASSEMBLER_SECTION_OBJECT "Generating object file"
+#define A65_ASSEMBLER_SECTION_PREPROCESS "Proprocessing input file"
+#define A65_ASSEMBLER_SECTION_SOURCE "Generating source file"
 
 static const std::map<int, std::pair<uint8_t, size_t>> A65_ASSEMBLER_COMMAND_ABSOLUTE_MAP = {
 	std::make_pair(A65_TOKEN_COMMAND_ADC, std::make_pair(0x6d, 3)),

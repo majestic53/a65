@@ -133,10 +133,17 @@ a65_assembler::contains_label(
 
 void
 a65_assembler::evaluate(
-	__in const std::string &input
+	__in const std::string &input,
+	__in_opt bool verbose
 	)
 {
-	A65_DEBUG_ENTRY_INFO("Input[%u]=%p", input.size(), &input);
+	A65_DEBUG_ENTRY_INFO("Input[%u]=%p, Verbose=%x", input.size(), &input, verbose);
+
+	if(verbose) {
+		std::cout << std::endl << A65_ASSEMBLER_DIVIDER
+			<< std::endl << A65_ASSEMBLER_SECTION_EVALUATE
+			<< std::endl << A65_ASSEMBLER_DIVIDER;
+	}
 
 	a65_parser::load(input, false);
 
@@ -147,11 +154,17 @@ a65_assembler::evaluate(
 				&& !tree.node().match(A65_NODE_END)) {
 
 			// TODO: evaluate parser contents
-			std::cout << a65_parser::as_string(tree, 0) << std::endl;
+			//std::cout << a65_parser::as_string(tree, 0) << std::endl;
 			// ---
 		}
 
 		a65_parser::move_next();
+	}
+
+	if(verbose) {
+		// TODO: write information/statistics
+
+		std::cout << std::endl << A65_ASSEMBLER_SECTION_DONE << std::endl;
 	}
 
 	A65_DEBUG_EXIT();
@@ -215,15 +228,119 @@ a65_assembler::is_valid_command(
 	return result;
 }
 
+void
+a65_assembler::output_object(
+	__in const std::string &name,
+	__in_opt bool verbose
+	)
+{
+	a65_object object;
+	std::stringstream path;
+
+	A65_DEBUG_ENTRY_INFO("Name[%u]=%s, Verbose=%x", name.size(), A65_STRING_CHECK(name), verbose);
+
+	path << m_output;
+
+	if(path.str().back() != A65_ASSEMBLER_OUTPUT_SEPERATOR) {
+		path << A65_ASSEMBLER_OUTPUT_SEPERATOR;
+	}
+
+	if(name.empty()) {
+		path << A65_ASSEMBLER_OUTPUT_OBJECT_NAME_DEFAULT << "_" << A65_STRING_HEX(int, std::rand());
+	} else {
+		path << name;
+	}
+
+	path << A65_ASSEMBLER_OUTPUT_OBJECT_EXTENSION;
+
+	if(verbose) {
+		std::cout << std::endl << A65_ASSEMBLER_DIVIDER
+			<< std::endl << A65_ASSEMBLER_SECTION_OBJECT
+			<< std::endl << A65_ASSEMBLER_DIVIDER;
+	}
+
+	object.import(m_section);
+
+	if(verbose) {
+		size_t size = object.size();
+
+		std::cout << std::endl << "Path: " << path.str()
+			<< std::endl << "Size: " << A65_FLOAT_PREC(2, size / A65_SECTION_KB_LENGTH) << " KB (" << size << " bytes)";
+
+		if(!object.empty()) {
+			std::cout << std::endl << object.to_string();
+		}
+	}
+
+	object.write(path.str());
+
+	if(verbose) {
+		std::cout << std::endl << A65_ASSEMBLER_SECTION_DONE << std::endl;
+	}
+
+	A65_DEBUG_EXIT();
+}
+
+void
+a65_assembler::output_source(
+	__in const std::string &name,
+	__in const std::string &source,
+	__in_opt bool verbose
+	)
+{
+	std::stringstream path;
+
+	A65_DEBUG_ENTRY_INFO("Name[%u]=%s, Source[%u]=%p Verbose=%x", name.size(), A65_STRING_CHECK(name), source.size(), &source, verbose);
+
+	path << m_output;
+
+	if(path.str().back() != A65_ASSEMBLER_OUTPUT_SEPERATOR) {
+		path << A65_ASSEMBLER_OUTPUT_SEPERATOR;
+	}
+
+	if(name.empty()) {
+		path << A65_ASSEMBLER_OUTPUT_SOURCE_NAME_DEFAULT << "_" << A65_STRING_HEX(int, std::rand());
+	} else {
+		path << name;
+	}
+
+	path << A65_ASSEMBLER_OUTPUT_SOURCE_EXTENSION;
+
+	if(verbose) {
+		size_t size = source.size();
+
+		std::cout << std::endl << A65_ASSEMBLER_DIVIDER
+			<< std::endl << A65_ASSEMBLER_SECTION_SOURCE
+			<< std::endl << A65_ASSEMBLER_DIVIDER
+			<< std::endl << "Path: " << path.str()
+			<< std::endl << "Size: " << A65_FLOAT_PREC(2, size / A65_SECTION_KB_LENGTH) << " KB (" << size << " bytes)";
+	}
+
+	a65_utility::write_file(path.str(), source);
+
+	if(verbose) {
+		std::cout << std::endl << A65_ASSEMBLER_SECTION_DONE << std::endl;
+	}
+
+	A65_DEBUG_EXIT();
+}
+
 std::string
 a65_assembler::preprocess(
-	__in_opt const std::string &input
+	__in_opt const std::string &input,
+	__in_opt bool verbose
 	)
 {
 	std::string name;
 	std::stringstream result;
 
-	A65_DEBUG_ENTRY_INFO("Input[%u]=%p", input.size(), &input);
+	A65_DEBUG_ENTRY_INFO("Input[%u]=%p, Verbose=%x", input.size(), &input, verbose);
+
+	if(verbose) {
+		std::cout << std::endl << A65_ASSEMBLER_DIVIDER
+			<< std::endl << A65_ASSEMBLER_SECTION_PREPROCESS
+			<< std::endl << A65_ASSEMBLER_DIVIDER;
+	}
 
 	if(!input.empty()) {
 		m_input = a65_utility::file_prefix(input, name);
@@ -243,37 +360,14 @@ a65_assembler::preprocess(
 		a65_parser::move_next();
 	}
 
+	if(verbose) {
+		// TODO: write information/statistics
+
+		std::cout << std::endl << A65_ASSEMBLER_SECTION_DONE << std::endl;
+	}
+
 	A65_DEBUG_EXIT();
 	return result.str();
-}
-
-void
-a65_assembler::output_object(
-	__in const std::string &name
-	)
-{
-	a65_object object;
-	std::stringstream path;
-
-	A65_DEBUG_ENTRY_INFO("Name[%u]=%s", name.size(), A65_STRING_CHECK(name));
-
-	object.import(m_section);
-	path << m_output;
-
-	if(path.str().back() != A65_ASSEMBLER_OUTPUT_SEPERATOR) {
-		path << A65_ASSEMBLER_OUTPUT_SEPERATOR;
-	}
-
-	if(name.empty()) {
-		path << A65_ASSEMBLER_OUTPUT_NAME_DEFAULT << "_" << A65_STRING_HEX(int, std::rand());
-	} else {
-		path << name;
-	}
-
-	path << A65_ASSEMBLER_OUTPUT_EXTENSION;
-	object.write(path.str());
-
-	A65_DEBUG_EXIT();
 }
 
 std::string
@@ -792,13 +886,15 @@ a65_assembler::preprocess_pragma(
 void
 a65_assembler::run(
 	__in const std::string &input,
-	__in_opt const std::string &output
+	__in_opt const std::string &output,
+	__in_opt bool source,
+	__in_opt bool verbose
 	)
 {
 	std::string name;
-	std::stringstream source;
+	std::stringstream processed;
 
-	A65_DEBUG_ENTRY_INFO("Input[%u]=%p, Output[%u]=%p", input.size(), &input, output.size(), &output);
+	A65_DEBUG_ENTRY_INFO("Input[%u]=%p, Output[%u]=%p, Source=%x, Verbose=%x", input.size(), &input, output.size(), &output, source, verbose);
 
 	m_input = a65_utility::file_prefix(input, name);
 	a65_parser::load(input);
@@ -815,18 +911,38 @@ a65_assembler::run(
 		m_output = output;
 	}
 
-	source << A65_CHARACTER_COMMENT << " " << A65 << " Preprocessor "
-		<< A65_VERSION_MAJOR << "." << A65_VERSION_MINOR << "." << A65_VERSION_REVISION
-		<< std::endl << A65_CHARACTER_COMMENT << " " << A65_NOTICE << std::endl << A65_CHARACTER_COMMENT
-		<< std::endl << A65_CHARACTER_COMMENT << " Input: " << m_input << ", Output: " << m_output
-		<< std::endl << std::endl << A65_TOKEN_PRAGMA_STRING(A65_TOKEN_PRAGMA_METADATA)
-		<< " " << A65_CHARACTER_LITERAL << a65_stream::path() << A65_CHARACTER_LITERAL
-		<< " " << a65_stream::line() << preprocess();
+	if(verbose) {
+		std::cout << A65 << " Assembler " << A65_VERSION_MAJOR << "." << A65_VERSION_MINOR << "." << A65_VERSION_REVISION
+			<< std::endl << A65_NOTICE
+			<< std::endl
+			<< std::endl << A65_ASSEMBLER_DIVIDER
+			<< std::endl << "Input: " << input << ", Output: " << m_output
+			<< std::endl << A65_ASSEMBLER_DIVIDER
+			<< std::endl;
+	}
 
-	a65_parser::load(source.str(), false);
+	processed << A65_CHARACTER_COMMENT << " " << A65 << " Preprocessor "
+			<< A65_VERSION_MAJOR << "." << A65_VERSION_MINOR << "." << A65_VERSION_REVISION
+		<< std::endl << A65_CHARACTER_COMMENT << " " << A65_NOTICE
+		<< std::endl << A65_CHARACTER_COMMENT << " " << A65_ASSEMBLER_DIVIDER
+		<< std::endl << A65_CHARACTER_COMMENT << " Input: " << input << ", Output: " << m_output
+		<< std::endl << A65_CHARACTER_COMMENT << " " << A65_ASSEMBLER_DIVIDER
+		<< std::endl << A65_TOKEN_PRAGMA_STRING(A65_TOKEN_PRAGMA_METADATA)
+			<< " " << A65_CHARACTER_LITERAL << a65_stream::path() << A65_CHARACTER_LITERAL
+			<< " " << a65_stream::line() << preprocess(std::string(), verbose);
+
+	if(source) {
+		output_source(name, processed.str(), verbose);
+	}
+
+	a65_parser::load(processed.str(), false);
 	a65_assembler::clear();
-	evaluate(source.str());
-	output_object(name);
+	evaluate(processed.str(), verbose);
+	output_object(name, verbose);
+
+	if(verbose) {
+		std::cout << std::endl << A65_ASSEMBLER_EXIT << std::endl;
+	}
 
 	A65_DEBUG_EXIT();
 }

@@ -44,7 +44,9 @@ class a65_assembler :
 
 		virtual void run(
 			__in const std::string &input,
-			__in_opt const std::string &output = std::string()
+			__in_opt const std::string &output = std::string(),
+			__in_opt bool source = false,
+			__in_opt bool verbose = false
 			);
 
 	protected:
@@ -64,7 +66,8 @@ class a65_assembler :
 			) const;
 
 		void evaluate(
-			__in const std::string &input
+			__in const std::string &input,
+			__in_opt bool verbose = false
 			);
 
 		std::map<std::string, uint16_t>::iterator find_define(
@@ -86,11 +89,19 @@ class a65_assembler :
 			);
 
 		void output_object(
-			__in const std::string &name
+			__in const std::string &name,
+			__in_opt bool verbose = false
+			);
+
+		void output_source(
+			__in const std::string &name,
+			__in const std::string &source,
+			__in_opt bool verbose = false
 			);
 
 		std::string preprocess(
-			__in_opt const std::string &input = std::string()
+			__in_opt const std::string &input = std::string(),
+			__in_opt bool verbose = false
 			);
 
 		std::string preprocess(

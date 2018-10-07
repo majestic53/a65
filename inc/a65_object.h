@@ -52,6 +52,8 @@ class a65_object {
 
 		size_t count(void) const;
 
+		bool empty(void) const;
+
 		void import(
 			__in const std::map<uint16_t, a65_section> &section
 			);
@@ -69,6 +71,8 @@ class a65_object {
 			__in size_t position,
 			__inout std::vector<uint8_t> &data
 			) const;
+
+		size_t size(void) const;
 
 		virtual std::string to_string(void) const;
 

@@ -175,6 +175,22 @@ a65_object::count(void) const
 	return result;
 }
 
+bool
+a65_object::empty(void) const
+{
+	bool result;
+
+	A65_DEBUG_ENTRY();
+
+	result = (m_payload == nullptr);
+	if(!result) {
+		result = (m_payload->metadata.count == 0);
+	}
+
+	A65_DEBUG_EXIT_INFO("Result=%x", result);
+	return result;
+}
+
 std::map<std::string, uint32_t>::const_iterator
 a65_object::find(
 	__in const std::string &name
@@ -230,6 +246,12 @@ a65_object::import(
 		uint32_t size;
 		std::vector<uint8_t> data;
 		std::string name = entry->second.name();
+
+		if(m_section.find(name) != m_section.end()) {
+			A65_THROW_EXCEPTION_INFO("Duplicate object payload section", "%u, [%u]%s", count, name.size(), A65_STRING_CHECK(name));
+		}
+
+		m_section.insert(std::make_pair(name, count));
 
 		for(size_t iter = 0; iter < entry->second.count(); ++iter) {
 
@@ -330,6 +352,12 @@ a65_object::read(
 			if(name.empty()) {
 				A65_THROW_EXCEPTION_INFO("Malformed object payload section name (cannot be empty)", "%u", entry);
 			}
+
+			if(m_section.find(name) != m_section.end()) {
+				A65_THROW_EXCEPTION_INFO("Duplicate object payload section", "%u, [%u]%s", entry, name.size(), A65_STRING_CHECK(name));
+			}
+
+			m_section.insert(std::make_pair(name, entry));
 		}
 
 		m_payload = (a65_object_payload_t *) new uint8_t[size];
@@ -390,6 +418,19 @@ a65_object::section(
 	return result;
 }
 
+size_t
+a65_object::size(void) const
+{
+	size_t result;
+
+	A65_DEBUG_ENTRY();
+
+	result = (m_payload_size + sizeof(a65_object_header_t));
+
+	A65_DEBUG_EXIT_INFO("Result=%u", result);
+	return result;
+}
+
 std::string
 a65_object::to_string(void) const
 {
@@ -397,13 +438,7 @@ a65_object::to_string(void) const
 
 	A65_DEBUG_ENTRY();
 
-	result << "Magic=\'" << (char *)&m_header.magic << "\'(" << A65_STRING_HEX(uint32_t, m_header.magic) << ")"
-		<< ", Version=" << m_header.metadata.major << "." << m_header.metadata.minor
-		<< ", Type=" << m_header.metadata.type << "(" << A65_STRING_HEX(uint16_t, m_header.metadata.type) << ")";
-
 	if(m_payload) {
-		result << ", Count=" << m_payload->metadata.count
-			<< ", Size=" << m_payload->metadata.size;
 
 		for(uint32_t entry = 0; entry < m_payload->metadata.count; ++entry) {
 
@@ -415,10 +450,9 @@ a65_object::to_string(void) const
 			std::vector<uint8_t> data = std::vector<uint8_t>(&((char *)m_payload)[section->offset],
 				&((char *)m_payload)[section->offset] + section->size);
 
-			result << std::endl << "[" << section->name << "]"
-				<< " <" << section->origin << "(" << A65_STRING_HEX(uint16_t, section->origin) << ")>"
-				<< " {" << section->offset << "(" << A65_STRING_HEX(uint32_t, section->offset) << "), "
-					<< section->size << "(" << A65_STRING_HEX(uint32_t, section->size) << ")}";
+			result << std::endl << "[" << A65_STRING_HEX(uint16_t, section->origin) << "]"
+				<< " \"" << section->name << "\""
+				<< " {" << A65_STRING_HEX(uint32_t, section->offset) << ", " << A65_STRING_HEX(uint32_t, section->size) << "}";
 
 			if(!data.empty()) {
 				result << std::endl << a65_utility::data_as_string(data, section->origin);
