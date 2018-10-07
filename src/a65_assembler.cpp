@@ -218,6 +218,10 @@ a65_assembler::evaluate(
 				&& !tree.node().match(A65_NODE_END)) {
 			std::vector<uint8_t> data;
 
+// TODO
+std::cout << a65_parser::as_string(tree, 0) << std::endl;
+// ---
+
 			data = evaluate(*this, tree);
 			if(!data.empty()) {
 

@@ -25,7 +25,7 @@ LIB=liba65.a
 
 all: exe
 
-### EXECUTABLES ###
+### EXECUTABLE ###
 
 exe:
 	@echo ''

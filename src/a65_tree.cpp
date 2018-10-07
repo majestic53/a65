@@ -22,40 +22,30 @@
 a65_tree::a65_tree(
 	__in_opt int type
 	) :
-		m_id(A65_UUID_INVALID),
 		m_node(A65_UUID_INVALID),
 		m_node_root(A65_UUID_INVALID),
 		m_type(type)
 {
 	A65_DEBUG_ENTRY_INFO("Type=%u(%s)", type, A65_TREE_STRING(type));
-
-	generate();
-
 	A65_DEBUG_EXIT();
 }
 
 a65_tree::a65_tree(
 	__in const a65_tree &other
 	) :
-		m_id(other.m_id),
+		a65_id(other),
 		m_node(other.m_node),
 		m_node_map(other.m_node_map),
 		m_node_root(other.m_node_root),
 		m_type(other.m_type)
 {
 	A65_DEBUG_ENTRY();
-
-	increment();
-
 	A65_DEBUG_EXIT();
 }
 
 a65_tree::~a65_tree(void)
 {
 	A65_DEBUG_ENTRY();
-
-	decrement();
-
 	A65_DEBUG_EXIT();
 }
 
@@ -67,13 +57,11 @@ a65_tree::operator=(
 	A65_DEBUG_ENTRY();
 
 	if(this != &other) {
-		decrement();
-		m_id = other.m_id;
+		a65_id::operator=(other);
 		m_node = other.m_node;
 		m_node_map = other.m_node_map;
 		m_node_root = other.m_node_root;
 		m_type = other.m_type;
-		increment();
 	}
 
 	A65_DEBUG_EXIT_INFO("Result=%p", this);
@@ -130,20 +118,6 @@ a65_tree::add_root(
 	A65_DEBUG_EXIT();
 }
 
-void
-a65_tree::decrement(void)
-{
-	A65_DEBUG_ENTRY();
-
-	a65_uuid &instance = a65_uuid::instance();
-	if(instance.contains(m_id)) {
-		instance.decrement(m_id);
-		m_id = A65_UUID_INVALID;
-	}
-
-	A65_DEBUG_EXIT();
-}
-
 bool
 a65_tree::empty(void) const
 {
@@ -173,16 +147,6 @@ a65_tree::find(
 
 	A65_DEBUG_EXIT_INFO("Result={%u(%x), %s}", result->first, result->first, A65_STRING_CHECK(result->second.to_string()));
 	return result;
-}
-
-void
-a65_tree::generate(void)
-{
-	A65_DEBUG_ENTRY();
-
-	m_id = a65_uuid::instance().generate();
-
-	A65_DEBUG_EXIT();
 }
 
 bool
@@ -243,27 +207,6 @@ a65_tree::has_root(void) const
 
 	A65_DEBUG_EXIT_INFO("Result=%x", result);
 	return result;
-}
-
-uint32_t
-a65_tree::id(void) const
-{
-	A65_DEBUG_ENTRY();
-	A65_DEBUG_EXIT_INFO("Result=%u(%x)", m_id, m_id);
-	return m_id;
-}
-
-void
-a65_tree::increment(void)
-{
-	A65_DEBUG_ENTRY();
-
-	a65_uuid &instance = a65_uuid::instance();
-	if(instance.contains(m_id)) {
-		instance.increment(m_id);
-	}
-
-	A65_DEBUG_EXIT();
 }
 
 bool
@@ -453,7 +396,7 @@ a65_tree::to_string(void) const
 
 	A65_DEBUG_ENTRY();
 
-	result << "{" << A65_STRING_HEX(uint32_t, m_id) << "} [" << A65_TREE_STRING(m_type) << "] <" << m_node_map.size() << ">";
+	result << "{" << a65_id::to_string() << "} [" << A65_TREE_STRING(m_type) << "] <" << m_node_map.size() << ">";
 
 	if(has_root()) {
 		result << " {" << A65_STRING_HEX(uint32_t, m_node_root) << ", " << A65_STRING_HEX(uint32_t, m_node) << "}";

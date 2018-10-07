@@ -22,7 +22,8 @@
 #include "./a65_object_type.h"
 #include "./a65_section.h"
 
-class a65_object {
+class a65_object :
+		public a65_id {
 
 	public:
 

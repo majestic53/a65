@@ -19,10 +19,11 @@
 #ifndef A65_TOKEN_H_
 #define A65_TOKEN_H_
 
+#include "./a65_id.h"
 #include "./a65_token_type.h"
-#include "./a65_uuid.h"
 
-class a65_token {
+class a65_token :
+		public a65_id {
 
 	public:
 
@@ -41,8 +42,6 @@ class a65_token {
 		a65_token &operator=(
 			__in const a65_token &other
 			);
-
-		uint32_t id(void) const;
 
 		size_t line(void) const;
 
@@ -92,14 +91,6 @@ class a65_token {
 		int type(void) const;
 
 	protected:
-
-		void decrement(void);
-
-		void generate(void);
-
-		void increment(void);
-
-		uint32_t m_id;
 
 		size_t m_line;
 

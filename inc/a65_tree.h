@@ -22,7 +22,8 @@
 #include "./a65_node.h"
 #include "./a65_tree_type.h"
 
-class a65_tree {
+class a65_tree :
+		public a65_id {
 
 	public:
 
@@ -60,8 +61,6 @@ class a65_tree {
 		bool has_parent(void) const;
 
 		bool has_root(void) const;
-
-		uint32_t id(void) const;
 
 		bool match(
 			__in int type
@@ -104,19 +103,11 @@ class a65_tree {
 
 	protected:
 
-		void decrement(void);
-
 		std::map<uint32_t, a65_node>::iterator find(
 			__in uint32_t id
 			);
 
-		void generate(void);
-
-		void increment(void);
-
 		void remove(void);
-
-		uint32_t m_id;
 
 		uint32_t m_node;
 

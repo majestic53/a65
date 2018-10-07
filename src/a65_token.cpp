@@ -24,7 +24,6 @@ a65_token::a65_token(
 	__in_opt int subtype,
 	__in_opt int mode
 	) :
-		m_id(A65_UUID_INVALID),
 		m_line(0),
 		m_mode(mode),
 		m_scalar(0),
@@ -33,16 +32,13 @@ a65_token::a65_token(
 {
 	A65_DEBUG_ENTRY_INFO("Type=%u(%s), Subtype=%u(%x), Mode=%u(%s)", type, A65_TOKEN_STRING(type), subtype, subtype, mode,
 		A65_TOKEN_COMMAND_MODE_STRING(mode));
-
-	generate();
-
 	A65_DEBUG_EXIT();
 }
 
 a65_token::a65_token(
 	__in const a65_token &other
 	) :
-		m_id(other.m_id),
+		a65_id(other),
 		m_line(other.m_line),
 		m_literal(other.m_literal),
 		m_mode(other.m_mode),
@@ -52,18 +48,12 @@ a65_token::a65_token(
 		m_type(other.m_type)
 {
 	A65_DEBUG_ENTRY();
-
-	increment();
-
 	A65_DEBUG_EXIT();
 }
 
 a65_token::~a65_token(void)
 {
 	A65_DEBUG_ENTRY();
-
-	decrement();
-
 	A65_DEBUG_EXIT();
 }
 
@@ -75,8 +65,7 @@ a65_token::operator=(
 	A65_DEBUG_ENTRY();
 
 	if(this != &other) {
-		decrement();
-		m_id = other.m_id;
+		a65_id::operator=(other);
 		m_line = other.m_line;
 		m_literal = other.m_literal;
 		m_mode = other.m_mode;
@@ -84,56 +73,10 @@ a65_token::operator=(
 		m_scalar = other.m_scalar;
 		m_subtype = other.m_subtype;
 		m_type = other.m_type;
-		increment();
 	}
 
 	A65_DEBUG_EXIT_INFO("Result=%p", this);
 	return *this;
-}
-
-void
-a65_token::decrement(void)
-{
-	A65_DEBUG_ENTRY();
-
-	a65_uuid &instance = a65_uuid::instance();
-	if(instance.contains(m_id)) {
-		instance.decrement(m_id);
-		m_id = A65_UUID_INVALID;
-	}
-
-	A65_DEBUG_EXIT();
-}
-
-void
-a65_token::generate(void)
-{
-	A65_DEBUG_ENTRY();
-
-	m_id = a65_uuid::instance().generate();
-
-	A65_DEBUG_EXIT();
-}
-
-uint32_t
-a65_token::id(void) const
-{
-	A65_DEBUG_ENTRY();
-	A65_DEBUG_EXIT_INFO("Result=%u(%x)", m_id, m_id);
-	return m_id;
-}
-
-void
-a65_token::increment(void)
-{
-	A65_DEBUG_ENTRY();
-
-	a65_uuid &instance = a65_uuid::instance();
-	if(instance.contains(m_id)) {
-		instance.increment(m_id);
-	}
-
-	A65_DEBUG_EXIT();
 }
 
 size_t
@@ -313,7 +256,7 @@ a65_token::to_string(void) const
 
 	A65_DEBUG_ENTRY();
 
-	result << "{" << A65_STRING_HEX(uint32_t, m_id) << "} [" << A65_TOKEN_STRING(m_type) << "]";
+	result << "{" << a65_id::to_string() << "} [" << A65_TOKEN_STRING(m_type) << "]";
 
 	switch(m_type) {
 		case A65_TOKEN_BEGIN:

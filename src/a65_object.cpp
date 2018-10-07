@@ -42,6 +42,7 @@ a65_object::a65_object(
 a65_object::a65_object(
 	__in const a65_object &other
 	) :
+		a65_id(other),
 		m_header({}),
 		m_payload(nullptr),
 		m_payload_size(0)
@@ -70,6 +71,7 @@ a65_object::operator=(
 	A65_DEBUG_ENTRY();
 
 	if(this != &other) {
+		a65_id::operator=(other);
 		copy(other);
 	}
 

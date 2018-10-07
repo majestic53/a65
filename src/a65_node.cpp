@@ -26,41 +26,31 @@ a65_node::a65_node(
 	__in_opt const std::vector<uint32_t> &child
 	) :
 		m_child(child),
-		m_id(A65_UUID_INVALID),
 		m_parent(parent),
 		m_token(token),
 		m_type(type)
 {
 	A65_DEBUG_ENTRY_INFO("Type=%u(%s), Token=%u(%x), Parent=%u(%x), Child[%u]=%p", type, A65_NODE_STRING(type),
 		token, token, parent, parent, child.size(), &child);
-
-	generate();
-
 	A65_DEBUG_EXIT();
 }
 
 a65_node::a65_node(
 	__in const a65_node &other
 	) :
+		a65_id(other),
 		m_child(other.m_child),
-		m_id(other.m_id),
 		m_parent(other.m_parent),
 		m_token(other.m_token),
 		m_type(other.m_type)
 {
 	A65_DEBUG_ENTRY();
-
-	increment();
-
 	A65_DEBUG_EXIT();
 }
 
 a65_node::~a65_node(void)
 {
 	A65_DEBUG_ENTRY();
-
-	decrement();
-
 	A65_DEBUG_EXIT();
 }
 
@@ -72,13 +62,11 @@ a65_node::operator=(
 	A65_DEBUG_ENTRY();
 
 	if(this != &other) {
-		decrement();
+		a65_id::operator=(other);
 		m_child = other.m_child;
-		m_id = other.m_id;
 		m_parent = other.m_parent;
 		m_token = other.m_token;
 		m_type = other.m_type;
-		increment();
 	}
 
 	A65_DEBUG_EXIT_INFO("Result=%p", this);
@@ -148,30 +136,6 @@ a65_node::child_count(void) const
 	return result;
 }
 
-void
-a65_node::decrement(void)
-{
-	A65_DEBUG_ENTRY();
-
-	a65_uuid &instance = a65_uuid::instance();
-	if(instance.contains(m_id)) {
-		instance.decrement(m_id);
-		m_id = A65_UUID_INVALID;
-	}
-
-	A65_DEBUG_EXIT();
-}
-
-void
-a65_node::generate(void)
-{
-	A65_DEBUG_ENTRY();
-
-	m_id = a65_uuid::instance().generate();
-
-	A65_DEBUG_EXIT();
-}
-
 bool
 a65_node::has_child(
 	__in size_t position
@@ -211,27 +175,6 @@ a65_node::has_token(void) const
 
 	A65_DEBUG_EXIT_INFO("Result=%x", result);
 	return result;
-}
-
-uint32_t
-a65_node::id(void) const
-{
-	A65_DEBUG_ENTRY();
-	A65_DEBUG_EXIT_INFO("Result=%u(%x)", m_id, m_id);
-	return m_id;
-}
-
-void
-a65_node::increment(void)
-{
-	A65_DEBUG_ENTRY();
-
-	a65_uuid &instance = a65_uuid::instance();
-	if(instance.contains(m_id)) {
-		instance.increment(m_id);
-	}
-
-	A65_DEBUG_EXIT();
 }
 
 bool
@@ -375,7 +318,7 @@ a65_node::to_string(void) const
 
 	A65_DEBUG_ENTRY();
 
-	result << "{" << A65_STRING_HEX(uint32_t, m_id) << "} [" << A65_NODE_STRING(m_type) << "] {";
+	result << "{" << a65_id::to_string() << "} [" << A65_NODE_STRING(m_type) << "] {";
 
 	if(is_root()) {
 		result << "Root";

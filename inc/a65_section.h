@@ -22,7 +22,8 @@
 #include "./a65_section_type.h"
 #include "./a65_tree.h"
 
-class a65_section {
+class a65_section :
+		public a65_id {
 
 	public:
 
@@ -56,8 +57,6 @@ class a65_section {
 
 		bool empty(void) const;
 
-		uint32_t id(void) const;
-
 		uint32_t listing(
 			__in size_t position
 			) const;
@@ -84,17 +83,9 @@ class a65_section {
 
 	protected:
 
-		void decrement(void);
-
 		std::tuple<std::vector<uint8_t>, uint16_t, uint32_t> find(
 			__in size_t position
 			) const;
-
-		void generate(void);
-
-		void increment(void);
-
-		uint32_t m_id;
 
 		std::vector<std::tuple<std::vector<uint8_t>, uint16_t, uint32_t>> m_listing;
 

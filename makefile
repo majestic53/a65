@@ -35,28 +35,18 @@ debug: clean init lib_debug exe_debug
 
 release: clean init lib_release exe_release
 
+### SETUP ###
+
 clean:
 	rm -rf $(DIR_BIN)
 	rm -rf $(DIR_BUILD)
-
-exe_debug:
-	@echo ''
-	@echo '============================================'
-	@echo 'BUILDING EXECUTABLES (DEBUG)'
-	@echo '============================================'
-	cd $(DIR_EXE) && make $(BUILD_FLAGS_DBG) $(TRACE_FLAGS_DBG)$(TRACE)
-
-exe_release:
-	@echo ''
-	@echo '============================================'
-	@echo 'BUILDING EXECUTABLES (RELEASE)'
-	@echo '============================================'
-	cd $(DIR_EXE) && make $(BUILD_FLAGS_REL) $(TRACE_FLAGS_REL)
 
 init:
 	mkdir -p $(DIR_BIN_INC)
 	mkdir -p $(DIR_BIN_LIB)
 	mkdir $(DIR_BUILD)
+
+### LIBRARY ###
 
 lib_debug:
 	@echo ''
@@ -73,6 +63,24 @@ lib_release:
 	@echo '============================================'
 	cd $(DIR_SRC) && make $(BUILD_FLAGS_REL) $(TRACE_FLAGS_REL) build -j $(JOB_SLOTS)
 	cd $(DIR_SRC) && make archive
+
+### EXECUTABLE ###
+
+exe_debug:
+	@echo ''
+	@echo '============================================'
+	@echo 'BUILDING EXECUTABLES (DEBUG)'
+	@echo '============================================'
+	cd $(DIR_EXE) && make $(BUILD_FLAGS_DBG) $(TRACE_FLAGS_DBG)$(TRACE)
+
+exe_release:
+	@echo ''
+	@echo '============================================'
+	@echo 'BUILDING EXECUTABLES (RELEASE)'
+	@echo '============================================'
+	cd $(DIR_EXE) && make $(BUILD_FLAGS_REL) $(TRACE_FLAGS_REL)
+
+### MISC ###
 
 lines:
 	@echo ''

@@ -23,7 +23,6 @@ a65_section::a65_section(
 	__in const std::string &name,
 	__in_opt uint16_t origin
 	) :
-		m_id(A65_UUID_INVALID),
 		m_name(name),
 		m_offset(0),
 		m_origin(origin)
@@ -34,33 +33,25 @@ a65_section::a65_section(
 		A65_THROW_EXCEPTION("Empty section name");
 	}
 
-	generate();
-
 	A65_DEBUG_EXIT();
 }
 
 a65_section::a65_section(
 	__in const a65_section &other
 	) :
-		m_id(other.m_id),
+		a65_id(other),
 		m_listing(other.m_listing),
 		m_name(other.m_name),
 		m_offset(other.m_offset),
 		m_origin(other.m_origin)
 {
 	A65_DEBUG_ENTRY();
-
-	increment();
-
 	A65_DEBUG_EXIT();
 }
 
 a65_section::~a65_section(void)
 {
 	A65_DEBUG_ENTRY();
-
-	decrement();
-
 	A65_DEBUG_EXIT();
 }
 
@@ -72,13 +63,11 @@ a65_section::operator=(
 	A65_DEBUG_ENTRY();
 
 	if(this != &other) {
-		decrement();
-		m_id = other.m_id;
+		a65_id::operator=(other);
 		m_listing = other.m_listing;
 		m_name = other.m_name;
 		m_offset = other.m_offset;
 		m_origin = other.m_origin;
-		increment();
 	}
 
 	A65_DEBUG_EXIT_INFO("Result=%p", this);
@@ -139,20 +128,6 @@ a65_section::data(
 	return result;
 }
 
-void
-a65_section::decrement(void)
-{
-	A65_DEBUG_ENTRY();
-
-	a65_uuid &instance = a65_uuid::instance();
-	if(instance.contains(m_id)) {
-		instance.decrement(m_id);
-		m_id = A65_UUID_INVALID;
-	}
-
-	A65_DEBUG_EXIT();
-}
-
 bool
 a65_section::empty(void) const
 {
@@ -189,37 +164,6 @@ a65_section::find(
 		std::get<A65_SECTION_OFFSET>(result), std::get<A65_SECTION_OFFSET>(result));
 
 	return result;
-}
-
-void
-a65_section::generate(void)
-{
-	A65_DEBUG_ENTRY();
-
-	m_id = a65_uuid::instance().generate();
-
-	A65_DEBUG_EXIT();
-}
-
-uint32_t
-a65_section::id(void) const
-{
-	A65_DEBUG_ENTRY();
-	A65_DEBUG_EXIT_INFO("Result=%u(%x)", m_id, m_id);
-	return m_id;
-}
-
-void
-a65_section::increment(void)
-{
-	A65_DEBUG_ENTRY();
-
-	a65_uuid &instance = a65_uuid::instance();
-	if(instance.contains(m_id)) {
-		instance.increment(m_id);
-	}
-
-	A65_DEBUG_EXIT();
 }
 
 uint32_t
@@ -311,7 +255,7 @@ a65_section::to_string(void) const
 
 	A65_DEBUG_ENTRY();
 
-	result << "{" << A65_STRING_HEX(uint32_t, m_id) << "} [" << A65_STRING_CHECK(m_name) << "@" << A65_STRING_HEX(uint16_t, m_origin)
+	result << "{" << a65_id::to_string() << "} [" << A65_STRING_CHECK(m_name) << "@" << A65_STRING_HEX(uint16_t, m_origin)
 		<< "] <" << m_listing.size() << ">";
 
 	if(!m_listing.empty()) {

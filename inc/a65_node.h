@@ -19,10 +19,11 @@
 #ifndef A65_NODE_H_
 #define A65_NODE_H_
 
+#include "./a65_id.h"
 #include "./a65_node_type.h"
-#include "./a65_uuid.h"
 
-class a65_node {
+class a65_node :
+		public a65_id {
 
 	public:
 
@@ -61,8 +62,6 @@ class a65_node {
 		bool has_parent(void) const;
 
 		bool has_token(void) const;
-
-		uint32_t id(void) const;
 
 		bool is_leaf(void) const;
 
@@ -105,15 +104,7 @@ class a65_node {
 
 	protected:
 
-		void decrement(void);
-
-		void generate(void);
-
-		void increment(void);
-
 		std::vector<uint32_t> m_child;
-
-		uint32_t m_id;
 
 		uint32_t m_parent;
 
