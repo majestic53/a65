@@ -22,6 +22,8 @@
 #include "../inc/a65.h"
 #include "../inc/a65_utility.h"
 
+#define A65_ARGUMENTS_MIN 2
+
 enum {
 	A65_FLAG_HELP = 0,
 	A65_FLAG_OUTPUT,
