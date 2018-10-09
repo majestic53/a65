@@ -25,12 +25,14 @@ static std::string g_error;
 int
 a65_assemble(
 	__in const char *input,
-	__in const char *output
+	__in const char *output,
+	__in int source,
+	__in int verbose
 	)
 {
 	int result = EXIT_SUCCESS;
 
-	A65_DEBUG_ENTRY_INFO("Input=%p, Output=%p", input, output);
+	A65_DEBUG_ENTRY_INFO("Input=%p, Output=%p, Source=%x, Verbose=%x", input, output, source, verbose);
 
 	try {
 		a65_assembler assembler;
@@ -43,7 +45,7 @@ a65_assemble(
 			A65_THROW_EXCEPTION_INFO("Invalid output path", "%p", output);
 		}
 
-		assembler.run(input, output);
+		assembler.run(input, output, source ? true : false, verbose ? true : false);
 	} catch(std::exception &exc) {
 		g_error = exc.what();
 		result = EXIT_FAILURE;

@@ -98,6 +98,11 @@ class a65_assembler :
 			__in a65_tree &tree
 			);
 
+		std::vector<uint8_t> evaluate_expression(
+			__in a65_parser &parser,
+			__in a65_tree &tree
+			);
+
 		std::vector<uint8_t> evaluate_pragma(
 			__in a65_parser &parser,
 			__in a65_tree &tree

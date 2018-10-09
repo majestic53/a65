@@ -219,7 +219,7 @@ a65_assembler::evaluate(
 			std::vector<uint8_t> data;
 
 // TODO
-std::cout << a65_parser::as_string(tree, 0) << std::endl;
+//std::cout << a65_parser::as_string(tree, 0) << std::endl;
 // ---
 
 			data = evaluate(*this, tree);
@@ -298,7 +298,7 @@ a65_assembler::evaluate_command(
 
 	A65_DEBUG_ENTRY_INFO("Parser=%p, Tree=%p", &parser, &tree);
 
-	// TODO: evalaute command
+	// TODO: evaluate command
 
 	A65_DEBUG_EXIT();
 	return result;
@@ -314,7 +314,23 @@ a65_assembler::evaluate_directive(
 
 	A65_DEBUG_ENTRY_INFO("Parser=%p, Tree=%p", &parser, &tree);
 
-	// TODO: evalaute directive
+	// TODO: evaluate directive
+
+	A65_DEBUG_EXIT();
+	return result;
+}
+
+std::vector<uint8_t>
+a65_assembler::evaluate_expression(
+	__in a65_parser &parser,
+	__in a65_tree &tree
+	)
+{
+	std::vector<uint8_t> result;
+
+	A65_DEBUG_ENTRY_INFO("Parser=%p, Tree=%p", &parser, &tree);
+
+	// TODO: evaluate pragma
 
 	A65_DEBUG_EXIT();
 	return result;
@@ -330,7 +346,7 @@ a65_assembler::evaluate_pragma(
 
 	A65_DEBUG_ENTRY_INFO("Parser=%p, Tree=%p", &parser, &tree);
 
-	// TODO: evalaute pragma
+	// TODO: evaluate pragma
 
 	A65_DEBUG_EXIT();
 	return result;
@@ -567,7 +583,7 @@ a65_assembler::preprocess(
 	}
 
 	if(!input.empty()) {
-		m_input = a65_utility::file_prefix(input, name);
+		m_input = a65_utility::decompose_file_path(input, name);
 		a65_parser::load(input);
 	} else {
 		a65_parser::reset();
@@ -609,13 +625,13 @@ a65_assembler::preprocess(
 	entry = parser.token(tree.node().token());
 	switch(entry.type()) {
 		case A65_TOKEN_COMMAND:
-			result << preprocess_command(parser, tree);
+			result << A65_PREPROCESSOR_INDENT << preprocess_command(parser, tree);
 			break;
 		case A65_TOKEN_CONSTANT:
 			result << A65_TOKEN_CONSTANT_STRING(entry.subtype());
 			break;
 		case A65_TOKEN_DIRECTIVE:
-			result << preprocess_directive(parser, tree);
+			result << A65_PREPROCESSOR_INDENT << preprocess_directive(parser, tree);
 			break;
 		case A65_TOKEN_IDENTIFIER:
 			result << entry.literal();
@@ -635,7 +651,7 @@ a65_assembler::preprocess(
 			result << A65_TOKEN_SYMBOL_STRING(A65_TOKEN_SYMBOL_PARENTHESIS_CLOSE);
 			break;
 		case A65_TOKEN_PRAGMA:
-			result << preprocess_pragma(parser, tree);
+			result << A65_PREPROCESSOR_INDENT << preprocess_pragma(parser, tree);
 			break;
 		case A65_TOKEN_REGISTER:
 			result << A65_TOKEN_REGISTER_STRING(entry.subtype());
@@ -1139,7 +1155,7 @@ a65_assembler::run(
 
 	A65_DEBUG_ENTRY_INFO("Input[%u]=%p, Output[%u]=%p, Source=%x, Verbose=%x", input.size(), &input, output.size(), &output, source, verbose);
 
-	m_input = a65_utility::file_prefix(input, name);
+	m_input = a65_utility::decompose_file_path(input, name);
 	a65_parser::load(input);
 	a65_assembler::clear();
 
@@ -1169,8 +1185,8 @@ a65_assembler::run(
 		<< std::endl << A65_CHARACTER_COMMENT << " " << A65_NOTICE
 		<< std::endl << A65_CHARACTER_COMMENT << " " << A65_ASSEMBLER_DIVIDER
 		<< std::endl << A65_CHARACTER_COMMENT << " Input: " << input << ", Output: " << m_output
-		<< std::endl << A65_CHARACTER_COMMENT << " " << A65_ASSEMBLER_DIVIDER
-		<< std::endl << A65_TOKEN_PRAGMA_STRING(A65_TOKEN_PRAGMA_METADATA)
+		<< std::endl << A65_CHARACTER_COMMENT << " " << A65_ASSEMBLER_DIVIDER << std::endl
+		<< std::endl << A65_PREPROCESSOR_INDENT << A65_TOKEN_PRAGMA_STRING(A65_TOKEN_PRAGMA_METADATA)
 			<< " " << A65_CHARACTER_LITERAL << a65_stream::path() << A65_CHARACTER_LITERAL
 			<< " " << a65_stream::line() << preprocess(std::string(), verbose);
 

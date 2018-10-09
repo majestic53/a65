@@ -151,7 +151,7 @@ a65_utility::debug_print(
 }
 
 std::string
-a65_utility::file_prefix(
+a65_utility::decompose_file_path(
 	__in const std::string &path,
 	__inout std::string &name
 	)

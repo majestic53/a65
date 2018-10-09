@@ -41,7 +41,7 @@ class a65_utility {
 			...
 			);
 
-		static std::string file_prefix(
+		static std::string decompose_file_path(
 			__in const std::string &path,
 			__inout std::string &name
 			);

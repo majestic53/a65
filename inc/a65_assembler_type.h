@@ -24,7 +24,7 @@
 
 #define A65_ASSEMBLER_DIVIDER "============================================"
 
-#define A65_ASSEMBLER_EXIT "[Exiting]"
+#define A65_ASSEMBLER_EXIT "Exiting"
 
 #define A65_ASSEMBLER_OUTPUT_PATH_DEFAULT "./"
 #define A65_ASSEMBLER_OUTPUT_SEPERATOR '/'
@@ -34,6 +34,8 @@
 
 #define A65_ASSEMBLER_OUTPUT_SOURCE_NAME_DEFAULT "src"
 #define A65_ASSEMBLER_OUTPUT_SOURCE_EXTENSION ".S"
+
+#define A65_PREPROCESSOR_INDENT "\t"
 
 #define A65_ASSEMBLER_SECTION_DONE "[Done]"
 #define A65_ASSEMBLER_SECTION_EVALUATE "Assembling object"

@@ -52,6 +52,9 @@
 #define A65 "A65"
 #define A65_NOTICE "Copyright (C) 2018 David Jolly"
 
+#define A65_COLUMN_WIDTH(_WIDTH_) \
+	std::left << std::setw(_WIDTH_)
+
 #define A65_FLOAT_PREC(_PREC_, _VALUE_) \
 	std::right << std::setprecision(_PREC_) << std::fixed << (_VALUE_) << std::defaultfloat
 
@@ -76,6 +79,6 @@
 
 #define A65_VERSION_MAJOR 0
 #define A65_VERSION_MINOR 1
-#define A65_VERSION_REVISION 33
+#define A65_VERSION_REVISION 34
 
 #endif // A65_DEFINE_H_

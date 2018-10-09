@@ -23,7 +23,7 @@
 extern "C" {
 #endif // __cplusplus
 
-extern int a65_assemble(const char *input, const char *output);
+extern int a65_assemble(const char *input, const char *output, int source, int verbose);
 
 extern const char *a65_error(void);
 

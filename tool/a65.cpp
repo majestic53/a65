@@ -24,7 +24,37 @@ display_usage(
 	__in_opt bool verbose = false
 	)
 {
-	// TODO: display usage
+	std::cout << A65_ARGUMENTS_HEAD;
+
+	for(int flag = 0; flag <= A65_FLAG_MAX; ++flag) {
+		std::vector<std::string>::const_iterator parameter;
+
+		if(!flag) {
+			std::cout << " ";
+		}
+
+		std::cout << "[" << A65_FLAG_SHORT_STRING(flag);
+
+		const std::vector<std::string> &parameters = A65_FLAG_FORMAT(flag);
+		for(parameter = parameters.begin(); parameter != parameters.end(); ++parameter) {
+			std::cout << " " << *parameter;
+		}
+
+		std::cout << "]";
+	}
+
+	std::cout << " " << A65_ARGUMENTS_TAIL;
+
+	if(verbose) {
+		std::cout << std::endl;
+
+		for(int flag = 0; flag <= A65_FLAG_MAX; ++flag) {
+			std::cout << std::endl << A65_FLAG_SHORT_STRING(flag) << "|" << A65_COLUMN_WIDTH(A65_FLAG_COLUMN_WIDTH)
+				<< A65_FLAG_LONG_STRING(flag) << A65_FLAG_DESCRIPTION_STRING(flag);
+		}
+	}
+
+	std::cout << std::endl;
 }
 
 void
@@ -32,12 +62,20 @@ display_version(
 	__in_opt bool verbose = false
 	)
 {
-	// TODO: display version
+	if(verbose) {
+		std::cout << A65 << " " << A65_VERSION_MAJOR << "." << A65_VERSION_MINOR << "." << A65_VERSION_REVISION
+			<< std::endl << A65_NOTICE;
+	} else {
+		std::cout << A65_VERSION_MAJOR << "." << A65_VERSION_MINOR << "." << A65_VERSION_REVISION;
+	}
+
+	std::cout << std::endl;
 }
 
 int
 parse(
 	__in const std::vector<std::string> &arguments,
+	__inout std::string &error,
 	__inout std::string &input,
 	__inout std::string &output,
 	__inout bool &help,
@@ -46,32 +84,77 @@ parse(
 	__inout bool &verbose
 	)
 {
-	int result;
+	std::stringstream stream;
+	int result = EXIT_SUCCESS;
+	std::vector<std::string>::const_iterator argument;
 
-	// TODO: parse user input
-	result = EXIT_SUCCESS;
-	// ---
+	help = false;
+	source = false;
+	verbose = false;
+	version = false;
 
-	return result;
-}
+	error.clear();
+	input.clear();
+	output.clear();
 
-int
-run(
-	__in const std::string &input,
-	__in const std::string &output,
-	__in bool source,
-	__in bool verbose
-	)
-{
-	int result;
+	for(argument = arguments.begin(); argument != arguments.end(); ++argument) {
 
-	// TODO: run with user input
-	result = a65_assemble("./doc/example.asm", "./bin");
-	if(result) {
-		std::cerr << "A65: " << a65_error() << std::endl;
+		if((*argument).front() == std::string(A65_FLAG_DELIMITER).front()) {
+
+			if(A65_IS_FLAG(*argument)) {
+				int id = A65_FLAG_ID(*argument);
+
+				switch(id) {
+					case A65_FLAG_HELP:
+						help = true;
+						break;
+					case A65_FLAG_OUTPUT:
+
+						if(argument == (arguments.end() - 1)) {
+							stream << "Undefined flag parameter: " << *argument;
+							result = EXIT_FAILURE;
+						} else {
+							output = *(++argument);
+						}
+						break;
+					case A65_FLAG_SOURCE:
+						source = true;
+						break;
+					case A65_FLAG_VERBOSE:
+						verbose = true;
+						break;
+					case A65_FLAG_VERSION:
+						version = true;
+						break;
+					default:
+						stream << "Invalid flag: " << *argument;
+						result = EXIT_FAILURE;
+				}
+			} else {
+				stream << "Undefined flag: " << *argument;
+				result = EXIT_FAILURE;
+			}
+		} else if(input.empty()) {
+			input = *argument;
+		} else {
+			stream << "Input redefined: " << *argument;
+			result = EXIT_FAILURE;
+			break;
+		}
+
+		if((result != EXIT_SUCCESS) || help || version) {
+			break;
+		}
+	}
+
+	if((result == EXIT_SUCCESS) && input.empty() && !help && !version) {
+		stream << "Input undefined";
 		result = EXIT_FAILURE;
 	}
-	// ---
+
+	if(result != EXIT_SUCCESS) {
+		error = stream.str();
+	}
 
 	return result;
 }
@@ -85,10 +168,10 @@ main(
 	int result = EXIT_SUCCESS;
 
 	if(argc >= A65_ARGUMENTS_MIN) {
-		std::string input, output;
+		std::string error, input, output;
 		bool help = false, source = false, verbose = false, version = false;
 
-		result = parse(std::vector<std::string>(argv + 1, argv + argc), input, output, help, version, source, verbose);
+		result = parse(std::vector<std::string>(argv + 1, argv + argc), error, input, output, help, version, source, verbose);
 		if(result == EXIT_SUCCESS) {
 
 			if(help) {
@@ -96,7 +179,18 @@ main(
 			} else if(version) {
 				display_version();
 			} else {
-				result = run(input, output, source, verbose);
+
+				result = a65_assemble(input.c_str(), output.c_str(), source, verbose);
+				if(result) {
+					std::cerr << A65 << ": " << a65_error() << std::endl;
+					result = EXIT_FAILURE;
+				}
+			}
+		} else {
+			display_usage();
+
+			if(!error.empty()) {
+				std::cerr << std::endl << error << std::endl;
 			}
 		}
 	} else {

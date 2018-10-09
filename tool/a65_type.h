@@ -22,6 +22,9 @@
 #include "../inc/a65.h"
 #include "../inc/a65_utility.h"
 
+#define A65_ARGUMENTS_HEAD "a65"
+#define A65_ARGUMENTS_TAIL "input"
+
 #define A65_ARGUMENTS_MIN 2
 
 enum {
@@ -32,9 +35,23 @@ enum {
 	A65_FLAG_VERSION,
 };
 
+#define A65_FLAG_COLUMN_WIDTH 14
+
 #define A65_FLAG_DELIMITER "-"
 
 #define A65_FLAG_MAX A65_FLAG_VERSION
+
+static const std::string A65_FLAG_DESC_STR[] = {
+	"Display help information",
+	"Specify output directory",
+	"Enable source output",
+	"Enable verbose output",
+	"Display version information",
+	};
+
+#define A65_FLAG_DESCRIPTION_STRING(_TYPE_) \
+	(((_TYPE_) > A65_FLAG_MAX) ? A65_STRING_UNKNOWN : \
+		A65_STRING_CHECK(A65_FLAG_DESC_STR[_TYPE_]))
 
 static const std::string A65_FLAG_LONG_STR[] = {
 	A65_FLAG_DELIMITER A65_FLAG_DELIMITER "help",
@@ -80,27 +97,22 @@ static const std::map<std::string, int> A65_FLAG_MAP = {
 #define A65_FLAG_ID(_STRING_) \
 	A65_FLAG_MAP.find(_STRING_)->second
 
-enum {
-	A65_FLAG_REQUIREMENT_COUNT = 0,
-	A65_FLAG_REQUIREMENT_FORMAT,
-	A65_FLAG_REQUIREMENT_REQUIRED,
-};
+static const std::vector<std::string> A65_FLAG_FORMAT_EMPTY;
 
-static const std::map<int, std::tuple<size_t, std::string, bool>> A65_FLAG_REQUIREMENT_MAP = {
-	std::make_pair(A65_FLAG_HELP, std::make_tuple(0, std::string(), false)),
-	std::make_pair(A65_FLAG_OUTPUT, std::make_tuple(1, "<path>", false)),
-	std::make_pair(A65_FLAG_SOURCE, std::make_tuple(0, std::string(), false)),
-	std::make_pair(A65_FLAG_VERBOSE, std::make_tuple(0, std::string(), false)),
-	std::make_pair(A65_FLAG_VERSION, std::make_tuple(0, std::string(), false)),
+static const std::vector<std::string> A65_FLAG_FORMAT_OUTPUT = { "output" };
+
+static const std::map<int, std::pair<std::vector<std::string>, bool>> A65_FLAG_REQUIREMENT_MAP = {
+	std::make_pair(A65_FLAG_HELP, std::make_pair(A65_FLAG_FORMAT_EMPTY, false)),
+	std::make_pair(A65_FLAG_OUTPUT, std::make_pair(A65_FLAG_FORMAT_OUTPUT, false)),
+	std::make_pair(A65_FLAG_SOURCE, std::make_pair(A65_FLAG_FORMAT_EMPTY, false)),
+	std::make_pair(A65_FLAG_VERBOSE, std::make_pair(A65_FLAG_FORMAT_EMPTY, false)),
+	std::make_pair(A65_FLAG_VERSION, std::make_pair(A65_FLAG_FORMAT_EMPTY, false)),
 	};
 
-#define A65_FLAG_PARAMETER_COUNT(_TYPE_) \
-	std::get<A65_FLAG_REQUIREMENT_COUNT>(A65_FLAG_REQUIREMENT_MAP.find(_TYPE_)->second)
-
-#define A65_FLAG_PARAMETER_FORMAT(_TYPE_) \
-	std::get<A65_FLAG_REQUIREMENT_FORMAT>(A65_FLAG_REQUIREMENT_MAP.find(_TYPE_)->second)
+#define A65_FLAG_FORMAT(_TYPE_) \
+	A65_FLAG_REQUIREMENT_MAP.find(_TYPE_)->second.first
 
 #define A65_IS_FLAG_REQUIRED(_TYPE_) \
-	std::get<A65_FLAG_REQUIREMENT_REQUIRED>(A65_FLAG_REQUIREMENT_MAP.find(_TYPE_)->second)
+	A65_FLAG_REQUIREMENT_MAP.find(_TYPE_)->second.second
 
 #endif // A65_TYPE_H_

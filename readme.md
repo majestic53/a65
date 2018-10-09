@@ -42,11 +42,23 @@ Launch from the project root directory:
 ### Interface
 
 ```
-TBD
+a65 [-h][-o output][-s][-a][-v] input
+
+-h|--help        Display help information
+-o|--output      Specify output directory
+-s|--source      Enable source output
+-a|--verbose     Enable verbose output
+-v|--version     Display version information
 ```
 
 Changelog
 =========
+
+Version 0.1.1841
+----------------
+*Updated: 10/8/2018*
+
+* Added cli interface
 
 Version 0.1.1840
 ----------------
@@ -57,32 +69,6 @@ Version 0.1.1840
 *Updated: 10/4/2018*
 
 * Added assembler command table
-
-Version 0.1.1839
-----------------
-*Updated: 9/30/2018*
-
-* Implemented pragma preprocessing
-
-*Updated: 9/28/2018*
-
-* Added custom command syntax: ```cmd{<SCALAR>} <MODE>```
-* Added metadata pragma for preprocessor
-
-*Updated: 9/27/2018*
-
-* Implemented assembler class
-* General code cleanup
-
-*Updated: 9/26/2018*
-
-* Implemented section class
-
-*Updated: 9/25/2018*
-
-* Added assembler class
-* Added section class
-* Added negative scalar support
 
 *Changelog truncated (see file history for full log)*
 
