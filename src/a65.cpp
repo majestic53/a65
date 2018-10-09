@@ -45,7 +45,7 @@ a65_assemble(
 			A65_THROW_EXCEPTION_INFO("Invalid output path", "%p", output);
 		}
 
-		assembler.run(input, output, source ? true : false, verbose ? true : false);
+		assembler.run(input, output, source, verbose);
 	} catch(std::exception &exc) {
 		g_error = exc.what();
 		result = EXIT_FAILURE;
