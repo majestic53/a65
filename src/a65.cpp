@@ -22,6 +22,42 @@
 
 static std::string g_error;
 
+static std::string g_output;
+
+int
+a65_archive(
+	__in int count,
+	__in const char **input,
+	__in const char *output,
+	__in const char *name,
+	__in int verbose
+	)
+{
+	int result = EXIT_SUCCESS;
+
+	A65_DEBUG_ENTRY_INFO("Input[%i]=%p, Output=%p, Name=%p, Verbose=%x", count, input, output, name, verbose);
+
+	try {
+		a65_assembler assembler;
+
+		if(!name) {
+			A65_THROW_EXCEPTION_INFO("Invalid name", "%p", name);
+		}
+
+		if(!output) {
+			A65_THROW_EXCEPTION_INFO("Invalid output path", "%p", output);
+		}
+
+		g_output = assembler.archive(std::vector<std::string>(input, input + count), output, name, verbose);
+	} catch(std::exception &exc) {
+		g_error = exc.what();
+		result = EXIT_FAILURE;
+	}
+
+	A65_DEBUG_EXIT_INFO("Result=%i(%x)", result, result);
+	return result;
+}
+
 int
 a65_assemble(
 	__in const char *input,
@@ -45,12 +81,13 @@ a65_assemble(
 			A65_THROW_EXCEPTION_INFO("Invalid output path", "%p", output);
 		}
 
-		assembler.run(input, output, source, verbose);
+		g_output = assembler.assemble(input, output, source, verbose);
 	} catch(std::exception &exc) {
 		g_error = exc.what();
 		result = EXIT_FAILURE;
 	}
 
+	A65_DEBUG_EXIT_INFO("Result=%i(%x)", result, result);
 	return result;
 }
 
@@ -60,6 +97,48 @@ a65_error(void)
 	A65_DEBUG_ENTRY();
 	A65_DEBUG_EXIT_INFO("Result[%u]=%s", g_error.size(), A65_STRING_CHECK(g_error));
 	return g_error.c_str();
+}
+
+int
+a65_link(
+	__in int count,
+	__in const char **input,
+	__in const char *output,
+	__in const char *source,
+	__in int verbose
+	)
+{
+	int result = EXIT_SUCCESS;
+
+	A65_DEBUG_ENTRY_INFO("Input[%i]=%p, Output=%p, Source=%p, Verbose=%x", count, input, output, source, verbose);
+
+	try {
+		a65_assembler assembler;
+
+		if(!output) {
+			A65_THROW_EXCEPTION_INFO("Invalid output path", "%p", output);
+		}
+
+		if(!source) {
+			A65_THROW_EXCEPTION_INFO("Invalid source path", "%p", source);
+		}
+
+		g_output = assembler.link(std::vector<std::string>(input, input + count), output, source, verbose);
+	} catch(std::exception &exc) {
+		g_error = exc.what();
+		result = EXIT_FAILURE;
+	}
+
+	A65_DEBUG_EXIT_INFO("Result=%i(%x)", result, result);
+	return result;
+}
+
+const char *
+a65_output_path(void)
+{
+	A65_DEBUG_ENTRY();
+	A65_DEBUG_EXIT_INFO("Result[%u]=%s", g_output.size(), A65_STRING_CHECK(g_output));
+	return g_output.c_str();
 }
 
 void

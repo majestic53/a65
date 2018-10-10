@@ -42,12 +42,14 @@ Launch from the project root directory:
 ### Interface
 
 ```
-a65 [-h][-o output][-s][-a][-v] input
+a65 [-a name][-c input][-h][-o output][-s][-b][-v] input...
 
+-a|--archive     Output archive file
+-c|--compile     Output binary file
 -h|--help        Display help information
 -o|--output      Specify output directory
 -s|--source      Enable source output
--a|--verbose     Enable verbose output
+-b|--verbose     Enable verbose output
 -v|--version     Display version information
 ```
 
@@ -56,6 +58,11 @@ Changelog
 
 Version 0.1.1841
 ----------------
+*Updated: 10/9/2018*
+
+* Added assemble/archive/link interface routines
+* Added archive/compile flags to cli interface
+
 *Updated: 10/8/2018*
 
 * Added cli interface

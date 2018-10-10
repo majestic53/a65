@@ -40,12 +40,26 @@ class a65_assembler :
 			__in const a65_assembler &other
 			);
 
+		std::string archive(
+			__in const std::vector<std::string> &input,
+			__in const std::string &output,
+			__in const std::string &name,
+			__in_opt bool verbose = false
+			);
+
+		std::string assemble(
+			__in const std::string &input,
+			__in const std::string &output,
+			__in_opt bool source = false,
+			__in_opt bool verbose = false
+			);
+
 		virtual void clear(void) override;
 
-		virtual void run(
-			__in const std::string &input,
-			__in_opt const std::string &output = std::string(),
-			__in_opt bool source = false,
+		std::string link(
+			__in const std::vector<std::string> &input,
+			__in const std::string &output,
+			__in const std::string &source,
 			__in_opt bool verbose = false
 			);
 
@@ -136,12 +150,12 @@ class a65_assembler :
 			__in size_t position
 			);
 
-		void output_object(
+		std::string output_object(
 			__in const std::string &name,
 			__in_opt bool verbose = false
 			);
 
-		void output_source(
+		std::string output_source(
 			__in const std::string &name,
 			__in const std::string &source,
 			__in_opt bool verbose = false

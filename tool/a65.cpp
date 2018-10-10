@@ -19,11 +19,92 @@
 #include <iostream>
 #include "./a65_type.h"
 
+int
+assemble(
+	__inout std::vector<std::string> &objects,
+	__in const std::vector<std::string> &sources,
+	__in const std::string &output,
+	__in bool source,
+	__in bool verbose
+	)
+{
+	int result = EXIT_SUCCESS;
+	std::vector<std::string>::const_iterator entry;
+
+	for(entry = sources.begin(); entry != sources.end(); ++entry) {
+		result = a65_assemble(entry->c_str(), output.c_str(), source, verbose);
+
+		if(result) {
+			std::cerr << A65 << ": " << a65_error() << std::endl;
+			result = EXIT_FAILURE;
+			break;
+		}
+
+		objects.push_back(a65_output_path());
+	}
+
+	return result;
+}
+
+int
+archive(
+	__inout std::vector<std::string> &objects,
+	__in const std::vector<std::string> &sources,
+	__in const std::string &output,
+	__in const std::string &name,
+	__in bool source,
+	__in bool verbose
+	)
+{
+	int result = EXIT_SUCCESS;
+
+	if(!sources.empty()) {
+		result = assemble(objects, sources, output, source, verbose);
+	}
+
+	if(result == EXIT_SUCCESS) {
+		std::vector<const char *> inputs;
+
+		for(std::vector<std::string>::iterator entry = objects.begin(); entry != objects.end(); ++entry) {
+			inputs.push_back(entry->c_str());
+		}
+
+		result = a65_archive(inputs.size(), (const char **) &inputs[0], output.c_str(), name.c_str(), verbose);
+		if(result) {
+			std::cerr << A65 << ": " << a65_error() << std::endl;
+			result = EXIT_FAILURE;
+		}
+	}
+
+	return result;
+}
+
+void
+display_version(
+	__in_opt bool verbose = false
+	)
+{
+	if(verbose) {
+		std::cout << A65 << " " << A65_VERSION_MAJOR << "." << A65_VERSION_MINOR << "." << A65_VERSION_REVISION
+			<< std::endl << A65_NOTICE;
+	} else {
+		std::cout << A65_VERSION_MAJOR << "." << A65_VERSION_MINOR << "." << A65_VERSION_REVISION;
+	}
+
+	std::cout << std::endl;
+}
+
 void
 display_usage(
 	__in_opt bool verbose = false
 	)
 {
+
+	if(verbose) {
+		display_version(true);
+		std::cout << std::endl;
+	}
+
 	std::cout << A65_ARGUMENTS_HEAD;
 
 	for(int flag = 0; flag <= A65_FLAG_MAX; ++flag) {
@@ -57,44 +138,63 @@ display_usage(
 	std::cout << std::endl;
 }
 
-void
-display_version(
-	__in_opt bool verbose = false
+int
+link(
+	__inout std::vector<std::string> &objects,
+	__in const std::vector<std::string> &archives,
+	__in const std::vector<std::string> &sources,
+	__in const std::string &input,
+	__in const std::string &output,
+	__in bool source,
+	__in bool verbose
 	)
 {
-	if(verbose) {
-		std::cout << A65 << " " << A65_VERSION_MAJOR << "." << A65_VERSION_MINOR << "." << A65_VERSION_REVISION
-			<< std::endl << A65_NOTICE;
-	} else {
-		std::cout << A65_VERSION_MAJOR << "." << A65_VERSION_MINOR << "." << A65_VERSION_REVISION;
+	int result = EXIT_SUCCESS;
+
+	if(!sources.empty()) {
+		result = assemble(objects, sources, output, source, verbose);
 	}
 
-	std::cout << std::endl;
+	if(result == EXIT_SUCCESS) {
+		std::vector<const char *> inputs;
+
+		for(std::vector<std::string>::iterator entry = objects.begin(); entry != objects.end(); ++entry) {
+			inputs.push_back(entry->c_str());
+		}
+
+		for(std::vector<std::string>::const_iterator entry = archives.begin(); entry != archives.end(); ++entry) {
+			inputs.push_back(entry->c_str());
+		}
+
+		result = a65_link(inputs.size(), (const char **) &inputs[0], output.c_str(), input.c_str(), verbose);
+		if(result) {
+			std::cerr << A65 << ": " << a65_error() << std::endl;
+			result = EXIT_FAILURE;
+		}
+	}
+
+	return result;
 }
 
 int
 parse(
 	__in const std::vector<std::string> &arguments,
-	__inout std::string &error,
-	__inout std::string &input,
+	__inout std::vector<std::string> &input,
 	__inout std::string &output,
-	__inout bool &help,
-	__inout bool &version,
-	__inout bool &source,
-	__inout bool &verbose
+	__inout std::string &name,
+	__inout std::string &error,
+	__inout int &flags
 	)
 {
 	std::stringstream stream;
 	int result = EXIT_SUCCESS;
 	std::vector<std::string>::const_iterator argument;
 
-	help = false;
-	source = false;
-	verbose = false;
-	version = false;
+	flags = 0;
 
 	error.clear();
 	input.clear();
+	name.clear();
 	output.clear();
 
 	for(argument = arguments.begin(); argument != arguments.end(); ++argument) {
@@ -105,8 +205,32 @@ parse(
 				int id = A65_FLAG_ID(*argument);
 
 				switch(id) {
+					case A65_FLAG_ARCHIVE:
+					case A65_FLAG_COMPILE:
+
+						switch(id) {
+							case A65_FLAG_ARCHIVE:
+								A65_FLAG_APPEND(A65_FLAG_ARCHIVE, flags);
+								break;
+							case A65_FLAG_COMPILE:
+								A65_FLAG_APPEND(A65_FLAG_COMPILE, flags);
+								break;
+							default:
+								break;
+						}
+
+						if(argument == (arguments.end() - 1)) {
+							stream << "Undefined flag parameter: " << *argument;
+							result = EXIT_FAILURE;
+						} else if(!name.empty()) {
+							stream << "Unsupported flag combination: " << *argument;
+							result = EXIT_FAILURE;
+						} else {
+							name = *(++argument);
+						}
+						break;
 					case A65_FLAG_HELP:
-						help = true;
+						A65_FLAG_APPEND(A65_FLAG_HELP, flags);
 						break;
 					case A65_FLAG_OUTPUT:
 
@@ -118,13 +242,13 @@ parse(
 						}
 						break;
 					case A65_FLAG_SOURCE:
-						source = true;
+						A65_FLAG_APPEND(A65_FLAG_SOURCE, flags);
 						break;
 					case A65_FLAG_VERBOSE:
-						verbose = true;
+						A65_FLAG_APPEND(A65_FLAG_VERBOSE, flags);
 						break;
 					case A65_FLAG_VERSION:
-						version = true;
+						A65_FLAG_APPEND(A65_FLAG_VERSION, flags);
 						break;
 					default:
 						stream << "Invalid flag: " << *argument;
@@ -134,20 +258,21 @@ parse(
 				stream << "Undefined flag: " << *argument;
 				result = EXIT_FAILURE;
 			}
-		} else if(input.empty()) {
-			input = *argument;
 		} else {
-			stream << "Input redefined: " << *argument;
-			result = EXIT_FAILURE;
-			break;
+			input.push_back(*argument);
 		}
 
-		if((result != EXIT_SUCCESS) || help || version) {
+		if((result != EXIT_SUCCESS)
+				|| A65_FLAG_CONTAINS(A65_FLAG_HELP, flags)
+				|| A65_FLAG_CONTAINS(A65_FLAG_VERSION, flags)) {
 			break;
 		}
 	}
 
-	if((result == EXIT_SUCCESS) && input.empty() && !help && !version) {
+	if((result == EXIT_SUCCESS)
+			&& input.empty()
+			&& !A65_FLAG_CONTAINS(A65_FLAG_HELP, flags)
+			&& !A65_FLAG_CONTAINS(A65_FLAG_VERSION, flags)) {
 		stream << "Input undefined";
 		result = EXIT_FAILURE;
 	}
@@ -159,6 +284,7 @@ parse(
 	return result;
 }
 
+
 int
 main(
 	__in int argc,
@@ -168,22 +294,46 @@ main(
 	int result = EXIT_SUCCESS;
 
 	if(argc >= A65_ARGUMENTS_MIN) {
-		std::string error, input, output;
-		bool help = false, source = false, verbose = false, version = false;
+		int flags = 0;
+		std::vector<std::string> input;
+		std::string error, name, output;
 
-		result = parse(std::vector<std::string>(argv + 1, argv + argc), error, input, output, help, version, source, verbose);
+		result = parse(std::vector<std::string>(argv + 1, argv + argc), input, output, name, error, flags);
 		if(result == EXIT_SUCCESS) {
 
-			if(help) {
+			if(A65_FLAG_CONTAINS(A65_FLAG_HELP, flags)) {
 				display_usage(true);
-			} else if(version) {
+			} else if(A65_FLAG_CONTAINS(A65_FLAG_VERSION, flags)) {
 				display_version();
 			} else {
+				std::vector<std::string> archives, objects, sources;
+				bool source = A65_FLAG_CONTAINS(A65_FLAG_SOURCE, flags),
+					verbose = A65_FLAG_CONTAINS(A65_FLAG_VERBOSE, flags);
 
-				result = a65_assemble(input.c_str(), output.c_str(), source, verbose);
-				if(result) {
-					std::cerr << A65 << ": " << a65_error() << std::endl;
-					result = EXIT_FAILURE;
+				for(std::vector<std::string>::iterator entry = input.begin(); entry != input.end(); ++entry) {
+					size_t dot = entry->find_last_of(A65_EXTENSION);
+
+					if(dot != std::string::npos) {
+						std::string extension = entry->substr(dot + 1);
+
+						if(extension == A65_EXTENSION_ARCHIVE) {
+							archives.push_back(*entry);
+						} else if(extension == A65_EXTENSION_OBJECT) {
+							objects.push_back(*entry);
+						} else {
+							sources.push_back(*entry);
+						}
+					}
+				}
+
+				if(A65_FLAG_CONTAINS(A65_FLAG_ARCHIVE, flags)) {
+					result = archive(objects, sources, output, name, source, verbose);
+				} else if(A65_FLAG_CONTAINS(A65_FLAG_COMPILE, flags)) {
+					result = link(objects, archives, sources, output, name, source, verbose);
+				} else {
+					std::vector<std::string> objects;
+
+					result = assemble(objects, sources, output, source, verbose);
 				}
 			}
 		} else {

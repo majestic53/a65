@@ -23,12 +23,27 @@
 #include "../inc/a65_utility.h"
 
 #define A65_ARGUMENTS_HEAD "a65"
-#define A65_ARGUMENTS_TAIL "input"
+#define A65_ARGUMENTS_TAIL "input..."
 
 #define A65_ARGUMENTS_MIN 2
 
+#define A65_EXTENSION "."
+#define A65_EXTENSION_ARCHIVE "a"
+#define A65_EXTENSION_OBJECT "o"
+
+#define A65_FLAG(_TYPE_) \
+	(1 << (_TYPE_))
+
+#define A65_FLAG_APPEND(_TYPE_, _FLAG_) \
+	((_FLAG_) |= A65_FLAG(_TYPE_))
+
+#define A65_FLAG_CONTAINS(_TYPE_, _FLAG_) \
+	(((_FLAG_) & A65_FLAG(_TYPE_)) == A65_FLAG(_TYPE_))
+
 enum {
-	A65_FLAG_HELP = 0,
+	A65_FLAG_ARCHIVE = 0,
+	A65_FLAG_COMPILE,
+	A65_FLAG_HELP,
 	A65_FLAG_OUTPUT,
 	A65_FLAG_SOURCE,
 	A65_FLAG_VERBOSE,
@@ -42,6 +57,8 @@ enum {
 #define A65_FLAG_MAX A65_FLAG_VERSION
 
 static const std::string A65_FLAG_DESC_STR[] = {
+	"Output archive file",
+	"Output binary file",
 	"Display help information",
 	"Specify output directory",
 	"Enable source output",
@@ -54,6 +71,8 @@ static const std::string A65_FLAG_DESC_STR[] = {
 		A65_STRING_CHECK(A65_FLAG_DESC_STR[_TYPE_]))
 
 static const std::string A65_FLAG_LONG_STR[] = {
+	A65_FLAG_DELIMITER A65_FLAG_DELIMITER "archive",
+	A65_FLAG_DELIMITER A65_FLAG_DELIMITER "compile",
 	A65_FLAG_DELIMITER A65_FLAG_DELIMITER "help",
 	A65_FLAG_DELIMITER A65_FLAG_DELIMITER "output",
 	A65_FLAG_DELIMITER A65_FLAG_DELIMITER "source",
@@ -66,10 +85,12 @@ static const std::string A65_FLAG_LONG_STR[] = {
 		A65_STRING_CHECK(A65_FLAG_LONG_STR[_TYPE_]))
 
 static const std::string A65_FLAG_SHORT_STR[] = {
+	A65_FLAG_DELIMITER "a",
+	A65_FLAG_DELIMITER "c",
 	A65_FLAG_DELIMITER "h",
 	A65_FLAG_DELIMITER "o",
 	A65_FLAG_DELIMITER "s",
-	A65_FLAG_DELIMITER "a",
+	A65_FLAG_DELIMITER "b",
 	A65_FLAG_DELIMITER "v",
 	};
 
@@ -78,12 +99,15 @@ static const std::string A65_FLAG_SHORT_STR[] = {
 		A65_STRING_CHECK(A65_FLAG_SHORT_STR[_TYPE_]))
 
 static const std::map<std::string, int> A65_FLAG_MAP = {
+	std::make_pair(A65_FLAG_LONG_STRING(A65_FLAG_ARCHIVE), A65_FLAG_ARCHIVE),
+	std::make_pair(A65_FLAG_LONG_STRING(A65_FLAG_COMPILE), A65_FLAG_COMPILE),
 	std::make_pair(A65_FLAG_LONG_STRING(A65_FLAG_HELP), A65_FLAG_HELP),
 	std::make_pair(A65_FLAG_LONG_STRING(A65_FLAG_OUTPUT), A65_FLAG_OUTPUT),
 	std::make_pair(A65_FLAG_LONG_STRING(A65_FLAG_SOURCE), A65_FLAG_SOURCE),
 	std::make_pair(A65_FLAG_LONG_STRING(A65_FLAG_VERBOSE), A65_FLAG_VERBOSE),
 	std::make_pair(A65_FLAG_LONG_STRING(A65_FLAG_VERSION), A65_FLAG_VERSION),
-
+	std::make_pair(A65_FLAG_SHORT_STRING(A65_FLAG_ARCHIVE), A65_FLAG_ARCHIVE),
+	std::make_pair(A65_FLAG_SHORT_STRING(A65_FLAG_COMPILE), A65_FLAG_COMPILE),
 	std::make_pair(A65_FLAG_SHORT_STRING(A65_FLAG_HELP), A65_FLAG_HELP),
 	std::make_pair(A65_FLAG_SHORT_STRING(A65_FLAG_OUTPUT), A65_FLAG_OUTPUT),
 	std::make_pair(A65_FLAG_SHORT_STRING(A65_FLAG_SOURCE), A65_FLAG_SOURCE),
@@ -99,9 +123,15 @@ static const std::map<std::string, int> A65_FLAG_MAP = {
 
 static const std::vector<std::string> A65_FLAG_FORMAT_EMPTY;
 
+static const std::vector<std::string> A65_FLAG_FORMAT_INPUT = { "input" };
+
+static const std::vector<std::string> A65_FLAG_FORMAT_NAME = { "name" };
+
 static const std::vector<std::string> A65_FLAG_FORMAT_OUTPUT = { "output" };
 
 static const std::map<int, std::pair<std::vector<std::string>, bool>> A65_FLAG_REQUIREMENT_MAP = {
+	std::make_pair(A65_FLAG_ARCHIVE, std::make_pair(A65_FLAG_FORMAT_NAME, false)),
+	std::make_pair(A65_FLAG_COMPILE, std::make_pair(A65_FLAG_FORMAT_INPUT, false)),
 	std::make_pair(A65_FLAG_HELP, std::make_pair(A65_FLAG_FORMAT_EMPTY, false)),
 	std::make_pair(A65_FLAG_OUTPUT, std::make_pair(A65_FLAG_FORMAT_OUTPUT, false)),
 	std::make_pair(A65_FLAG_SOURCE, std::make_pair(A65_FLAG_FORMAT_EMPTY, false)),
