@@ -16,27 +16,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef A65_H_
-#define A65_H_
+#ifndef A65_ARCHIVE_TYPE_H_
+#define A65_ARCHIVE_TYPE_H_
 
-#ifdef __cplusplus
-extern "C" {
-#endif // __cplusplus
+#include "./a65_object_type.h"
 
-extern int a65_archive(int count, const char **input, const char *output, const char *name, int verbose);
+#define A65_ARCHIVE_TYPE 2
 
-extern int a65_assemble(const char *input, const char *output, int source, int verbose);
+typedef struct __attribute__((packed)) {
+	uint32_t offset;
+	uint32_t size;
+} a65_archive_object_t;
 
-extern int a65_link(int count, const char **input, const char *output, const char *source, int verbose);
+typedef struct __attribute__((packed)) {
+	a65_object_payload_metadata_t metadata;
+	a65_archive_object_t object[0];
+} a65_archive_payload_t;
 
-extern const char *a65_error(void);
-
-extern const char *a65_output_path(void);
-
-extern void a65_version(int *major, int *minor, int *revision);
-
-#ifdef __cplusplus
-}
-#endif // __cplusplus
-
-#endif // A65_H_
+#endif // A65_ARCHIVE_TYPE_H_

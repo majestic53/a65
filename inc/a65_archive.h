@@ -16,48 +16,44 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef A65_OBJECT_H_
-#define A65_OBJECT_H_
+#ifndef A65_ARCHIVE_H_
+#define A65_ARCHIVE_H_
 
-#include "./a65_object_type.h"
-#include "./a65_section.h"
+#include "./a65_archive_type.h"
+#include "./a65_object.h"
 
-class a65_object :
+class a65_archive :
 		public a65_id {
 
 	public:
 
-		explicit a65_object(
-			__in_opt const std::map<uint16_t, a65_section> &section = std::map<uint16_t, a65_section>()
+		explicit a65_archive(
+			__in_opt const std::vector<a65_object> &object = std::vector<a65_object>()
 			);
 
-		explicit a65_object(
+		explicit a65_archive(
 			__in const std::vector<uint8_t> &data
 			);
 
-		explicit a65_object(
+		explicit a65_archive(
 			__in const std::string &path
 			);
 
-		a65_object(
-			__in const a65_object &other
+		a65_archive(
+			__in const a65_archive &other
 			);
 
-		virtual ~a65_object(void);
+		virtual ~a65_archive(void);
 
-		a65_object &operator=(
-			__in const a65_object &other
+		a65_archive &operator=(
+			__in const a65_archive &other
 			);
 
 		std::vector<uint8_t> as_data(void) const;
 
 		void clear(void);
 
-		bool contains_section(
-			__in const std::string &name
-			) const;
-
-		bool contains_section(
+		bool contains_object(
 			__in size_t position
 			) const;
 
@@ -66,26 +62,21 @@ class a65_object :
 		bool empty(void) const;
 
 		void import(
-			__in const std::map<uint16_t, a65_section> &section
+			__in const std::vector<a65_object> &object
 			);
 
 		void import(
 			__in const std::vector<uint8_t> &data
 			);
 
+		void object(
+			__in size_t position,
+			__inout a65_object &object
+			) const;
+
 		void read(
 			__in const std::string &path
 			);
-
-		uint16_t section(
-			__in const std::string &name,
-			__inout std::vector<uint8_t> &data
-			) const;
-
-		uint16_t section(
-			__in size_t position,
-			__inout std::vector<uint8_t> &data
-			) const;
 
 		size_t size(void) const;
 
@@ -98,20 +89,14 @@ class a65_object :
 	protected:
 
 		void copy(
-			__in const a65_object &other
+			__in const a65_archive &other
 			);
-
-		std::map<std::string, uint32_t>::const_iterator find(
-			__in const std::string &name
-			) const;
 
 		a65_object_header_t m_header;
 
-		a65_object_payload_t *m_payload;
+		a65_archive_payload_t *m_payload;
 
 		size_t m_payload_size;
-
-		std::map<std::string, uint32_t> m_section;
 };
 
-#endif // A65_OBJECT_H_
+#endif // A65_ARCHIVE_H_

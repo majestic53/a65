@@ -30,20 +30,23 @@ all: build archive
 archive:
 	@echo ''
 	@echo '--- BUILDING LIBRARY -----------------------'
-	ar rcs $(DIR_BIN_LIB)$(LIB) $(DIR_BUILD)a65.o $(DIR_BUILD)a65_assembler.o $(DIR_BUILD)a65_id.o $(DIR_BUILD)a65_lexer.o $(DIR_BUILD)a65_node.o \
-		$(DIR_BUILD)a65_object.o $(DIR_BUILD)a65_parser.o $(DIR_BUILD)a65_section.o $(DIR_BUILD)a65_stream.o $(DIR_BUILD)a65_token.o \
-		$(DIR_BUILD)a65_tree.o $(DIR_BUILD)a65_utility.o $(DIR_BUILD)a65_uuid.o
+	ar rcs $(DIR_BIN_LIB)$(LIB) $(DIR_BUILD)a65.o $(DIR_BUILD)a65_archive.o $(DIR_BUILD)a65_assembler.o $(DIR_BUILD)a65_id.o $(DIR_BUILD)a65_lexer.o \
+		$(DIR_BUILD)a65_node.o $(DIR_BUILD)a65_object.o $(DIR_BUILD)a65_parser.o $(DIR_BUILD)a65_section.o $(DIR_BUILD)a65_stream.o \
+		$(DIR_BUILD)a65_token.o $(DIR_BUILD)a65_tree.o $(DIR_BUILD)a65_utility.o $(DIR_BUILD)a65_uuid.o
 	cp $(DIR_INC)a65.h $(DIR_BIN_INC)
 	@echo '--- DONE -----------------------------------'
 	@echo ''
 
 build: build_a65
 
-build_a65: a65.o a65_assembler.o a65_id.o a65_lexer.o a65_node.o a65_object.o a65_parser.o a65_section.o a65_stream.o a65_token.o a65_tree.o \
-	a65_utility.o a65_uuid.o
+build_a65: a65.o a65_archive.o a65_assembler.o a65_id.o a65_lexer.o a65_node.o a65_object.o a65_parser.o a65_section.o a65_stream.o a65_token.o \
+	a65_tree.o a65_utility.o a65_uuid.o
 
 a65.o: $(DIR_SRC)a65.cpp $(DIR_INC)a65.h
 	$(CC) $(CC_FLAGS) $(CC_BUILD_FLAGS) $(CC_TRACE_FLAGS) -c $(DIR_SRC)a65.cpp -o $(DIR_BUILD)a65.o
+
+a65_archive.o: $(DIR_SRC)a65_archive.cpp $(DIR_INC)a65_archive.h
+	$(CC) $(CC_FLAGS) $(CC_BUILD_FLAGS) $(CC_TRACE_FLAGS) -c $(DIR_SRC)a65_archive.cpp -o $(DIR_BUILD)a65_archive.o
 
 a65_assembler.o: $(DIR_SRC)a65_assembler.cpp $(DIR_INC)a65_assembler.h
 	$(CC) $(CC_FLAGS) $(CC_BUILD_FLAGS) $(CC_TRACE_FLAGS) -c $(DIR_SRC)a65_assembler.cpp -o $(DIR_BUILD)a65_assembler.o

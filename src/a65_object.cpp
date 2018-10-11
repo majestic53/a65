@@ -40,6 +40,38 @@ a65_object::a65_object(
 }
 
 a65_object::a65_object(
+	__in const std::vector<uint8_t> &data
+	) :
+		m_header({}),
+		m_payload(nullptr),
+		m_payload_size(0)
+{
+	A65_DEBUG_ENTRY_INFO("Data[%u]=%p", data.size(), &data);
+
+	if(!data.empty()) {
+		import(data);
+	} else {
+		clear();
+	}
+
+	A65_DEBUG_EXIT();
+}
+
+a65_object::a65_object(
+	__in const std::string &path
+	) :
+		m_header({}),
+		m_payload(nullptr),
+		m_payload_size(0)
+{
+	A65_DEBUG_ENTRY_INFO("Path[%u]=%s", path.size(), A65_STRING_CHECK(path));
+
+	read(path);
+
+	A65_DEBUG_EXIT();
+}
+
+a65_object::a65_object(
 	__in const a65_object &other
 	) :
 		a65_id(other),
@@ -77,6 +109,23 @@ a65_object::operator=(
 
 	A65_DEBUG_EXIT_INFO("Result=%p", this);
 	return *this;
+}
+
+std::vector<uint8_t>
+a65_object::as_data(void) const
+{
+	std::vector<uint8_t> result;
+
+	A65_DEBUG_ENTRY();
+
+	result.insert(result.end(), (char *)&m_header, ((char *)&m_header) + sizeof(m_header));
+
+	if(m_payload) {
+		result.insert(result.end(), (char *)m_payload, ((char *)m_payload) + m_payload_size);
+	}
+
+	A65_DEBUG_EXIT();
+	return result;
 }
 
 void
@@ -142,18 +191,15 @@ a65_object::copy(
 
 	clear();
 
+	m_payload_size = other.m_payload_size;
 	if(m_payload_size) {
 
-		m_payload = (a65_object_payload_t *) new uint8_t[other.m_payload_size];
+		m_payload = (a65_object_payload_t *) new uint8_t[m_payload_size];
 		if(!m_payload) {
 			A65_THROW_EXCEPTION("Object payload allocation failed");
 		}
 
-		std::memcpy(m_payload, other.m_payload, other.m_payload_size);
-		m_payload_size = other.m_payload_size;
-	} else {
-		m_payload = nullptr;
-		m_payload_size = 0;
+		std::memcpy(m_payload, other.m_payload, m_payload_size);
 	}
 
 	std::memcpy(&m_header, &other.m_header, sizeof(m_header));
@@ -285,22 +331,19 @@ a65_object::import(
 }
 
 void
-a65_object::read(
-	__in const std::string &path
+a65_object::import(
+	__in const std::vector<uint8_t> &data
 	)
 {
 	size_t length;
-	std::vector<uint8_t> data;
 	a65_object_header_t *header;
 	a65_object_payload_t *payload;
 
-	A65_DEBUG_ENTRY_INFO("Path[%u]=%s", path.size(), A65_STRING_CHECK(path));
+	A65_DEBUG_ENTRY_INFO("Data[%u]=%p", data.size(), &data);
 
-	length = a65_utility::read_file(path, data);
-	if(length != data.size()) {
-		A65_THROW_EXCEPTION_INFO("File length mismatch", "%u (expecting=%u)", data.size(), length);
-	} else if(length < sizeof(a65_object_header_t)) {
-		A65_THROW_EXCEPTION_INFO("File length mismatch", "%u (min=%u)", length, sizeof(a65_object_header_t));
+	length = data.size();
+	if(length < sizeof(a65_object_header_t)) {
+		A65_THROW_EXCEPTION_INFO("Invalid object length", "%u (min=%u)", length, sizeof(a65_object_header_t));
 	}
 
 	header = (a65_object_header_t *)&data[0];
@@ -311,9 +354,11 @@ a65_object::read(
 	if(header->magic != A65_OBJECT_MAGIC) {
 		A65_THROW_EXCEPTION_INFO("Object header mismatch", "Magic=%u(%08x) (expecting=%u(%08x))", header->magic, header->magic,
 			A65_OBJECT_MAGIC, A65_OBJECT_MAGIC);
+#ifdef VERSION_CHECK
 	} else if((header->metadata.major != A65_VERSION_MAJOR) || (header->metadata.minor != A65_VERSION_MINOR)) {
 		A65_THROW_EXCEPTION_INFO("Object header mismatch", "Version=%u.%u (expecting=%u.%u)", header->metadata.major, header->metadata.minor,
 			A65_VERSION_MAJOR, A65_VERSION_MINOR);
+#endif // VERSION_CHECK
 	} else if(header->metadata.type != A65_OBJECT_TYPE) {
 		A65_THROW_EXCEPTION_INFO("Object header mismatch", "Type=%u(%04x) (expecting=%u(%04x))", header->metadata.type, header->metadata.type,
 			A65_OBJECT_TYPE, A65_OBJECT_TYPE);
@@ -372,6 +417,26 @@ a65_object::read(
 	}
 
 	std::memcpy(&m_header, header, sizeof(m_header));
+
+	A65_DEBUG_EXIT();
+}
+
+void
+a65_object::read(
+	__in const std::string &path
+	)
+{
+	size_t length;
+	std::vector<uint8_t> data;
+
+	A65_DEBUG_ENTRY_INFO("Path[%u]=%s", path.size(), A65_STRING_CHECK(path));
+
+	length = a65_utility::read_file(path, data);
+	if(length != data.size()) {
+		A65_THROW_EXCEPTION_INFO("File length mismatch", "%u (expecting=%u)", data.size(), length);
+	}
+
+	import(data);
 
 	A65_DEBUG_EXIT();
 }
@@ -452,8 +517,8 @@ a65_object::to_string(void) const
 			std::vector<uint8_t> data = std::vector<uint8_t>(&((char *)m_payload)[section->offset],
 				&((char *)m_payload)[section->offset] + section->size);
 
-			result << std::endl << "[" << A65_STRING_HEX(uint16_t, section->origin) << "]"
-				<< " \"" << section->name << "\""
+			result << std::endl << "{" << A65_STRING_HEX(uint32_t, m_id) << "} [" << section->name
+					<< "@" << A65_STRING_HEX(uint16_t, section->origin) << "]"
 				<< " {" << A65_STRING_HEX(uint32_t, section->offset) << ", " << A65_STRING_HEX(uint32_t, section->size) << "}";
 
 			if(!data.empty()) {
@@ -472,17 +537,9 @@ a65_object::write(
 	__in const std::string &path
 	) const
 {
-	std::vector<uint8_t> data;
-
 	A65_DEBUG_ENTRY_INFO("Path[%u]=%s", path.size(), A65_STRING_CHECK(path));
 
-	data.insert(data.end(), (char *)&m_header, ((char *)&m_header) + sizeof(m_header));
-
-	if(m_payload) {
-		data.insert(data.end(), (char *)m_payload, ((char *)m_payload) + m_payload_size);
-	}
-
-	a65_utility::write_file(path, data);
+	a65_utility::write_file(path, as_data());
 
 	A65_DEBUG_EXIT();
 }

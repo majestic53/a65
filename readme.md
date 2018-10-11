@@ -58,6 +58,10 @@ Changelog
 
 Version 0.1.1841
 ----------------
+*Updated: 10/10/2018*
+
+* Added archive class
+
 *Updated: 10/9/2018*
 
 * Added assemble/archive/link interface routines
