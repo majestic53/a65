@@ -17,8 +17,8 @@
  */
 
 #include <climits>
+#include "../inc/a65_archive.h"
 #include "../inc/a65_assembler.h"
-#include "../inc/a65_object.h"
 #include "../inc/a65_utility.h"
 
 a65_assembler::a65_assembler(void) :
@@ -148,7 +148,33 @@ a65_assembler::archive(
 	A65_DEBUG_ENTRY_INFO("Input[%u]=%p, Output[%u]=%s, Name[%u]=%s, Verbose=%x", input.size(), &input, output.size(), A65_STRING_CHECK(output),
 		name.size(), A65_STRING_CHECK(name), verbose);
 
-	// TODO: form archive from objects at output/name
+	a65_assembler::clear();
+
+	if(output.empty()) {
+		m_output = A65_ASSEMBLER_OUTPUT_PATH_DEFAULT;
+	} else {
+		m_output = output;
+	}
+
+	if(verbose) {
+		std::cout << std::endl << A65_ASSEMBLER_DIVIDER
+			<< std::endl << "Input[" << input.size() << "]: ";
+
+		for(std::vector<std::string>::const_iterator entry = input.begin(); entry != input.end(); ++entry) {
+
+			if(entry != input.begin()) {
+				std::cout << ", ";
+			}
+
+			std::cout << *entry;
+		}
+
+		std::cout << std::endl << "Output: " << m_output << ", Name: " << name
+			<< std::endl << A65_ASSEMBLER_DIVIDER
+			<< std::endl;
+	}
+
+	result = output_archive(name, input, verbose);
 
 	A65_DEBUG_EXIT_INFO("Result[%u]=%s", result.size(), A65_STRING_CHECK(result));
 	return result;
@@ -183,10 +209,7 @@ a65_assembler::assemble(
 	}
 
 	if(verbose) {
-		std::cout << A65 << " Assembler " << A65_VERSION_MAJOR << "." << A65_VERSION_MINOR << "." << A65_VERSION_REVISION
-			<< std::endl << A65_NOTICE
-			<< std::endl
-			<< std::endl << A65_ASSEMBLER_DIVIDER
+		std::cout << std::endl << A65_ASSEMBLER_DIVIDER
 			<< std::endl << "Input: " << input << ", Output: " << m_output
 			<< std::endl << A65_ASSEMBLER_DIVIDER
 			<< std::endl;
@@ -198,7 +221,7 @@ a65_assembler::assemble(
 		<< std::endl << A65_CHARACTER_COMMENT << " " << A65_ASSEMBLER_DIVIDER
 		<< std::endl << A65_CHARACTER_COMMENT << " Input: " << input << ", Output: " << m_output
 		<< std::endl << A65_CHARACTER_COMMENT << " " << A65_ASSEMBLER_DIVIDER << std::endl
-		<< std::endl << A65_PREPROCESSOR_INDENT << A65_TOKEN_PRAGMA_STRING(A65_TOKEN_PRAGMA_METADATA)
+		<< std::endl << A65_TOKEN_PRAGMA_STRING(A65_TOKEN_PRAGMA_METADATA)
 			<< " " << A65_CHARACTER_LITERAL << a65_stream::path() << A65_CHARACTER_LITERAL
 			<< " " << a65_stream::line() << preprocess(std::string(), verbose);
 
@@ -326,8 +349,6 @@ std::cout << a65_parser::as_string(tree, 0) << std::endl;
 	}
 
 	if(verbose) {
-		// TODO: write information/statistics
-
 		std::cout << std::endl << A65_ASSEMBLER_SECTION_DONE << std::endl;
 	}
 
@@ -552,19 +573,171 @@ std::string
 a65_assembler::link(
 	__in const std::vector<std::string> &input,
 	__in const std::string &output,
-	__in const std::string &source,
+	__in const std::string &name,
 	__in_opt bool verbose
 	)
 {
 	std::string result;
 
-	A65_DEBUG_ENTRY_INFO("Input[%u]=%p, Output[%u]=%s, Source[%u]=%s, Verbose=%x", input.size(), &input, output.size(), A65_STRING_CHECK(output),
-		source.size(), A65_STRING_CHECK(source), verbose);
+	A65_DEBUG_ENTRY_INFO("Input[%u]=%p, Output[%u]=%s, Name[%u]=%s, Verbose=%x", input.size(), &input, output.size(), A65_STRING_CHECK(output),
+		name.size(), A65_STRING_CHECK(name), verbose);
 
-	// TODO: link archives + objects + source
+	a65_assembler::clear();
+
+	if(output.empty()) {
+		m_output = A65_ASSEMBLER_OUTPUT_PATH_DEFAULT;
+	} else {
+		m_output = output;
+	}
+
+	if(verbose) {
+		std::cout << std::endl << A65_ASSEMBLER_DIVIDER
+			<< std::endl << "Input[" << input.size() << "]: ";
+
+		for(std::vector<std::string>::const_iterator entry = input.begin(); entry != input.end(); ++entry) {
+
+			if(entry != input.begin()) {
+				std::cout << ", ";
+			}
+
+			std::cout << *entry;
+		}
+
+		std::cout << std::endl << "Output: " << m_output << ", Name: " << name
+			<< std::endl << A65_ASSEMBLER_DIVIDER
+			<< std::endl;
+	}
+
+	result = output_binary(name, input, verbose);
 
 	A65_DEBUG_EXIT_INFO("Result[%u]=%s", result.size(), A65_STRING_CHECK(result));
 	return result;
+}
+
+std::string
+a65_assembler::output_archive(
+	__in const std::string &name,
+	__in const std::vector<std::string> &input,
+	__in_opt bool verbose
+	)
+{
+	std::stringstream result;
+	class a65_archive archive;
+
+	A65_DEBUG_ENTRY_INFO("Name[%u]=%s, Input[%u]=%p, Verbose=%x", name.size(), A65_STRING_CHECK(name), input.size(), &input, verbose);
+
+	result << m_output;
+
+	if(result.str().back() != A65_ASSEMBLER_OUTPUT_SEPERATOR) {
+		result << A65_ASSEMBLER_OUTPUT_SEPERATOR;
+	}
+
+	if(name.empty()) {
+		result << A65_ASSEMBLER_OUTPUT_ARCHIVE_NAME_DEFAULT << "_" << A65_STRING_HEX(int, std::rand());
+	} else {
+		result << name;
+	}
+
+	result << A65_ASSEMBLER_OUTPUT_ARCHIVE_EXTENSION;
+
+	if(verbose) {
+		std::cout << std::endl << A65_ASSEMBLER_DIVIDER
+			<< std::endl << A65_ASSEMBLER_SECTION_ARCHIVE
+			<< std::endl << A65_ASSEMBLER_DIVIDER;
+	}
+
+	if(!input.empty()) {
+		std::vector<a65_object> objects;
+
+		for(std::vector<std::string>::const_iterator entry = input.begin(); entry != input.end(); ++entry) {
+			objects.push_back(a65_object(*entry));
+		}
+
+		archive.import(objects);
+	}
+
+	if(verbose) {
+		size_t size = archive.size();
+
+		std::cout << std::endl << "Path: " << result.str()
+			<< std::endl << "Size: " << A65_FLOAT_PREC(2, size / A65_SECTION_KB_LENGTH) << " KB (" << size << " bytes)";
+
+#ifndef NDEBUG
+		if(!archive.empty()) {
+			std::cout << std::endl << archive.to_string();
+		}
+#endif // NDEBUG
+	}
+
+	archive.write(result.str());
+
+	if(verbose) {
+		std::cout << std::endl << A65_ASSEMBLER_SECTION_DONE << std::endl;
+	}
+
+	A65_DEBUG_EXIT_INFO("Result[%u]=%s", result.str().size(), A65_STRING_CHECK(result.str()));
+	return result.str();
+}
+
+std::string
+a65_assembler::output_binary(
+	__in const std::string &name,
+	__in const std::vector<std::string> &input,
+	__in_opt bool verbose
+	)
+{
+	std::stringstream result;
+	std::vector<uint8_t> binary;
+
+	A65_DEBUG_ENTRY_INFO("Name[%u]=%s, Input[%u]=%p, Verbose=%x", name.size(), A65_STRING_CHECK(name), input.size(), &input, verbose);
+
+	result << m_output;
+
+	if(result.str().back() != A65_ASSEMBLER_OUTPUT_SEPERATOR) {
+		result << A65_ASSEMBLER_OUTPUT_SEPERATOR;
+	}
+
+	if(name.empty()) {
+		result << A65_ASSEMBLER_OUTPUT_BINARY_NAME_DEFAULT << "_" << A65_STRING_HEX(int, std::rand());
+	} else {
+		result << name;
+	}
+
+	result << A65_ASSEMBLER_OUTPUT_BINARY_EXTENSION;
+
+	if(verbose) {
+		std::cout << std::endl << A65_ASSEMBLER_DIVIDER
+			<< std::endl << A65_ASSEMBLER_SECTION_ARCHIVE
+			<< std::endl << A65_ASSEMBLER_DIVIDER;
+	}
+
+	if(!input.empty()) {
+
+		// TODO: form binary from inputs (archives + objects)
+
+	}
+
+	if(verbose) {
+		size_t size = binary.size();
+
+		std::cout << std::endl << "Path: " << result.str()
+			<< std::endl << "Size: " << A65_FLOAT_PREC(2, size / A65_SECTION_KB_LENGTH) << " KB (" << size << " bytes)";
+
+#ifndef NDEBUG
+		if(!binary.empty()) {
+			std::cout << std::endl << a65_utility::data_as_string(binary);
+		}
+#endif // NDEBUG
+	}
+
+	a65_utility::write_file(result.str(), binary);
+
+	if(verbose) {
+		std::cout << std::endl << A65_ASSEMBLER_SECTION_DONE << std::endl;
+	}
+
+	A65_DEBUG_EXIT_INFO("Result[%u]=%s", result.str().size(), A65_STRING_CHECK(result.str()));
+	return result.str();
 }
 
 std::string
@@ -606,9 +779,11 @@ a65_assembler::output_object(
 		std::cout << std::endl << "Path: " << result.str()
 			<< std::endl << "Size: " << A65_FLOAT_PREC(2, size / A65_SECTION_KB_LENGTH) << " KB (" << size << " bytes)";
 
+#ifndef NDEBUG
 		if(!object.empty()) {
 			std::cout << std::endl << object.to_string();
 		}
+#endif // NDEBUG
 	}
 
 	object.write(result.str());
@@ -702,8 +877,6 @@ a65_assembler::preprocess(
 	}
 
 	if(verbose) {
-		// TODO: write information/statistics
-
 		std::cout << std::endl << A65_ASSEMBLER_SECTION_DONE << std::endl;
 	}
 
@@ -726,13 +899,13 @@ a65_assembler::preprocess(
 	entry = parser.token(tree.node().token());
 	switch(entry.type()) {
 		case A65_TOKEN_COMMAND:
-			result << A65_PREPROCESSOR_INDENT << preprocess_command(parser, tree);
+			result << preprocess_command(parser, tree);
 			break;
 		case A65_TOKEN_CONSTANT:
 			result << A65_TOKEN_CONSTANT_STRING(entry.subtype());
 			break;
 		case A65_TOKEN_DIRECTIVE:
-			result << A65_PREPROCESSOR_INDENT << preprocess_directive(parser, tree);
+			result << preprocess_directive(parser, tree);
 			break;
 		case A65_TOKEN_IDENTIFIER:
 			result << entry.literal();
@@ -752,7 +925,7 @@ a65_assembler::preprocess(
 			result << A65_TOKEN_SYMBOL_STRING(A65_TOKEN_SYMBOL_PARENTHESIS_CLOSE);
 			break;
 		case A65_TOKEN_PRAGMA:
-			result << A65_PREPROCESSOR_INDENT << preprocess_pragma(parser, tree);
+			result << preprocess_pragma(parser, tree);
 			break;
 		case A65_TOKEN_REGISTER:
 			result << A65_TOKEN_REGISTER_STRING(entry.subtype());

@@ -59,7 +59,7 @@ class a65_assembler :
 		std::string link(
 			__in const std::vector<std::string> &input,
 			__in const std::string &output,
-			__in const std::string &source,
+			__in const std::string &name,
 			__in_opt bool verbose = false
 			);
 
@@ -148,6 +148,18 @@ class a65_assembler :
 		void move_child_tree(
 			__in a65_tree &tree,
 			__in size_t position
+			);
+
+		std::string output_archive(
+			__in const std::string &name,
+			__in const std::vector<std::string> &input,
+			__in_opt bool verbose = false
+			);
+
+		std::string output_binary(
+			__in const std::string &name,
+			__in const std::vector<std::string> &input,
+			__in_opt bool verbose = false
 			);
 
 		std::string output_object(

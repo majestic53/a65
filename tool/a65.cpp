@@ -31,6 +31,12 @@ assemble(
 	int result = EXIT_SUCCESS;
 	std::vector<std::string>::const_iterator entry;
 
+	if(verbose) {
+		std::cout << A65 << " Assembler " << A65_VERSION_MAJOR << "." << A65_VERSION_MINOR << "." << A65_VERSION_REVISION
+			<< std::endl << A65_NOTICE
+			<< std::endl;
+	}
+
 	for(entry = sources.begin(); entry != sources.end(); ++entry) {
 		result = a65_assemble(entry->c_str(), output.c_str(), source, verbose);
 
@@ -60,6 +66,10 @@ archive(
 
 	if(!sources.empty()) {
 		result = assemble(objects, sources, output, source, verbose);
+	} else if(verbose) {
+		std::cout << A65 << " Assembler " << A65_VERSION_MAJOR << "." << A65_VERSION_MINOR << "." << A65_VERSION_REVISION
+			<< std::endl << A65_NOTICE
+			<< std::endl;
 	}
 
 	if(result == EXIT_SUCCESS) {
@@ -69,7 +79,7 @@ archive(
 			inputs.push_back(entry->c_str());
 		}
 
-		result = a65_archive(inputs.size(), (const char **) &inputs[0], output.c_str(), name.c_str(), verbose);
+		result = a65_archive(inputs.size(), (const char **)&inputs[0], output.c_str(), name.c_str(), verbose);
 		if(result) {
 			std::cerr << A65 << ": " << a65_error() << std::endl;
 			result = EXIT_FAILURE;
@@ -143,8 +153,8 @@ link(
 	__inout std::vector<std::string> &objects,
 	__in const std::vector<std::string> &archives,
 	__in const std::vector<std::string> &sources,
-	__in const std::string &input,
 	__in const std::string &output,
+	__in const std::string &name,
 	__in bool source,
 	__in bool verbose
 	)
@@ -153,6 +163,10 @@ link(
 
 	if(!sources.empty()) {
 		result = assemble(objects, sources, output, source, verbose);
+	} else if(verbose) {
+		std::cout << A65 << " Assembler " << A65_VERSION_MAJOR << "." << A65_VERSION_MINOR << "." << A65_VERSION_REVISION
+			<< std::endl << A65_NOTICE
+			<< std::endl;
 	}
 
 	if(result == EXIT_SUCCESS) {
@@ -166,7 +180,7 @@ link(
 			inputs.push_back(entry->c_str());
 		}
 
-		result = a65_link(inputs.size(), (const char **) &inputs[0], output.c_str(), input.c_str(), verbose);
+		result = a65_link(inputs.size(), (const char **)&inputs[0], output.c_str(), name.c_str(), verbose);
 		if(result) {
 			std::cerr << A65 << ": " << a65_error() << std::endl;
 			result = EXIT_FAILURE;

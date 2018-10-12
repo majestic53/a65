@@ -374,9 +374,7 @@ a65_object::import(
 			A65_THROW_EXCEPTION("Malformed object payload");
 		}
 
-		if(!payload->metadata.count) {
-			A65_THROW_EXCEPTION_INFO("Object payload mismatch", "Count=%u", payload->metadata.count);
-		} else if(payload->metadata.size < sizeof(a65_object_payload_t)) {
+		if(payload->metadata.size < sizeof(a65_object_payload_t)) {
 			A65_THROW_EXCEPTION_INFO("Object payload length mismatch", "%u (min=%u)", payload->metadata.size, sizeof(a65_object_payload_t));
 		}
 

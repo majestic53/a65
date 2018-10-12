@@ -42,7 +42,7 @@ Launch from the project root directory:
 ### Interface
 
 ```
-a65 [-a name][-c input][-h][-o output][-s][-b][-v] input...
+a65 [-a name][-c name][-h][-o output][-s][-b][-v] input...
 
 -a|--archive     Output archive file
 -c|--compile     Output binary file

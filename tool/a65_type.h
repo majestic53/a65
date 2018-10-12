@@ -123,15 +123,13 @@ static const std::map<std::string, int> A65_FLAG_MAP = {
 
 static const std::vector<std::string> A65_FLAG_FORMAT_EMPTY;
 
-static const std::vector<std::string> A65_FLAG_FORMAT_INPUT = { "input" };
-
 static const std::vector<std::string> A65_FLAG_FORMAT_NAME = { "name" };
 
 static const std::vector<std::string> A65_FLAG_FORMAT_OUTPUT = { "output" };
 
 static const std::map<int, std::pair<std::vector<std::string>, bool>> A65_FLAG_REQUIREMENT_MAP = {
 	std::make_pair(A65_FLAG_ARCHIVE, std::make_pair(A65_FLAG_FORMAT_NAME, false)),
-	std::make_pair(A65_FLAG_COMPILE, std::make_pair(A65_FLAG_FORMAT_INPUT, false)),
+	std::make_pair(A65_FLAG_COMPILE, std::make_pair(A65_FLAG_FORMAT_NAME, false)),
 	std::make_pair(A65_FLAG_HELP, std::make_pair(A65_FLAG_FORMAT_EMPTY, false)),
 	std::make_pair(A65_FLAG_OUTPUT, std::make_pair(A65_FLAG_FORMAT_OUTPUT, false)),
 	std::make_pair(A65_FLAG_SOURCE, std::make_pair(A65_FLAG_FORMAT_EMPTY, false)),

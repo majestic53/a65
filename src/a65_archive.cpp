@@ -312,9 +312,7 @@ a65_archive::import(
 			A65_THROW_EXCEPTION("Malformed archive payload");
 		}
 
-		if(!payload->metadata.count) {
-			A65_THROW_EXCEPTION_INFO("Archive payload mismatch", "Count=%u", payload->metadata.count);
-		} else if(payload->metadata.size < sizeof(a65_archive_payload_t)) {
+		if(payload->metadata.size < sizeof(a65_archive_payload_t)) {
 			A65_THROW_EXCEPTION_INFO("Archive payload length mismatch", "%u (min=%u)", payload->metadata.size,
 				sizeof(a65_archive_payload_t));
 		}

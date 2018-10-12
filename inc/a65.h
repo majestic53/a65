@@ -27,7 +27,7 @@ extern int a65_archive(int count, const char **input, const char *output, const 
 
 extern int a65_assemble(const char *input, const char *output, int source, int verbose);
 
-extern int a65_link(int count, const char **input, const char *output, const char *source, int verbose);
+extern int a65_link(int count, const char **input, const char *output, const char *name, int verbose);
 
 extern const char *a65_error(void);
 
