@@ -707,7 +707,7 @@ a65_assembler::output_binary(
 
 	if(verbose) {
 		std::cout << std::endl << A65_ASSEMBLER_DIVIDER
-			<< std::endl << A65_ASSEMBLER_SECTION_ARCHIVE
+			<< std::endl << A65_ASSEMBLER_SECTION_BINARY
 			<< std::endl << A65_ASSEMBLER_DIVIDER;
 	}
 
