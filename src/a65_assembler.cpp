@@ -592,7 +592,6 @@ a65_assembler::output_archive(
 	}
 
 	archive.write(result.str());
-
 	output_archive_source(result.str(), archive);
 
 	A65_DEBUG_EXIT_INFO("Result[%u]=%s", result.str().size(), A65_STRING_CHECK(result.str()));
@@ -611,7 +610,7 @@ a65_assembler::output_archive_source(
 
 	result << name << A65_ASSEMBLER_OUTPUT_SOURCE_EXTENSION;
 
-	// TODO
+	// TODO: form archive source file
 
 	A65_DEBUG_EXIT_INFO("Result[%u]=%s", result.str().size(), A65_STRING_CHECK(result.str()));
 	return result.str();
@@ -679,7 +678,6 @@ a65_assembler::output_object(
 	result << A65_ASSEMBLER_OUTPUT_OBJECT_EXTENSION;
 	object.import(m_section);
 	object.write(result.str());
-
 	output_object_source(result.str(), object);
 
 	A65_DEBUG_EXIT_INFO("Result[%u]=%s", result.str().size(), A65_STRING_CHECK(result.str()));
@@ -689,7 +687,7 @@ a65_assembler::output_object(
 std::string
 a65_assembler::output_object_source(
 	__in const std::string &name,
-	__in const a65_object &archive
+	__in const a65_object &object
 	)
 {
 	std::stringstream result;
@@ -698,7 +696,7 @@ a65_assembler::output_object_source(
 
 	result << name << A65_ASSEMBLER_OUTPUT_SOURCE_EXTENSION;
 
-	// TODO
+	// TODO: form object source file
 
 	A65_DEBUG_EXIT_INFO("Result[%u]=%s", result.str().size(), A65_STRING_CHECK(result.str()));
 	return result.str();
