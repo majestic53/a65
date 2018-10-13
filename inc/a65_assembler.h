@@ -20,6 +20,7 @@
 #define A65_ASSEMBLER_H_
 
 #include "./a65_assembler_type.h"
+#include "./a65_archive.h"
 #include "./a65_parser.h"
 #include "./a65_section.h"
 
@@ -43,15 +44,13 @@ class a65_assembler :
 		std::string archive(
 			__in const std::vector<std::string> &input,
 			__in const std::string &output,
-			__in const std::string &name,
-			__in_opt bool verbose = false
+			__in const std::string &name
 			);
 
 		std::string assemble(
 			__in const std::string &input,
 			__in const std::string &output,
-			__in_opt bool source = false,
-			__in_opt bool verbose = false
+			__in_opt bool source = false
 			);
 
 		virtual void clear(void) override;
@@ -59,8 +58,7 @@ class a65_assembler :
 		std::string link(
 			__in const std::vector<std::string> &input,
 			__in const std::string &output,
-			__in const std::string &name,
-			__in_opt bool verbose = false
+			__in const std::string &name
 			);
 
 	protected:
@@ -93,8 +91,7 @@ class a65_assembler :
 			) const;
 
 		void evaluate(
-			__in const std::string &input,
-			__in_opt bool verbose = false
+			__in const std::string &input
 			);
 
 		std::vector<uint8_t> evaluate(
@@ -152,30 +149,35 @@ class a65_assembler :
 
 		std::string output_archive(
 			__in const std::string &name,
-			__in const std::vector<std::string> &input,
-			__in_opt bool verbose = false
+			__in const std::vector<std::string> &input
+			);
+
+		std::string output_archive_source(
+			__in const std::string &name,
+			__in const a65_archive &archive
 			);
 
 		std::string output_binary(
 			__in const std::string &name,
-			__in const std::vector<std::string> &input,
-			__in_opt bool verbose = false
+			__in const std::vector<std::string> &input
 			);
 
 		std::string output_object(
+			__in const std::string &name
+			);
+
+		std::string output_object_source(
 			__in const std::string &name,
-			__in_opt bool verbose = false
+			__in const a65_object &object
 			);
 
 		std::string output_source(
 			__in const std::string &name,
-			__in const std::string &source,
-			__in_opt bool verbose = false
+			__in const std::string &source
 			);
 
 		std::string preprocess(
-			__in_opt const std::string &input = std::string(),
-			__in_opt bool verbose = false
+			__in_opt const std::string &input = std::string()
 			);
 
 		std::string preprocess(

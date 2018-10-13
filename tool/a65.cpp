@@ -20,29 +20,20 @@
 #include "./a65_type.h"
 
 int
-assemble(
+build_objects(
 	__inout std::vector<std::string> &objects,
 	__in const std::vector<std::string> &sources,
 	__in const std::string &output,
-	__in bool source,
-	__in bool verbose
+	__in bool source
 	)
 {
 	int result = EXIT_SUCCESS;
 	std::vector<std::string>::const_iterator entry;
 
-	if(verbose) {
-		std::cout << A65 << " Assembler " << A65_VERSION_MAJOR << "." << A65_VERSION_MINOR << "." << A65_VERSION_REVISION
-			<< std::endl << A65_NOTICE
-			<< std::endl;
-	}
-
 	for(entry = sources.begin(); entry != sources.end(); ++entry) {
-		result = a65_assemble(entry->c_str(), output.c_str(), source, verbose);
 
+		result = a65_build_object(entry->c_str(), output.c_str(), source);
 		if(result) {
-			std::cerr << A65 << ": " << a65_error() << std::endl;
-			result = EXIT_FAILURE;
 			break;
 		}
 
@@ -53,23 +44,18 @@ assemble(
 }
 
 int
-archive(
+build_archive(
 	__inout std::vector<std::string> &objects,
 	__in const std::vector<std::string> &sources,
 	__in const std::string &output,
 	__in const std::string &name,
-	__in bool source,
-	__in bool verbose
+	__in bool source
 	)
 {
 	int result = EXIT_SUCCESS;
 
 	if(!sources.empty()) {
-		result = assemble(objects, sources, output, source, verbose);
-	} else if(verbose) {
-		std::cout << A65 << " Assembler " << A65_VERSION_MAJOR << "." << A65_VERSION_MINOR << "." << A65_VERSION_REVISION
-			<< std::endl << A65_NOTICE
-			<< std::endl;
+		result = build_objects(objects, sources, output, source);
 	}
 
 	if(result == EXIT_SUCCESS) {
@@ -79,11 +65,40 @@ archive(
 			inputs.push_back(entry->c_str());
 		}
 
-		result = a65_archive(inputs.size(), (const char **)&inputs[0], output.c_str(), name.c_str(), verbose);
-		if(result) {
-			std::cerr << A65 << ": " << a65_error() << std::endl;
-			result = EXIT_FAILURE;
+		result = a65_build_archive(inputs.size(), (const char **)&inputs[0], output.c_str(), name.c_str());
+	}
+
+	return result;
+}
+
+int
+compile(
+	__inout std::vector<std::string> &objects,
+	__in const std::vector<std::string> &archives,
+	__in const std::vector<std::string> &sources,
+	__in const std::string &output,
+	__in const std::string &name,
+	__in bool source
+	)
+{
+	int result = EXIT_SUCCESS;
+
+	if(!sources.empty()) {
+		result = build_objects(objects, sources, output, source);
+	}
+
+	if(result == EXIT_SUCCESS) {
+		std::vector<const char *> inputs;
+
+		for(std::vector<std::string>::iterator entry = objects.begin(); entry != objects.end(); ++entry) {
+			inputs.push_back(entry->c_str());
 		}
+
+		for(std::vector<std::string>::const_iterator entry = archives.begin(); entry != archives.end(); ++entry) {
+			inputs.push_back(entry->c_str());
+		}
+
+		result = a65_compile(inputs.size(), (const char **)&inputs[0], output.c_str(), name.c_str());
 	}
 
 	return result;
@@ -146,48 +161,6 @@ display_usage(
 	}
 
 	std::cout << std::endl;
-}
-
-int
-link(
-	__inout std::vector<std::string> &objects,
-	__in const std::vector<std::string> &archives,
-	__in const std::vector<std::string> &sources,
-	__in const std::string &output,
-	__in const std::string &name,
-	__in bool source,
-	__in bool verbose
-	)
-{
-	int result = EXIT_SUCCESS;
-
-	if(!sources.empty()) {
-		result = assemble(objects, sources, output, source, verbose);
-	} else if(verbose) {
-		std::cout << A65 << " Assembler " << A65_VERSION_MAJOR << "." << A65_VERSION_MINOR << "." << A65_VERSION_REVISION
-			<< std::endl << A65_NOTICE
-			<< std::endl;
-	}
-
-	if(result == EXIT_SUCCESS) {
-		std::vector<const char *> inputs;
-
-		for(std::vector<std::string>::iterator entry = objects.begin(); entry != objects.end(); ++entry) {
-			inputs.push_back(entry->c_str());
-		}
-
-		for(std::vector<std::string>::const_iterator entry = archives.begin(); entry != archives.end(); ++entry) {
-			inputs.push_back(entry->c_str());
-		}
-
-		result = a65_link(inputs.size(), (const char **)&inputs[0], output.c_str(), name.c_str(), verbose);
-		if(result) {
-			std::cerr << A65 << ": " << a65_error() << std::endl;
-			result = EXIT_FAILURE;
-		}
-	}
-
-	return result;
 }
 
 int
@@ -320,42 +293,114 @@ main(
 			} else if(A65_FLAG_CONTAINS(A65_FLAG_VERSION, flags)) {
 				display_version();
 			} else {
+				std::vector<std::string>::iterator entry;
 				std::vector<std::string> archives, objects, sources;
 				bool source = A65_FLAG_CONTAINS(A65_FLAG_SOURCE, flags),
 					verbose = A65_FLAG_CONTAINS(A65_FLAG_VERBOSE, flags);
 
-				for(std::vector<std::string>::iterator entry = input.begin(); entry != input.end(); ++entry) {
-					size_t dot = entry->find_last_of(A65_EXTENSION);
+				if(verbose) {
+					display_version(true);
+					std::cout << std::endl;
+				}
 
-					if(dot != std::string::npos) {
-						std::string extension = entry->substr(dot + 1);
+				if(!input.empty()) {
 
-						if(extension == A65_EXTENSION_ARCHIVE) {
-							archives.push_back(*entry);
-						} else if(extension == A65_EXTENSION_OBJECT) {
-							objects.push_back(*entry);
-						} else {
-							sources.push_back(*entry);
+					if(verbose) {
+						std::cout << "Inputs: ";
+					}
+
+					for(entry = input.begin(); entry != input.end(); ++entry) {
+
+						if(verbose) {
+
+							if(entry != input.begin()) {
+								std::cout << ", ";
+							}
+
+							std::cout << *entry;
 						}
+
+						size_t dot = entry->find_last_of(A65_EXTENSION);
+
+						if(dot != std::string::npos) {
+							std::string extension = entry->substr(dot + 1);
+
+							if(extension == A65_EXTENSION_ARCHIVE) {
+								archives.push_back(*entry);
+							} else if(extension == A65_EXTENSION_OBJECT) {
+								objects.push_back(*entry);
+							} else {
+								sources.push_back(*entry);
+							}
+						}
+					}
+
+					if(verbose) {
+						std::cout << std::endl;
 					}
 				}
 
-				if(A65_FLAG_CONTAINS(A65_FLAG_ARCHIVE, flags)) {
-					result = archive(objects, sources, output, name, source, verbose);
-				} else if(A65_FLAG_CONTAINS(A65_FLAG_COMPILE, flags)) {
-					result = link(objects, archives, sources, output, name, source, verbose);
-				} else {
-					std::vector<std::string> objects;
+				if(verbose) {
+					std::cout << "Output: " << A65_STRING_CHECK(output) << std::endl;
+				}
 
-					result = assemble(objects, sources, output, source, verbose);
+				if(A65_FLAG_CONTAINS(A65_FLAG_ARCHIVE, flags)) {
+
+					if(verbose) {
+						std::cout << A65_VERBOSE_DIVIDER
+							<< std::endl << A65_VERBOSE_SECTION_ARCHIVE
+							<< std::endl << "Name: " << name
+							<< std::endl << A65_VERBOSE_DIVIDER
+							<< std::endl;
+					}
+
+					result = build_archive(objects, sources, output, name, source);
+				} else if(A65_FLAG_CONTAINS(A65_FLAG_COMPILE, flags)) {
+
+					if(verbose) {
+						std::cout << A65_VERBOSE_DIVIDER
+							<< std::endl << A65_VERBOSE_SECTION_COMPILE
+							<< std::endl << "Name: " << name
+							<< std::endl << A65_VERBOSE_DIVIDER
+							<< std::endl;
+					}
+
+					result = compile(objects, archives, sources, output, name, source);
+				} else {
+
+					if(verbose) {
+						std::cout << A65_VERBOSE_DIVIDER
+							<< std::endl << A65_VERBOSE_SECTION_OBJECT
+							<< std::endl << "Sources: ";
+
+						for(entry = sources.begin(); entry != sources.end(); ++entry) {
+
+							if(entry != sources.begin()) {
+								std::cout << ", ";
+							}
+
+							std::cout << *entry;
+						}
+
+						std::cout << std::endl << A65_VERBOSE_DIVIDER
+							<< std::endl;
+					}
+
+					result = build_objects(objects, sources, output, source);
+				}
+
+				if(result) {
+					std::cerr << "Error: " << a65_error() << std::endl;
+				} else if(verbose) {
+					std::cout << "Success" << std::endl;
 				}
 			}
 		} else {
 			display_usage();
+		}
 
-			if(!error.empty()) {
-				std::cerr << std::endl << error << std::endl;
-			}
+		if(!error.empty()) {
+			std::cerr << std::endl << error << std::endl;
 		}
 	} else {
 		display_usage();

@@ -25,17 +25,16 @@ static std::string g_error;
 static std::string g_output;
 
 int
-a65_archive(
+a65_build_archive(
 	__in int count,
 	__in const char **input,
 	__in const char *output,
-	__in const char *name,
-	__in int verbose
+	__in const char *name
 	)
 {
 	int result = EXIT_SUCCESS;
 
-	A65_DEBUG_ENTRY_INFO("Input[%i]=%p, Output=%p, Name=%p, Verbose=%x", count, input, output, name, verbose);
+	A65_DEBUG_ENTRY_INFO("Input[%i]=%p, Output=%p, Name=%p", count, input, output, name);
 
 	try {
 		a65_assembler assembler;
@@ -48,7 +47,7 @@ a65_archive(
 			A65_THROW_EXCEPTION_INFO("Invalid output path", "%p", output);
 		}
 
-		g_output = assembler.archive(std::vector<std::string>(input, input + count), output, name, verbose);
+		g_output = assembler.archive(std::vector<std::string>(input, input + count), output, name);
 	} catch(std::exception &exc) {
 		g_error = exc.what();
 		result = EXIT_FAILURE;
@@ -59,16 +58,15 @@ a65_archive(
 }
 
 int
-a65_assemble(
+a65_build_object(
 	__in const char *input,
 	__in const char *output,
-	__in int source,
-	__in int verbose
+	__in int source
 	)
 {
 	int result = EXIT_SUCCESS;
 
-	A65_DEBUG_ENTRY_INFO("Input=%p, Output=%p, Source=%x, Verbose=%x", input, output, source, verbose);
+	A65_DEBUG_ENTRY_INFO("Input=%p, Output=%p, Source=%x", input, output, source);
 
 	try {
 		a65_assembler assembler;
@@ -81,7 +79,40 @@ a65_assemble(
 			A65_THROW_EXCEPTION_INFO("Invalid output path", "%p", output);
 		}
 
-		g_output = assembler.assemble(input, output, source, verbose);
+		g_output = assembler.assemble(input, output, source);
+	} catch(std::exception &exc) {
+		g_error = exc.what();
+		result = EXIT_FAILURE;
+	}
+
+	A65_DEBUG_EXIT_INFO("Result=%i(%x)", result, result);
+	return result;
+}
+
+int
+a65_compile(
+	__in int count,
+	__in const char **input,
+	__in const char *output,
+	__in const char *name
+	)
+{
+	int result = EXIT_SUCCESS;
+
+	A65_DEBUG_ENTRY_INFO("Input[%i]=%p, Output=%p, Name=%p", count, input, output, name);
+
+	try {
+		a65_assembler assembler;
+
+		if(!name) {
+			A65_THROW_EXCEPTION_INFO("Invalid name path", "%p", name);
+		}
+
+		if(!output) {
+			A65_THROW_EXCEPTION_INFO("Invalid output path", "%p", output);
+		}
+
+		g_output = assembler.link(std::vector<std::string>(input, input + count), output, name);
 	} catch(std::exception &exc) {
 		g_error = exc.what();
 		result = EXIT_FAILURE;
@@ -97,40 +128,6 @@ a65_error(void)
 	A65_DEBUG_ENTRY();
 	A65_DEBUG_EXIT_INFO("Result[%u]=%s", g_error.size(), A65_STRING_CHECK(g_error));
 	return g_error.c_str();
-}
-
-int
-a65_link(
-	__in int count,
-	__in const char **input,
-	__in const char *output,
-	__in const char *name,
-	__in int verbose
-	)
-{
-	int result = EXIT_SUCCESS;
-
-	A65_DEBUG_ENTRY_INFO("Input[%i]=%p, Output=%p, Name=%p, Verbose=%x", count, input, output, name, verbose);
-
-	try {
-		a65_assembler assembler;
-
-		if(!name) {
-			A65_THROW_EXCEPTION_INFO("Invalid name path", "%p", name);
-		}
-
-		if(!output) {
-			A65_THROW_EXCEPTION_INFO("Invalid output path", "%p", output);
-		}
-
-		g_output = assembler.link(std::vector<std::string>(input, input + count), output, name, verbose);
-	} catch(std::exception &exc) {
-		g_error = exc.what();
-		result = EXIT_FAILURE;
-	}
-
-	A65_DEBUG_EXIT_INFO("Result=%i(%x)", result, result);
-	return result;
 }
 
 const char *

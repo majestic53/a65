@@ -23,11 +23,11 @@
 extern "C" {
 #endif // __cplusplus
 
-extern int a65_archive(int count, const char **input, const char *output, const char *name, int verbose);
+extern int a65_build_archive(int count, const char **input, const char *output, const char *name);
 
-extern int a65_assemble(const char *input, const char *output, int source, int verbose);
+extern int a65_build_object(const char *input, const char *output, int source);
 
-extern int a65_link(int count, const char **input, const char *output, const char *name, int verbose);
+extern int a65_compile(int count, const char **input, const char *output, const char *name);
 
 extern const char *a65_error(void);
 

@@ -143,4 +143,10 @@ static const std::map<int, std::pair<std::vector<std::string>, bool>> A65_FLAG_R
 #define A65_IS_FLAG_REQUIRED(_TYPE_) \
 	A65_FLAG_REQUIREMENT_MAP.find(_TYPE_)->second.second
 
+#define A65_VERBOSE_DIVIDER "============================================"
+
+#define A65_VERBOSE_SECTION_ARCHIVE "Generating archive file"
+#define A65_VERBOSE_SECTION_COMPILE "Generating binary file"
+#define A65_VERBOSE_SECTION_OBJECT "Generating object file(s)"
+
 #endif // A65_TYPE_H_

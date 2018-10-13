@@ -39,14 +39,7 @@
 #define A65_ASSEMBLER_OUTPUT_SOURCE_NAME_DEFAULT "src"
 #define A65_ASSEMBLER_OUTPUT_SOURCE_EXTENSION ".S"
 
-#define A65_ASSEMBLER_SECTION_ARCHIVE "Generating archive file"
-#define A65_ASSEMBLER_SECTION_BINARY "Generating binary file"
-#define A65_ASSEMBLER_SECTION_DONE "[Done]"
-#define A65_ASSEMBLER_SECTION_EVALUATE "Assembling object"
 #define A65_ASSEMBLER_SECTION_NAME_DEFAULT "sec"
-#define A65_ASSEMBLER_SECTION_OBJECT "Generating object file"
-#define A65_ASSEMBLER_SECTION_PREPROCESS "Proprocessing input file"
-#define A65_ASSEMBLER_SECTION_SOURCE "Generating source file"
 
 enum {
 	A65_ASSEMBLER_COMMAND_IMMEDIATE_NONE = 1,
