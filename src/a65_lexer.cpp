@@ -119,6 +119,7 @@ a65_lexer::clear(void)
 	m_token_position = 0;
 	add(a65_token(A65_TOKEN_BEGIN), 0);
 	add(a65_token(A65_TOKEN_END), 1);
+	skip();
 
 	A65_DEBUG_EXIT();
 }
@@ -843,6 +844,49 @@ a65_lexer::reset(void)
 	A65_DEBUG_ENTRY();
 
 	m_token_position = 0;
+
+	A65_DEBUG_EXIT();
+}
+
+void
+a65_lexer::set_metadata(
+	__in const std::string &path
+	)
+{
+	A65_DEBUG_ENTRY_INFO("Path[%u]=%s", path.size(), A65_STRING_CHECK(path));
+
+	a65_stream::set_metadata(path);
+
+	if(m_token.size() > m_token_position) {
+		std::map<uint32_t, a65_token>::iterator entry;
+
+		entry = m_token_map.find(m_token.at(m_token_position));
+		if(entry != m_token_map.end()) {
+			entry->second.set_metadata(path);
+		}
+	}
+
+	A65_DEBUG_EXIT();
+}
+
+void
+a65_lexer::set_metadata(
+	__in const std::string &path,
+	__in size_t line
+	)
+{
+	A65_DEBUG_ENTRY_INFO("Path[%u]=%s", path.size(), A65_STRING_CHECK(path));
+
+	a65_stream::set_metadata(path, line);
+
+	if(m_token.size() > m_token_position) {
+		std::map<uint32_t, a65_token>::iterator entry;
+
+		entry = m_token_map.find(m_token.at(m_token_position));
+		if(entry != m_token_map.end()) {
+			entry->second.set_metadata(path, line);
+		}
+	}
 
 	A65_DEBUG_EXIT();
 }

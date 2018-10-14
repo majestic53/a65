@@ -41,13 +41,13 @@ class a65_assembler :
 			__in const a65_assembler &other
 			);
 
-		std::string archive(
+		std::string build_archive(
 			__in const std::vector<std::string> &input,
 			__in const std::string &output,
 			__in const std::string &name
 			);
 
-		std::string assemble(
+		std::string build_object(
 			__in const std::string &input,
 			__in const std::string &output,
 			__in_opt bool source = false
@@ -55,7 +55,7 @@ class a65_assembler :
 
 		virtual void clear(void) override;
 
-		std::string link(
+		std::string compile(
 			__in const std::vector<std::string> &input,
 			__in const std::string &output,
 			__in const std::string &name
@@ -64,12 +64,16 @@ class a65_assembler :
 	protected:
 
 		void add_define(
-			__in const std::string &name,
+			__in const a65_token &token,
 			__in uint16_t value
 			);
 
+		void add_export(
+			__in const std::string &name
+			);
+
 		void add_label(
-			__in const std::string &name,
+			__in const a65_token &token,
 			__in uint16_t origin
 			);
 
@@ -82,6 +86,10 @@ class a65_assembler :
 			__in const std::string &name
 			) const;
 
+		bool contains_export(
+			__in const std::string &name
+			) const;
+
 		bool contains_label(
 			__in const std::string &name
 			) const;
@@ -91,6 +99,7 @@ class a65_assembler :
 			) const;
 
 		void evaluate(
+			__in const std::string &name,
 			__in const std::string &input
 			);
 
@@ -109,7 +118,7 @@ class a65_assembler :
 			__in a65_tree &tree
 			);
 
-		std::vector<uint8_t> evaluate_expression(
+		uint16_t evaluate_expression(
 			__in a65_parser &parser,
 			__in a65_tree &tree
 			);
@@ -152,18 +161,14 @@ class a65_assembler :
 			__in const std::vector<std::string> &input
 			);
 
-		std::string output_archive_source(
-			__in const std::string &name,
-			__in const a65_archive &archive
-			);
-
 		std::string output_binary(
 			__in const std::string &name,
 			__in const std::vector<std::string> &input
 			);
 
 		std::string output_object(
-			__in const std::string &name
+			__in const std::string &name,
+			__in_opt bool source = true
 			);
 
 		std::string output_object_source(
@@ -211,10 +216,12 @@ class a65_assembler :
 			);
 
 		void remove_define(
-			__in const std::string &name
+			__in const a65_token &token
 			);
 
 		std::map<std::string, uint16_t> m_define;
+
+		std::set<std::string> m_export;
 
 		std::string m_input;
 

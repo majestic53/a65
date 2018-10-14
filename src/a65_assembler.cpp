@@ -35,6 +35,7 @@ a65_assembler::a65_assembler(
 	) :
 		a65_parser(other),
 		m_define(other.m_define),
+		m_export(other.m_export),
 		m_input(other.m_input),
 		m_label(other.m_label),
 		m_name(other.m_name),
@@ -62,6 +63,7 @@ a65_assembler::operator=(
 	if(this != &other) {
 		a65_parser::operator=(other);
 		m_define = other.m_define;
+		m_export = other.m_export;
 		m_input = other.m_input;
 		m_label = other.m_label;
 		m_name = other.m_name;
@@ -76,17 +78,20 @@ a65_assembler::operator=(
 
 void
 a65_assembler::add_define(
-	__in const std::string &name,
+	__in const a65_token &token,
 	__in uint16_t value
 	)
 {
+	std::string name;
 	std::map<std::string, uint16_t>::iterator entry;
 
-	A65_DEBUG_ENTRY_INFO("Name[%u]=%s, Value=%u(%04x)", name.size(), A65_STRING_CHECK(name), value, value);
+	A65_DEBUG_ENTRY_INFO("Token=%p, Value=%u(%04x)", &token, value, value);
+
+	name = token.literal();
 
 	entry = m_define.find(name);
 	if(entry != m_define.end()) {
-		A65_THROW_EXCEPTION_INFO("Duplicate define", "[%u]%s=%u(%04x)", name.size(), A65_STRING_CHECK(name), value, value);
+		A65_THROW_EXCEPTION_INFO("Duplicate define", "%s", A65_STRING_CHECK(token.to_string()));
 	}
 
 	m_define.insert(std::make_pair(name, value));
@@ -95,18 +100,40 @@ a65_assembler::add_define(
 }
 
 void
+a65_assembler::add_export(
+	__in const std::string &name
+	)
+{
+	std::set<std::string>::iterator entry;
+
+	A65_DEBUG_ENTRY_INFO("Name[%u]=%s", name.size(), A65_STRING_CHECK(name));
+
+	entry = m_export.find(name);
+	if(entry != m_export.end()) {
+		A65_THROW_EXCEPTION_INFO("Duplicate export", "[%u]%s", name.size(), A65_STRING_CHECK(name));
+	}
+
+	m_export.insert(name);
+
+	A65_DEBUG_EXIT();
+}
+
+void
 a65_assembler::add_label(
-	__in const std::string &name,
+	__in const a65_token &token,
 	__in uint16_t origin
 	)
 {
+	std::string name;
 	std::map<std::string, uint16_t>::iterator entry;
 
-	A65_DEBUG_ENTRY_INFO("Name[%u]=%s, Origin=%u(%04x)", name.size(), A65_STRING_CHECK(name), origin, origin);
+	A65_DEBUG_ENTRY_INFO("Token=%p, Origin=%u(%04x)", &token, origin, origin);
+
+	name = token.literal();
 
 	entry = m_label.find(name);
 	if(entry != m_label.end()) {
-		A65_THROW_EXCEPTION_INFO("Duplicate label", "[%u]%s=%u(%04x)", name.size(), A65_STRING_CHECK(name), origin, origin);
+		A65_THROW_EXCEPTION_INFO("Duplicate label", "%s", A65_STRING_CHECK(token.to_string()));
 	}
 
 	m_label.insert(std::make_pair(name, origin));
@@ -135,7 +162,7 @@ a65_assembler::add_section(
 }
 
 std::string
-a65_assembler::archive(
+a65_assembler::build_archive(
 	__in const std::vector<std::string> &input,
 	__in const std::string &output,
 	__in const std::string &name
@@ -161,7 +188,7 @@ a65_assembler::archive(
 }
 
 std::string
-a65_assembler::assemble(
+a65_assembler::build_object(
 	__in const std::string &input,
 	__in const std::string &output,
 	__in_opt bool source
@@ -187,15 +214,13 @@ a65_assembler::assemble(
 		m_output = output;
 	}
 
-	processed << A65_CHARACTER_COMMENT << " " << A65 << " Preprocessor "
+	processed << A65_CHARACTER_COMMENT << " Generated with " << A65 << " Assembler "
 			<< A65_VERSION_MAJOR << "." << A65_VERSION_MINOR << "." << A65_VERSION_REVISION
 		<< std::endl << A65_CHARACTER_COMMENT << " " << A65_NOTICE
 		<< std::endl << A65_CHARACTER_COMMENT << " " << A65_ASSEMBLER_DIVIDER
 		<< std::endl << A65_CHARACTER_COMMENT << " Input: " << input << ", Output: " << m_output
-		<< std::endl << A65_CHARACTER_COMMENT << " " << A65_ASSEMBLER_DIVIDER << std::endl
-		<< std::endl << A65_TOKEN_PRAGMA_STRING(A65_TOKEN_PRAGMA_METADATA)
-			<< " " << A65_CHARACTER_LITERAL << a65_stream::path() << A65_CHARACTER_LITERAL
-			<< " " << a65_stream::line() << preprocess(std::string());
+		<< std::endl << A65_CHARACTER_COMMENT << " " << A65_ASSEMBLER_DIVIDER
+		<< std::endl << preprocess(std::string());
 
 	if(source) {
 		output_source(name, processed.str());
@@ -203,7 +228,7 @@ a65_assembler::assemble(
 
 	a65_parser::load(processed.str(), false);
 	a65_assembler::clear();
-	evaluate(processed.str());
+	evaluate(name, processed.str());
 	result = output_object(name);
 
 	A65_DEBUG_EXIT_INFO("Result[%u]=%s", result.size(), A65_STRING_CHECK(result));
@@ -217,12 +242,39 @@ a65_assembler::clear(void)
 
 	a65_parser::reset();
 	m_define.clear();
+	m_export.clear();
 	m_label.clear();
 	m_name.clear();
 	m_origin = 0;
 	m_section.clear();
 
 	A65_DEBUG_EXIT();
+}
+
+std::string
+a65_assembler::compile(
+	__in const std::vector<std::string> &input,
+	__in const std::string &output,
+	__in const std::string &name
+	)
+{
+	std::string result;
+
+	A65_DEBUG_ENTRY_INFO("Input[%u]=%p, Output[%u]=%s, Name[%u]=%s", input.size(), &input, output.size(), A65_STRING_CHECK(output),
+		name.size(), A65_STRING_CHECK(name));
+
+	a65_assembler::clear();
+
+	if(output.empty()) {
+		m_output = A65_ASSEMBLER_OUTPUT_PATH_DEFAULT;
+	} else {
+		m_output = output;
+	}
+
+	result = output_binary(name, input);
+
+	A65_DEBUG_EXIT_INFO("Result[%u]=%s", result.size(), A65_STRING_CHECK(result));
+	return result;
 }
 
 bool
@@ -235,6 +287,21 @@ a65_assembler::contains_define(
 	A65_DEBUG_ENTRY_INFO("Name[%u]=%s", name.size(), A65_STRING_CHECK(name));
 
 	result = (m_define.find(name) != m_define.end());
+
+	A65_DEBUG_EXIT_INFO("Result=%x", result);
+	return result;
+}
+
+bool
+a65_assembler::contains_export(
+	__in const std::string &name
+	) const
+{
+	bool result;
+
+	A65_DEBUG_ENTRY_INFO("Name[%u]=%s", name.size(), A65_STRING_CHECK(name));
+
+	result = (m_export.find(name) != m_export.end());
 
 	A65_DEBUG_EXIT_INFO("Result=%x", result);
 	return result;
@@ -272,12 +339,14 @@ a65_assembler::contains_section(
 
 void
 a65_assembler::evaluate(
+	__in const std::string &name,
 	__in const std::string &input
 	)
 {
-	A65_DEBUG_ENTRY_INFO("Input[%u]=%p", input.size(), &input);
+	A65_DEBUG_ENTRY_INFO("Name[%u]=%s, Input[%u]=%p", name.size(), A65_STRING_CHECK(name), input.size(), &input);
 
 	a65_parser::load(input, false);
+	a65_lexer::set_metadata(name);
 
 	while(a65_parser::has_next()) {
 		a65_tree tree = a65_parser::tree();
@@ -285,10 +354,6 @@ a65_assembler::evaluate(
 		if(!tree.node().match(A65_NODE_BEGIN)
 				&& !tree.node().match(A65_NODE_END)) {
 			std::vector<uint8_t> data;
-
-// TODO
-//std::cout << a65_parser::as_string(tree, 0) << std::endl;
-// ---
 
 			data = evaluate(*this, tree);
 			if(!data.empty()) {
@@ -308,6 +373,17 @@ a65_assembler::evaluate(
 
 				find_section(m_origin)->second.add(data, tree.id());
 			}
+
+// TODO
+std::cout << a65_parser::as_string(tree, 0) << std::endl;
+
+if(!data.empty()) {
+	std::cout << a65_utility::data_as_string(data, m_origin) << std::endl;
+}
+
+std::cout << std::endl;
+// ---
+
 		}
 
 		a65_parser::move_next();
@@ -337,7 +413,7 @@ a65_assembler::evaluate(
 			break;
 		case A65_TOKEN_LABEL:
 			m_name = entry.literal();
-			add_label(m_name, m_origin);
+			add_label(entry, m_origin);
 			break;
 		case A65_TOKEN_PRAGMA:
 			result = evaluate_pragma(parser, tree);
@@ -372,29 +448,95 @@ a65_assembler::evaluate_directive(
 	__in a65_tree &tree
 	)
 {
+	a65_token entry;
 	std::vector<uint8_t> result;
 
 	A65_DEBUG_ENTRY_INFO("Parser=%p, Tree=%p", &parser, &tree);
 
-	// TODO: evaluate directive
+	entry = parser.token(tree.node().token());
+	switch(entry.subtype()) {
+		case A65_TOKEN_DIRECTIVE_DATA_BYTE:
+			// TODO
+			break;
+		case A65_TOKEN_DIRECTIVE_DATA_WORD:
+			// TODO
+			break;
+		case A65_TOKEN_DIRECTIVE_DEFINE:
+			// TODO
+			break;
+		case A65_TOKEN_DIRECTIVE_EXPORT:
+			// TODO
+			break;
+		case A65_TOKEN_DIRECTIVE_IF:
+			// TODO
+			break;
+		case A65_TOKEN_DIRECTIVE_IF_DEFINE:
+			// TODO
+			break;
+		case A65_TOKEN_DIRECTIVE_IF_DEFINE_NOT:
+			// TODO
+			break;
+		case A65_TOKEN_DIRECTIVE_ORIGIN:
+			a65_tree::move_child(tree, 0);
+			m_origin = evaluate_expression(parser, tree);
+			a65_tree::move_parent(tree);
+			break;
+		case A65_TOKEN_DIRECTIVE_RESERVE:
+			a65_tree::move_child(tree, 0);
+			result.resize(evaluate_expression(parser, tree), A65_ASSEMBLER_FILL);
+			a65_tree::move_parent(tree);
+			break;
+		case A65_TOKEN_DIRECTIVE_UNDEFINE:
+			a65_tree::move_child(tree, 0);
+
+			entry = parser.token(tree.node().token());
+			if(!entry.match(A65_TOKEN_IDENTIFIER)) {
+				A65_THROW_EXCEPTION_INFO("Malformed directive tree", "%s", A65_STRING_CHECK(entry.to_string()));
+			}
+
+			if(contains_define(entry.literal())) {
+				remove_define(entry);
+			}
+
+			a65_tree::move_parent(tree);
+			break;
+		default:
+			A65_THROW_EXCEPTION_INFO("Malformed directive tree", "%s", A65_STRING_CHECK(entry.to_string()));
+	}
 
 	A65_DEBUG_EXIT();
 	return result;
 }
 
-std::vector<uint8_t>
+uint16_t
 a65_assembler::evaluate_expression(
 	__in a65_parser &parser,
 	__in a65_tree &tree
 	)
 {
-	std::vector<uint8_t> result;
+	a65_token entry;
+	uint16_t result = 0;
 
 	A65_DEBUG_ENTRY_INFO("Parser=%p, Tree=%p", &parser, &tree);
 
 	// TODO: evaluate expression
+	entry = parser.token(tree.node().token());
 
-	A65_DEBUG_EXIT();
+	switch(tree.node().type()) {
+		case A65_NODE_EXPRESSION:
+			a65_tree::move_child(tree, 0);
+			result = evaluate_expression(parser, tree);
+			a65_tree::move_parent(tree);
+			break;
+		case A65_NODE_CONSTANT:
+			result = entry.scalar();
+			break;
+		default:
+			A65_THROW_EXCEPTION_INFO("Malformed expression tree", "%s", A65_STRING_CHECK(entry.to_string()));
+	}
+	// ---
+
+	A65_DEBUG_EXIT_INFO("Result=%u(%04x)", result, result);
 	return result;
 }
 
@@ -404,11 +546,44 @@ a65_assembler::evaluate_pragma(
 	__in a65_tree &tree
 	)
 {
+	uint16_t line;
+	a65_token entry;
+	std::string path;
 	std::vector<uint8_t> result;
 
 	A65_DEBUG_ENTRY_INFO("Parser=%p, Tree=%p", &parser, &tree);
 
-	// TODO: evaluate pragma
+	entry = parser.token(tree.node().token());
+	switch(entry.subtype()) {
+		case A65_TOKEN_PRAGMA_INCLUDE_BINARY:
+		case A65_TOKEN_PRAGMA_INCLUDE_SOURCE:
+			A65_THROW_EXCEPTION_INFO("Disallowed pragma", "%s", A65_STRING_CHECK(entry.to_string()));
+			break;
+		case A65_TOKEN_PRAGMA_METADATA:
+			a65_tree::move_child(tree, 0);
+
+			entry = parser.token(tree.node().token());
+			if(!entry.match(A65_TOKEN_LITERAL)) {
+				A65_THROW_EXCEPTION_INFO("Malformed pragma tree", "%s", A65_STRING_CHECK(entry.to_string()));
+			}
+
+			path = entry.literal();
+			a65_tree::move_parent(tree);
+
+			a65_tree::move_child(tree, 1);
+
+			entry = parser.token(tree.node().token());
+			if(!entry.match(A65_TOKEN_SCALAR)) {
+				A65_THROW_EXCEPTION_INFO("Malformed pragma tree", "%s", A65_STRING_CHECK(entry.to_string()));
+			}
+
+			line = entry.scalar();
+			a65_tree::move_parent(tree);
+			a65_lexer::set_metadata(path, line);
+			break;
+		default:
+			A65_THROW_EXCEPTION_INFO("Malformed pragma tree", "%s", A65_STRING_CHECK(entry.to_string()));
+	}
 
 	A65_DEBUG_EXIT();
 	return result;
@@ -531,32 +706,6 @@ a65_assembler::is_valid_command(
 }
 
 std::string
-a65_assembler::link(
-	__in const std::vector<std::string> &input,
-	__in const std::string &output,
-	__in const std::string &name
-	)
-{
-	std::string result;
-
-	A65_DEBUG_ENTRY_INFO("Input[%u]=%p, Output[%u]=%s, Name[%u]=%s", input.size(), &input, output.size(), A65_STRING_CHECK(output),
-		name.size(), A65_STRING_CHECK(name));
-
-	a65_assembler::clear();
-
-	if(output.empty()) {
-		m_output = A65_ASSEMBLER_OUTPUT_PATH_DEFAULT;
-	} else {
-		m_output = output;
-	}
-
-	result = output_binary(name, input);
-
-	A65_DEBUG_EXIT_INFO("Result[%u]=%s", result.size(), A65_STRING_CHECK(result));
-	return result;
-}
-
-std::string
 a65_assembler::output_archive(
 	__in const std::string &name,
 	__in const std::vector<std::string> &input
@@ -592,25 +741,6 @@ a65_assembler::output_archive(
 	}
 
 	archive.write(result.str());
-	output_archive_source(result.str(), archive);
-
-	A65_DEBUG_EXIT_INFO("Result[%u]=%s", result.str().size(), A65_STRING_CHECK(result.str()));
-	return result.str();
-}
-
-std::string
-a65_assembler::output_archive_source(
-	__in const std::string &name,
-	__in const a65_archive &archive
-	)
-{
-	std::stringstream result;
-
-	A65_DEBUG_ENTRY_INFO("Name[%u]=%s, Archive=%p", name.size(), A65_STRING_CHECK(name), &archive);
-
-	result << name << A65_ASSEMBLER_OUTPUT_SOURCE_EXTENSION;
-
-	// TODO: form archive source file
 
 	A65_DEBUG_EXIT_INFO("Result[%u]=%s", result.str().size(), A65_STRING_CHECK(result.str()));
 	return result.str();
@@ -655,13 +785,14 @@ a65_assembler::output_binary(
 
 std::string
 a65_assembler::output_object(
-	__in const std::string &name
+	__in const std::string &name,
+	__in_opt bool source
 	)
 {
 	a65_object object;
 	std::stringstream result;
 
-	A65_DEBUG_ENTRY_INFO("Name[%u]=%s", name.size(), A65_STRING_CHECK(name));
+	A65_DEBUG_ENTRY_INFO("Name[%u]=%s, Source=%x", name.size(), A65_STRING_CHECK(name), source);
 
 	result << m_output;
 
@@ -678,7 +809,10 @@ a65_assembler::output_object(
 	result << A65_ASSEMBLER_OUTPUT_OBJECT_EXTENSION;
 	object.import(m_section);
 	object.write(result.str());
-	output_object_source(result.str(), object);
+
+	if(source && !m_export.empty()) {
+		output_object_source(result.str(), object);
+	}
 
 	A65_DEBUG_EXIT_INFO("Result[%u]=%s", result.str().size(), A65_STRING_CHECK(result.str()));
 	return result.str();
@@ -690,13 +824,33 @@ a65_assembler::output_object_source(
 	__in const a65_object &object
 	)
 {
-	std::stringstream result;
+	std::stringstream result, source;
+	std::set<std::string>::iterator entry;
 
 	A65_DEBUG_ENTRY_INFO("Name[%u]=%s, Object=%p", name.size(), A65_STRING_CHECK(name), &object);
 
 	result << name << A65_ASSEMBLER_OUTPUT_SOURCE_EXTENSION;
 
-	// TODO: form object source file
+	source << A65_CHARACTER_COMMENT << " Generated with " << A65 << " Assembler "
+			<< A65_VERSION_MAJOR << "." << A65_VERSION_MINOR << "." << A65_VERSION_REVISION
+		<< std::endl << A65_CHARACTER_COMMENT << " " << A65_NOTICE
+		<< std::endl << A65_CHARACTER_COMMENT << " " << A65_ASSEMBLER_DIVIDER
+		<< std::endl << A65_CHARACTER_COMMENT << " Object: " << name << ", Output: " << result.str()
+		<< std::endl << A65_CHARACTER_COMMENT << " " << A65_ASSEMBLER_DIVIDER << std::endl
+		<< std::endl << A65_CHARACTER_COMMENT << " Exports:" << std::endl;
+
+	for(entry = m_export.begin(); entry != m_export.end(); ++entry) {
+		std::map<std::string, uint16_t>::iterator label = find_label(*entry);
+
+		if(entry != m_export.begin()) {
+			source << std::endl;
+		}
+
+		source << std::endl << label->first << A65_CHARACTER_LABEL << " " << A65_TOKEN_COMMAND_STRING(A65_TOKEN_COMMAND_JSR)
+			<< " " << A65_STRING_HEX(uint16_t, label->second);
+	}
+
+	a65_utility::write_file(result.str(), source.str());
 
 	A65_DEBUG_EXIT_INFO("Result[%u]=%s", result.str().size(), A65_STRING_CHECK(result.str()));
 	return result.str();
@@ -753,7 +907,13 @@ a65_assembler::preprocess(
 
 		if(!tree.node().match(A65_NODE_BEGIN)
 				&& !tree.node().match(A65_NODE_END)) {
-			result << std::endl << preprocess(*this, tree);
+			a65_token entry;
+
+			entry = a65_parser::token(tree.node().token());
+			result << std::endl << A65_TOKEN_PRAGMA_STRING(A65_TOKEN_PRAGMA_METADATA)
+					<< " " << A65_CHARACTER_LITERAL << entry.path() << A65_CHARACTER_LITERAL
+					<< " " << entry.line()
+				<< std::endl << preprocess(*this, tree);
 		}
 
 		a65_parser::move_next();
@@ -1032,6 +1192,17 @@ a65_assembler::preprocess_directive(
 				a65_tree::move_parent(tree);
 			}
 			break;
+		case A65_TOKEN_DIRECTIVE_EXPORT:
+			a65_tree::move_child(tree, 0);
+
+			entry = parser.token(tree.node().token());
+			if(!entry.match(A65_TOKEN_IDENTIFIER)) {
+				A65_THROW_EXCEPTION_INFO("Malformed directive tree", "%s", A65_STRING_CHECK(entry.to_string()));
+			}
+
+			result << " " << entry.literal();
+			a65_tree::move_parent(tree);
+			break;
 		case A65_TOKEN_DIRECTIVE_IF:
 			a65_tree::move_child(tree, 0);
 			result << " " << preprocess_condition(parser, tree);
@@ -1223,7 +1394,7 @@ a65_assembler::preprocess_pragma(
 
 				a65_tree::move_child(tree, 0);
 				entry = parser.token(tree.node().token());
-				path << m_input << "/" << entry.literal();
+				path << m_input << A65_ASSEMBLER_OUTPUT_SEPERATOR << entry.literal();
 				a65_tree::move_parent(tree);
 
 				size = a65_utility::read_file(path.str(), data);
@@ -1253,7 +1424,7 @@ a65_assembler::preprocess_pragma(
 		case A65_TOKEN_PRAGMA_INCLUDE_SOURCE:
 			a65_tree::move_child(tree, 0);
 			entry = parser.token(tree.node().token());
-			path << m_input << "/" << entry.literal();
+			path << m_input << A65_ASSEMBLER_OUTPUT_SEPERATOR << entry.literal();
 			a65_tree::move_parent(tree);
 
 			result << A65_TOKEN_PRAGMA_STRING(A65_TOKEN_PRAGMA_METADATA)
@@ -1278,16 +1449,16 @@ a65_assembler::preprocess_pragma(
 
 void
 a65_assembler::remove_define(
-	__in const std::string &name
+	__in const a65_token &token
 	)
 {
 	std::map<std::string, uint16_t>::iterator entry;
 
-	A65_DEBUG_ENTRY_INFO("Name[%u]=%s", name.size(), A65_STRING_CHECK(name));
+	A65_DEBUG_ENTRY_INFO("Token=%p", &token);
 
-	entry = m_define.find(name);
+	entry = m_define.find(token.literal());
 	if(entry == m_define.end()) {
-		A65_THROW_EXCEPTION_INFO("Define not found", "[%u]%s", name.size(), A65_STRING_CHECK(name));
+		A65_THROW_EXCEPTION_INFO("Define not found", "%s", A65_STRING_CHECK(token.to_string()));
 	}
 
 	m_define.erase(entry);

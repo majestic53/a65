@@ -515,7 +515,11 @@ a65_object::to_string(void) const
 			std::vector<uint8_t> data = std::vector<uint8_t>(&((char *)m_payload)[section->offset],
 				&((char *)m_payload)[section->offset] + section->size);
 
-			result << std::endl << "{" << A65_STRING_HEX(uint32_t, m_id) << "} [" << section->name
+			result << std::endl
+#ifndef NDEBUG
+					<< "{" << a65_id::to_string() << "} "
+#endif // NDEBUG
+					<< "[" << section->name
 					<< "@" << A65_STRING_HEX(uint16_t, section->origin) << "]"
 				<< " {" << A65_STRING_HEX(uint32_t, section->offset) << ", " << A65_STRING_HEX(uint32_t, section->size) << "}";
 

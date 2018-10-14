@@ -148,6 +148,10 @@ class a65_parser :
 			__inout a65_tree &tree
 			);
 
+		void enumerate_directive_export(
+			__inout a65_tree &tree
+			);
+
 		void enumerate_directive_if(
 			__inout a65_tree &tree
 			);

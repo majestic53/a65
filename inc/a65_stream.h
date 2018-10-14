@@ -82,7 +82,11 @@ class a65_stream {
 
 		virtual void reset(void);
 
-		void set_metadata(
+		virtual void set_metadata(
+			__in const std::string &path
+			);
+
+		virtual void set_metadata(
 			__in const std::string &path,
 			__in size_t line
 			);

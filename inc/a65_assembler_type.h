@@ -24,6 +24,8 @@
 
 #define A65_ASSEMBLER_DIVIDER "============================================"
 
+#define A65_ASSEMBLER_FILL 0xea
+
 #define A65_ASSEMBLER_OUTPUT_ARCHIVE_NAME_DEFAULT "lib"
 #define A65_ASSEMBLER_OUTPUT_ARCHIVE_EXTENSION ".a"
 

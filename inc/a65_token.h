@@ -72,6 +72,10 @@ class a65_token :
 			);
 
 		void set_metadata(
+			__in const std::string &path
+			);
+
+		void set_metadata(
 			__in const std::string &path,
 			__in size_t line
 			);

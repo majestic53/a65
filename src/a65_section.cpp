@@ -255,7 +255,11 @@ a65_section::to_string(void) const
 
 	A65_DEBUG_ENTRY();
 
-	result << "{" << a65_id::to_string() << "} [" << A65_STRING_CHECK(m_name) << "@" << A65_STRING_HEX(uint16_t, m_origin)
+	result
+#ifndef NDEBUG
+		<< "{" << a65_id::to_string() << "} "
+#endif // NDEBUG
+		<< "[" << A65_STRING_CHECK(m_name) << "@" << A65_STRING_HEX(uint16_t, m_origin)
 		<< "] <" << m_listing.size() << ">";
 
 	if(!m_listing.empty()) {

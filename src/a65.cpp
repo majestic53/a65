@@ -47,7 +47,7 @@ a65_build_archive(
 			A65_THROW_EXCEPTION_INFO("Invalid output path", "%p", output);
 		}
 
-		g_output = assembler.archive(std::vector<std::string>(input, input + count), output, name);
+		g_output = assembler.build_archive(std::vector<std::string>(input, input + count), output, name);
 	} catch(std::exception &exc) {
 		g_error = exc.what();
 		result = EXIT_FAILURE;
@@ -79,7 +79,7 @@ a65_build_object(
 			A65_THROW_EXCEPTION_INFO("Invalid output path", "%p", output);
 		}
 
-		g_output = assembler.assemble(input, output, source);
+		g_output = assembler.build_object(input, output, source);
 	} catch(std::exception &exc) {
 		g_error = exc.what();
 		result = EXIT_FAILURE;
@@ -112,7 +112,7 @@ a65_compile(
 			A65_THROW_EXCEPTION_INFO("Invalid output path", "%p", output);
 		}
 
-		g_output = assembler.link(std::vector<std::string>(input, input + count), output, name);
+		g_output = assembler.compile(std::vector<std::string>(input, input + count), output, name);
 	} catch(std::exception &exc) {
 		g_error = exc.what();
 		result = EXIT_FAILURE;

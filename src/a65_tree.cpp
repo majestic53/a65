@@ -396,7 +396,11 @@ a65_tree::to_string(void) const
 
 	A65_DEBUG_ENTRY();
 
-	result << "{" << a65_id::to_string() << "} [" << A65_TREE_STRING(m_type) << "] <" << m_node_map.size() << ">";
+	result
+#ifndef NDEBUG
+		<< "{" << a65_id::to_string() << "} "
+#endif // NDEBUG
+		<< "[" << A65_TREE_STRING(m_type) << "] <" << m_node_map.size() << ">";
 
 	if(has_root()) {
 		result << " {" << A65_STRING_HEX(uint32_t, m_node_root) << ", " << A65_STRING_HEX(uint32_t, m_node) << "}";

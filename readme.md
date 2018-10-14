@@ -58,6 +58,11 @@ Changelog
 
 Version 0.1.1841
 ----------------
+*Updated: 10/14/2018*
+
+* Added export directive
+* Bug fixes
+
 *Updated: 10/10/2018*
 
 * Added archive class

@@ -64,6 +64,15 @@ class a65_lexer :
 
 		virtual void reset(void) override;
 
+		void set_metadata(
+			__in const std::string &path
+			) override;
+
+		void set_metadata(
+			__in const std::string &path,
+			__in size_t line
+			) override;
+
 		void set_mode(
 			__in uint32_t id,
 			__in int mode

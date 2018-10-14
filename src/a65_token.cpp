@@ -205,6 +205,18 @@ a65_token::set_literal(
 
 void
 a65_token::set_metadata(
+	__in const std::string &path
+	)
+{
+	A65_DEBUG_ENTRY_INFO("Path[%u]=%s", path.size(), A65_STRING_CHECK(path));
+
+	m_path = path;
+
+	A65_DEBUG_EXIT();
+}
+
+void
+a65_token::set_metadata(
 	__in const std::string &path,
 	__in size_t line
 	)
@@ -256,7 +268,9 @@ a65_token::to_string(void) const
 
 	A65_DEBUG_ENTRY();
 
-	result << "{" << a65_id::to_string() << "} [" << A65_TOKEN_STRING(m_type) << "]";
+#ifndef NDEBUG
+	result << "{" << a65_id::to_string() << "} [" << A65_TOKEN_STRING(m_type) << "] ";
+#endif // NDEBUG
 
 	switch(m_type) {
 		case A65_TOKEN_BEGIN:
@@ -267,17 +281,19 @@ a65_token::to_string(void) const
 			switch(m_type) {
 				case A65_TOKEN_IDENTIFIER:
 				case A65_TOKEN_LABEL:
-					result << "[" << m_literal.size() << "]";
-
-					if(!m_literal.empty()) {
-						result << " \"" << A65_STRING_CHECK(m_literal) << "\"";
-					}
+#ifndef NDEBUG
+					result << "[" << m_literal.size() << "] ";
+#endif // NDEBUG
+					result << "\"" << A65_STRING_CHECK(m_literal) << "\"";
 					break;
 				case A65_TOKEN_LITERAL:
-					result << "[" << m_literal.size() << "] \"" << literal_formatted() << "\"";
+#ifndef NDEBUG
+					result << "[" << m_literal.size() << "] ";
+#endif // NDEBUG
+					result << "\"" << literal_formatted() << "\"";
 					break;
 				case A65_TOKEN_SCALAR:
-					result << " " << m_scalar << "(" << A65_STRING_HEX(uint16_t, m_scalar) << ")";
+					result << m_scalar << "(" << A65_STRING_HEX(uint16_t, m_scalar) << ")";
 					break;
 				default:
 					break;
@@ -287,7 +303,7 @@ a65_token::to_string(void) const
 
 				switch(m_type) {
 					case A65_TOKEN_COMMAND:
-						result << " " << A65_TOKEN_COMMAND_STRING(m_subtype);
+						result << A65_TOKEN_COMMAND_STRING(m_subtype);
 
 						if(m_subtype == A65_TOKEN_COMMAND_CMD) {
 							result << "<" << m_scalar << "(" << A65_STRING_HEX(uint8_t, m_scalar) << ")>";
@@ -298,22 +314,22 @@ a65_token::to_string(void) const
 						}
 						break;
 					case A65_TOKEN_CONSTANT:
-						result << " " << A65_TOKEN_CONSTANT_STRING(m_subtype);
+						result << A65_TOKEN_CONSTANT_STRING(m_subtype);
 						break;
 					case A65_TOKEN_DIRECTIVE:
-						result << " " << A65_TOKEN_DIRECTIVE_STRING(m_subtype);
+						result << A65_TOKEN_DIRECTIVE_STRING(m_subtype);
 						break;
 					case A65_TOKEN_MACRO:
-						result << " " << A65_TOKEN_MACRO_STRING(m_subtype);
+						result << A65_TOKEN_MACRO_STRING(m_subtype);
 						break;
 					case A65_TOKEN_PRAGMA:
-						result << " " << A65_TOKEN_PRAGMA_STRING(m_subtype);
+						result << A65_TOKEN_PRAGMA_STRING(m_subtype);
 						break;
 					case A65_TOKEN_REGISTER:
-						result << " " << A65_TOKEN_REGISTER_STRING(m_subtype);
+						result << A65_TOKEN_REGISTER_STRING(m_subtype);
 						break;
 					case A65_TOKEN_SYMBOL:
-						result << " " << A65_TOKEN_SYMBOL_STRING(m_subtype);
+						result << A65_TOKEN_SYMBOL_STRING(m_subtype);
 						break;
 					default:
 						break;

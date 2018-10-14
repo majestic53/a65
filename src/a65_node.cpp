@@ -318,7 +318,11 @@ a65_node::to_string(void) const
 
 	A65_DEBUG_ENTRY();
 
-	result << "{" << a65_id::to_string() << "} [" << A65_NODE_STRING(m_type) << "] {";
+	result
+#ifndef NDEBUG
+		<< "{" << a65_id::to_string() << "} "
+#endif // NDEBUG
+		<< "[" << A65_NODE_STRING(m_type) << "] {";
 
 	if(is_root()) {
 		result << "Root";

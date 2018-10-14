@@ -422,7 +422,11 @@ a65_archive::to_string(void) const
 				A65_THROW_EXCEPTION_INFO("Malformed archive payload object", "%u", entry);
 			}
 
-			result << std::endl << "{" << A65_STRING_HEX(uint32_t, m_id) << "} [" << entry << "]"
+			result << std::endl
+#ifndef NDEBUG
+				<< "{" << a65_id::to_string() << "} "
+#endif // NDEBUG
+				<< "[" << entry << "]"
 				<< " {" << A65_STRING_HEX(uint32_t, object->offset) << ", " << A65_STRING_HEX(uint32_t, object->size) << "}";
 
 			std::vector<uint8_t> data = std::vector<uint8_t>(&((char *)m_payload)[object->offset],

@@ -109,6 +109,8 @@ directive_elseif ::= .elseif <expression_condition> <statement>*
 
 directive_end ::= .endif
 
+directive_export ::= .exp <identifier>
+
 directive_if ::= .if <expression_condition> <statement>* <directive_elseif>* <directive_else>? <directive_end>
 
 directive_ifdef ::= [.ifdef | .ifndef] <identifier> <statement>* <directive_else>? <directive_end>
