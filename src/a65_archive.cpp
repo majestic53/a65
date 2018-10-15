@@ -292,11 +292,9 @@ a65_archive::import(
 	if(header->magic != A65_OBJECT_MAGIC) {
 		A65_THROW_EXCEPTION_INFO("Archive header mismatch", "Magic=%u(%08x) (expecting=%u(%08x))", header->magic, header->magic,
 			A65_OBJECT_MAGIC, A65_OBJECT_MAGIC);
-#ifdef VERSION_CHECK
 	} else if((header->metadata.major != A65_VERSION_MAJOR) || (header->metadata.minor != A65_VERSION_MINOR)) {
 		A65_THROW_EXCEPTION_INFO("Archive header mismatch", "Version=%u.%u (expecting=%u.%u)", header->metadata.major, header->metadata.minor,
 			A65_VERSION_MAJOR, A65_VERSION_MINOR);
-#endif // VERSION_CHECK
 	} else if(header->metadata.type != A65_ARCHIVE_TYPE) {
 		A65_THROW_EXCEPTION_INFO("Archive header mismatch", "Type=%u(%04x) (expecting=%u(%04x))", header->metadata.type, header->metadata.type,
 			A65_ARCHIVE_TYPE, A65_ARCHIVE_TYPE);

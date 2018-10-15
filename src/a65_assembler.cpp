@@ -101,16 +101,19 @@ a65_assembler::add_define(
 
 void
 a65_assembler::add_export(
-	__in const std::string &name
+	__in const a65_token &token
 	)
 {
+	std::string name;
 	std::set<std::string>::iterator entry;
 
-	A65_DEBUG_ENTRY_INFO("Name[%u]=%s", name.size(), A65_STRING_CHECK(name));
+	A65_DEBUG_ENTRY_INFO("Token=%p", &token);
+
+	name = token.literal();
 
 	entry = m_export.find(name);
 	if(entry != m_export.end()) {
-		A65_THROW_EXCEPTION_INFO("Duplicate export", "[%u]%s", name.size(), A65_STRING_CHECK(name));
+		A65_THROW_EXCEPTION_INFO("Duplicate export", "%s", A65_STRING_CHECK(token.to_string()));
 	}
 
 	m_export.insert(name);
@@ -448,33 +451,120 @@ a65_assembler::evaluate_directive(
 	__in a65_tree &tree
 	)
 {
+	int type;
 	a65_token entry;
+	uint16_t value = 1;
+	bool branch = false;
 	std::vector<uint8_t> result;
 
 	A65_DEBUG_ENTRY_INFO("Parser=%p, Tree=%p", &parser, &tree);
 
 	entry = parser.token(tree.node().token());
-	switch(entry.subtype()) {
+
+	type = entry.subtype();
+	switch(type) {
 		case A65_TOKEN_DIRECTIVE_DATA_BYTE:
-			// TODO
+			a65_tree::move_child(tree, 0);
+
+			entry = parser.token(tree.node().token());
+			if(!tree.node().match(A65_NODE_LIST)) {
+				A65_THROW_EXCEPTION_INFO("Malformed directive tree", "%s", A65_STRING_CHECK(entry.to_string()));
+			}
+
+			for(size_t child = 0; child < tree.node().child_count(); ++child) {
+				a65_tree::move_child(tree, child);
+				result.push_back(evaluate_expression(parser, tree));
+				a65_tree::move_parent(tree);
+			}
+
+			a65_tree::move_parent(tree);
 			break;
 		case A65_TOKEN_DIRECTIVE_DATA_WORD:
-			// TODO
+			a65_tree::move_child(tree, 0);
+
+			entry = parser.token(tree.node().token());
+			if(!tree.node().match(A65_NODE_LIST)) {
+				A65_THROW_EXCEPTION_INFO("Malformed directive tree", "%s", A65_STRING_CHECK(entry.to_string()));
+			}
+
+			for(size_t child = 0; child < tree.node().child_count(); ++child) {
+				a65_tree::move_child(tree, child);
+				value = evaluate_expression(parser, tree);
+				result.push_back(value);
+				result.push_back(value >> CHAR_BIT);
+				a65_tree::move_parent(tree);
+			}
+
+			a65_tree::move_parent(tree);
 			break;
 		case A65_TOKEN_DIRECTIVE_DEFINE:
-			// TODO
+
+			if(tree.has_child(1)) {
+				a65_tree::move_child(tree, 1);
+				value = evaluate_expression(parser, tree);
+				a65_tree::move_parent(tree);
+			}
+
+			a65_tree::move_child(tree, 0);
+
+			entry = parser.token(tree.node().token());
+			if(!entry.match(A65_TOKEN_IDENTIFIER)) {
+				A65_THROW_EXCEPTION_INFO("Malformed directive tree", "%s", A65_STRING_CHECK(entry.to_string()));
+			}
+
+			add_define(entry, value);
+			a65_tree::move_parent(tree);
 			break;
 		case A65_TOKEN_DIRECTIVE_EXPORT:
-			// TODO
+			a65_tree::move_child(tree, 0);
+
+			entry = parser.token(tree.node().token());
+			if(!entry.match(A65_TOKEN_IDENTIFIER)) {
+				A65_THROW_EXCEPTION_INFO("Malformed directive tree", "%s", A65_STRING_CHECK(entry.to_string()));
+			}
+
+			add_export(entry);
+			a65_tree::move_parent(tree);
 			break;
 		case A65_TOKEN_DIRECTIVE_IF:
 			// TODO
 			break;
 		case A65_TOKEN_DIRECTIVE_IF_DEFINE:
-			// TODO
-			break;
 		case A65_TOKEN_DIRECTIVE_IF_DEFINE_NOT:
-			// TODO
+			a65_tree::move_child(tree, 0);
+
+			entry = parser.token(tree.node().token());
+			if(!entry.match(A65_TOKEN_IDENTIFIER)) {
+				A65_THROW_EXCEPTION_INFO("Malformed directive tree", "%s", A65_STRING_CHECK(entry.to_string()));
+			}
+
+			branch = contains_define(entry.literal());
+			a65_tree::move_parent(tree);
+
+			if(type == A65_TOKEN_DIRECTIVE_IF_DEFINE_NOT) {
+				branch = !branch;
+			}
+
+// TODO
+std::cout << branch << std::endl;
+// ---
+
+			if(branch) {
+				a65_tree::move_child(tree, 1);
+				result = evaluate_list(parser, tree);
+				a65_tree::move_parent(tree);
+			} else if(tree.has_child(2)) {
+				a65_tree::move_child(tree, 2);
+
+				if(!tree.has_child(0)) {
+					A65_THROW_EXCEPTION_INFO("Malformed directive tree", "%s", A65_STRING_CHECK(entry.to_string()));
+				}
+
+				a65_tree::move_child(tree, 0);
+				result = evaluate_list(parser, tree);
+				a65_tree::move_parent(tree);
+				a65_tree::move_parent(tree);
+			}
 			break;
 		case A65_TOKEN_DIRECTIVE_ORIGIN:
 			a65_tree::move_child(tree, 0);
@@ -494,10 +584,7 @@ a65_assembler::evaluate_directive(
 				A65_THROW_EXCEPTION_INFO("Malformed directive tree", "%s", A65_STRING_CHECK(entry.to_string()));
 			}
 
-			if(contains_define(entry.literal())) {
-				remove_define(entry);
-			}
-
+			remove_define(entry);
 			a65_tree::move_parent(tree);
 			break;
 		default:
@@ -537,6 +624,32 @@ a65_assembler::evaluate_expression(
 	// ---
 
 	A65_DEBUG_EXIT_INFO("Result=%u(%04x)", result, result);
+	return result;
+}
+
+std::vector<uint8_t>
+a65_assembler::evaluate_list(
+	__in a65_parser &parser,
+	__in a65_tree &tree
+	)
+{
+	std::vector<uint8_t> result;
+
+	A65_DEBUG_ENTRY_INFO("Parser=%p, Tree=%p", &parser, &tree);
+
+	for(size_t child = 0; child < tree.node().child_count(); ++child) {
+		std::vector<uint8_t> data;
+
+		a65_tree::move_child(tree, child);
+		data = evaluate(parser, tree);
+		a65_tree::move_parent(tree);
+
+		if(!data.empty()) {
+			result.insert(result.end(), data.begin(), data.end());
+		}
+	}
+
+	A65_DEBUG_EXIT();
 	return result;
 }
 

@@ -69,7 +69,7 @@ class a65_assembler :
 			);
 
 		void add_export(
-			__in const std::string &name
+			__in const a65_token &token
 			);
 
 		void add_label(
@@ -119,6 +119,11 @@ class a65_assembler :
 			);
 
 		uint16_t evaluate_expression(
+			__in a65_parser &parser,
+			__in a65_tree &tree
+			);
+
+		std::vector<uint8_t> evaluate_list(
 			__in a65_parser &parser,
 			__in a65_tree &tree
 			);
