@@ -265,7 +265,7 @@ a65_archive::import(
 		size = data.size();
 		m_payload->object[count].offset = offset;
 		m_payload->object[count].size = size;
-		memcpy(&((char *)m_payload)[offset], &data[0], size);
+		std::memcpy(&((char *)m_payload)[offset], &data[0], size);
 		offset += size;
 	}
 
@@ -371,7 +371,7 @@ a65_archive::object(
 	std::vector<uint8_t> data = std::vector<uint8_t>(&((char *)m_payload)[entry->offset],
 		&((char *)m_payload)[entry->offset] + entry->size);
 
-	memcpy(&header, &m_header, sizeof(header));
+	std::memcpy(&header, &m_header, sizeof(header));
 	header.metadata.type = A65_OBJECT_TYPE;
 	data.insert(data.begin(), (char *)&header, ((char *)&header) + sizeof(header));
 
@@ -429,7 +429,7 @@ a65_archive::to_string(void) const
 	if(m_payload) {
 		a65_object_header_t header = {};
 
-		memcpy(&header, &m_header, sizeof(header));
+		std::memcpy(&header, &m_header, sizeof(header));
 		header.metadata.type = A65_OBJECT_TYPE;
 
 		for(uint32_t entry = 0; entry < m_payload->metadata.count; ++entry) {

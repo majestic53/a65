@@ -321,13 +321,13 @@ a65_object::import(
 		m_payload->section[count].offset = offset;
 		m_payload->section[count].size = size;
 
-		memcpy(&m_payload->section[count].name, &name[0], std::min(name.size(), (size_t) (A65_OBJECT_SECTION_NAME_MAX - 1)));
+		std::memcpy(&m_payload->section[count].name, &name[0], std::min(name.size(), (size_t) (A65_OBJECT_SECTION_NAME_MAX - 1)));
 
 		if(name.size() > (A65_OBJECT_SECTION_NAME_MAX - 1)) {
 			A65_DEBUG_MESSAGE_INFO(A65_DEBUG_LEVEL_WARNING, "Object section name truncated", "%s", m_payload->section[count].name);
 		}
 
-		memcpy(&((char *)m_payload)[offset], &data[0], size);
+		std::memcpy(&((char *)m_payload)[offset], &data[0], size);
 		offset += size;
 	}
 
