@@ -56,6 +56,12 @@ a65 [-a name][-c name][-h][-o output][-s][-b][-v] input...
 Changelog
 =========
 
+Version 0.1.1842
+----------------
+
+* Implemented directive evaluation
+* Simplified archive file format
+
 Version 0.1.1841
 ----------------
 *Updated: 10/14/2018*
@@ -75,16 +81,6 @@ Version 0.1.1841
 *Updated: 10/8/2018*
 
 * Added cli interface
-
-Version 0.1.1840
-----------------
-*Updated: 10/6/2018*
-
-* Added assembler object class
-
-*Updated: 10/4/2018*
-
-* Added assembler command table
 
 *Changelog truncated (see file history for full log)*
 

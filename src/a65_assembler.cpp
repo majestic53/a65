@@ -445,6 +445,24 @@ a65_assembler::evaluate_command(
 	return result;
 }
 
+bool
+a65_assembler::evaluate_condition(
+	__in a65_parser &parser,
+	__in a65_tree &tree
+	)
+{
+	bool result;
+
+	A65_DEBUG_ENTRY_INFO("Parser=%p, Tree=%p", &parser, &tree);
+
+	// TODO: evaluate condition
+	result = true;
+	// ---
+
+	A65_DEBUG_EXIT_INFO("Result=%x", result);
+	return result;
+}
+
 std::vector<uint8_t>
 a65_assembler::evaluate_directive(
 	__in a65_parser &parser,
@@ -527,7 +545,52 @@ a65_assembler::evaluate_directive(
 			a65_tree::move_parent(tree);
 			break;
 		case A65_TOKEN_DIRECTIVE_IF:
-			// TODO
+			a65_tree::move_child(tree, 0);
+			entry = parser.token(tree.node().token());
+
+			if(!tree.node().match(A65_NODE_CONDITION)) {
+				A65_THROW_EXCEPTION_INFO("Malformed directive tree", "%s", A65_STRING_CHECK(entry.to_string()));
+			}
+
+			branch = evaluate_condition(parser, tree);
+			a65_tree::move_parent(tree);
+
+			if(branch) {
+				a65_tree::move_child(tree, 1);
+				result = evaluate_list(parser, tree);
+				a65_tree::move_parent(tree);
+			} else {
+
+				for(size_t child = 2; child < tree.node().child_count(); ++child) {
+					a65_tree::move_child(tree, child);
+
+					entry = parser.token(tree.node().token());
+					if(entry.match(A65_TOKEN_DIRECTIVE, A65_TOKEN_DIRECTIVE_ELSE_IF)) {
+						a65_tree::move_child(tree, 0);
+						branch = evaluate_condition(parser, tree);
+						a65_tree::move_parent(tree);
+
+						if(branch) {
+							a65_tree::move_child(tree, 1);
+							result = evaluate_list(parser, tree);
+							a65_tree::move_parent(tree);
+						}
+					} else if(entry.match(A65_TOKEN_DIRECTIVE, A65_TOKEN_DIRECTIVE_ELSE)) {
+						branch = true;
+						a65_tree::move_child(tree, 0);
+						result = evaluate_list(parser, tree);
+						a65_tree::move_parent(tree);
+					} else {
+						A65_THROW_EXCEPTION_INFO("Malformed directive tree", "%s", A65_STRING_CHECK(entry.to_string()));
+					}
+
+					a65_tree::move_parent(tree);
+
+					if(branch) {
+						break;
+					}
+				}
+			}
 			break;
 		case A65_TOKEN_DIRECTIVE_IF_DEFINE:
 		case A65_TOKEN_DIRECTIVE_IF_DEFINE_NOT:
@@ -544,10 +607,6 @@ a65_assembler::evaluate_directive(
 			if(type == A65_TOKEN_DIRECTIVE_IF_DEFINE_NOT) {
 				branch = !branch;
 			}
-
-// TODO
-std::cout << branch << std::endl;
-// ---
 
 			if(branch) {
 				a65_tree::move_child(tree, 1);

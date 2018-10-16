@@ -112,13 +112,17 @@ a65_object::operator=(
 }
 
 std::vector<uint8_t>
-a65_object::as_data(void) const
+a65_object::as_data(
+	__in_opt bool header
+	) const
 {
 	std::vector<uint8_t> result;
 
-	A65_DEBUG_ENTRY();
+	A65_DEBUG_ENTRY_INFO("Header=%x", header);
 
-	result.insert(result.end(), (char *)&m_header, ((char *)&m_header) + sizeof(m_header));
+	if(header) {
+		result.insert(result.end(), (char *)&m_header, ((char *)&m_header) + sizeof(m_header));
+	}
 
 	if(m_payload) {
 		result.insert(result.end(), (char *)m_payload, ((char *)m_payload) + m_payload_size);
@@ -482,13 +486,19 @@ a65_object::section(
 }
 
 size_t
-a65_object::size(void) const
+a65_object::size(
+	__in_opt bool header
+	) const
 {
 	size_t result;
 
-	A65_DEBUG_ENTRY();
+	A65_DEBUG_ENTRY_INFO("Header=%x", header);
 
-	result = (m_payload_size + sizeof(a65_object_header_t));
+	result = m_payload_size;
+
+	if(header) {
+		result += sizeof(a65_object_header_t);
+	}
 
 	A65_DEBUG_EXIT_INFO("Result=%u", result);
 	return result;

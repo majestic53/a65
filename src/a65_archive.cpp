@@ -111,13 +111,17 @@ a65_archive::operator=(
 }
 
 std::vector<uint8_t>
-a65_archive::as_data(void) const
+a65_archive::as_data(
+	__in_opt bool header
+	) const
 {
 	std::vector<uint8_t> result;
 
-	A65_DEBUG_ENTRY();
+	A65_DEBUG_ENTRY_INFO("Header=%x", header);
 
-	result.insert(result.end(), (char *)&m_header, ((char *)&m_header) + sizeof(m_header));
+	if(header) {
+		result.insert(result.end(), (char *)&m_header, ((char *)&m_header) + sizeof(m_header));
+	}
 
 	if(m_payload) {
 		result.insert(result.end(), (char *)m_payload, ((char *)m_payload) + m_payload_size);
@@ -241,7 +245,7 @@ a65_archive::import(
 		offset = m_payload_size;
 
 		for(entry = object.begin(); entry != object.end(); ++entry) {
-			m_payload_size += entry->size();
+			m_payload_size += entry->size(false);
 		}
 	}
 
@@ -256,7 +260,7 @@ a65_archive::import(
 
 	for(entry = object.begin(); entry != object.end(); ++count, ++entry) {
 		uint32_t size;
-		std::vector<uint8_t> data = entry->as_data();
+		std::vector<uint8_t> data = entry->as_data(false);
 
 		size = data.size();
 		m_payload->object[count].offset = offset;
@@ -351,6 +355,7 @@ a65_archive::object(
 	) const
 {
 	a65_archive_object_t *entry;
+	a65_object_header_t header = {};
 
 	A65_DEBUG_ENTRY_INFO("Position=%u", position);
 
@@ -365,6 +370,10 @@ a65_archive::object(
 
 	std::vector<uint8_t> data = std::vector<uint8_t>(&((char *)m_payload)[entry->offset],
 		&((char *)m_payload)[entry->offset] + entry->size);
+
+	memcpy(&header, &m_header, sizeof(header));
+	header.metadata.type = A65_OBJECT_TYPE;
+	data.insert(data.begin(), (char *)&header, ((char *)&header) + sizeof(header));
 
 	object.import(data);
 
@@ -392,13 +401,19 @@ a65_archive::read(
 }
 
 size_t
-a65_archive::size(void) const
+a65_archive::size(
+	__in_opt bool header
+	) const
 {
 	size_t result;
 
-	A65_DEBUG_ENTRY();
+	A65_DEBUG_ENTRY_INFO("Header=%x", header);
 
-	result = (m_payload_size + sizeof(a65_object_header_t));
+	result = m_payload_size;
+
+	if(header) {
+		result += sizeof(a65_object_header_t);
+	}
 
 	A65_DEBUG_EXIT_INFO("Result=%u", result);
 	return result;
@@ -412,6 +427,10 @@ a65_archive::to_string(void) const
 	A65_DEBUG_ENTRY();
 
 	if(m_payload) {
+		a65_object_header_t header = {};
+
+		memcpy(&header, &m_header, sizeof(header));
+		header.metadata.type = A65_OBJECT_TYPE;
 
 		for(uint32_t entry = 0; entry < m_payload->metadata.count; ++entry) {
 
@@ -429,6 +448,8 @@ a65_archive::to_string(void) const
 
 			std::vector<uint8_t> data = std::vector<uint8_t>(&((char *)m_payload)[object->offset],
 				&((char *)m_payload)[object->offset] + object->size);
+
+			data.insert(data.begin(), (char *)&header, ((char *)&header) + sizeof(header));
 
 			if(!data.empty()) {
 				result << a65_object(data).to_string();

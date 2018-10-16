@@ -113,6 +113,11 @@ class a65_assembler :
 			__in a65_tree &tree
 			);
 
+		bool evaluate_condition(
+			__in a65_parser &parser,
+			__in a65_tree &tree
+			);
+
 		std::vector<uint8_t> evaluate_directive(
 			__in a65_parser &parser,
 			__in a65_tree &tree

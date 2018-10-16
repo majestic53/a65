@@ -49,7 +49,9 @@ class a65_object :
 			__in const a65_object &other
 			);
 
-		std::vector<uint8_t> as_data(void) const;
+		std::vector<uint8_t> as_data(
+			__in_opt bool header = true
+			) const;
 
 		void clear(void);
 
@@ -87,7 +89,9 @@ class a65_object :
 			__inout std::vector<uint8_t> &data
 			) const;
 
-		size_t size(void) const;
+		size_t size(
+			__in_opt bool header = true
+			) const;
 
 		virtual std::string to_string(void) const;
 

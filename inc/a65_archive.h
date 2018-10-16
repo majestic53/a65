@@ -49,7 +49,9 @@ class a65_archive :
 			__in const a65_archive &other
 			);
 
-		std::vector<uint8_t> as_data(void) const;
+		std::vector<uint8_t> as_data(
+			__in_opt bool header = true
+			) const;
 
 		void clear(void);
 
@@ -78,7 +80,9 @@ class a65_archive :
 			__in const std::string &path
 			);
 
-		size_t size(void) const;
+		size_t size(
+			__in_opt bool header = true
+			) const;
 
 		virtual std::string to_string(void) const;
 
