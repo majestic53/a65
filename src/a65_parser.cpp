@@ -1050,9 +1050,7 @@ a65_parser::enumerate_expression_condition(
 	enumerate_expression(tree);
 
 	entry = a65_lexer::token();
-	if(entry.match(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_OPERATOR_AND)
-			|| entry.match(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_OPERATOR_OR)
-			|| entry.match(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_OPERATOR_EQUALS)
+	if(entry.match(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_OPERATOR_EQUALS)
 			|| entry.match(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_OPERATOR_GREATER_THAN)
 			|| entry.match(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_OPERATOR_GREATER_THAN_EQUALS)
 			|| entry.match(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_OPERATOR_LESS_THAN)
@@ -1210,7 +1208,9 @@ a65_parser::enumerate_expression_logical(
 	enumerate_expression_arithmetic_0(subtree);
 
 	entry = a65_lexer::token();
-	if(entry.match(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_LOGICAL_SHIFT_LEFT)
+	if(entry.match(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_LOGICAL_AND)
+			|| entry.match(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_LOGICAL_OR)
+			|| entry.match(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_LOGICAL_SHIFT_LEFT)
 			|| entry.match(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_LOGICAL_SHIFT_RIGHT)) {
 		add_child_subtree(tree, A65_NODE_OPERATOR, entry.id());
 		add_child_subtree(tree, subtree);

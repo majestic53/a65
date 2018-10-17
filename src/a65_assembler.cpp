@@ -435,11 +435,67 @@ a65_assembler::evaluate_command(
 	__in a65_tree &tree
 	)
 {
+	int mode;
+	a65_token entry;
 	std::vector<uint8_t> result;
 
 	A65_DEBUG_ENTRY_INFO("Parser=%p, Tree=%p", &parser, &tree);
 
-	// TODO: evaluate command
+	entry = parser.token(tree.node().token());
+	if(!entry.match(A65_TOKEN_COMMAND)) {
+		A65_THROW_EXCEPTION_INFO("Malformed command tree", "%s", A65_STRING_CHECK(entry.to_string()));
+	}
+
+	mode = entry.mode();
+	switch(mode) {
+		case A65_TOKEN_COMMAND_MODE_ABSOLUTE:
+			// TODO
+			break;
+		case A65_TOKEN_COMMAND_MODE_ABSOLUTE_INDEX_INDIRECT:
+			// TODO
+			break;
+		case A65_TOKEN_COMMAND_MODE_ABSOLUTE_INDEX_X:
+			// TODO
+			break;
+		case A65_TOKEN_COMMAND_MODE_ABSOLUTE_INDEX_Y:
+			// TODO
+			break;
+		case A65_TOKEN_COMMAND_MODE_ABSOLUTE_INDIRECT:
+			// TODO
+			break;
+		case A65_TOKEN_COMMAND_MODE_ACCUMULATOR:
+			// TODO
+			break;
+		case A65_TOKEN_COMMAND_MODE_IMMEDIATE:
+			// TODO
+			break;
+		case A65_TOKEN_COMMAND_MODE_IMPLIED:
+			// TODO
+			break;
+		case A65_TOKEN_COMMAND_MODE_RELATIVE:
+			// TODO
+			break;
+		case A65_TOKEN_COMMAND_MODE_ZEROPAGE:
+			// TODO
+			break;
+		case A65_TOKEN_COMMAND_MODE_ZEROPAGE_INDEX_INDIRECT:
+			// TODO
+			break;
+		case A65_TOKEN_COMMAND_MODE_ZEROPAGE_INDEX_X:
+			// TODO
+			break;
+		case A65_TOKEN_COMMAND_MODE_ZEROPAGE_INDEX_Y:
+			// TODO
+			break;
+		case A65_TOKEN_COMMAND_MODE_ZEROPAGE_INDIRECT:
+			// TODO
+			break;
+		case A65_TOKEN_COMMAND_MODE_ZEROPAGE_INDIRECT_INDEX:
+			// TODO
+			break;
+		default:
+			A65_THROW_EXCEPTION_INFO("Malformed command tree", "%s", A65_STRING_CHECK(entry.to_string()));
+	}
 
 	A65_DEBUG_EXIT();
 	return result;
@@ -451,13 +507,50 @@ a65_assembler::evaluate_condition(
 	__in a65_tree &tree
 	)
 {
-	bool result;
+	a65_token entry;
+	bool result = false;
 
 	A65_DEBUG_ENTRY_INFO("Parser=%p, Tree=%p", &parser, &tree);
 
-	// TODO: evaluate condition
-	result = true;
-	// ---
+	if(tree.node().has_token()) {
+		uint16_t left, right;
+
+		a65_tree::move_child(tree, 0);
+		left = evaluate_expression(parser, tree);
+		a65_tree::move_parent(tree);
+
+		a65_tree::move_child(tree, 1);
+		right = evaluate_expression(parser, tree);
+		a65_tree::move_parent(tree);
+
+		entry = parser.token(tree.node().token());
+		switch(entry.subtype()) {
+			case A65_TOKEN_SYMBOL_OPERATOR_EQUALS:
+				result = (left == right);
+				break;
+			case A65_TOKEN_SYMBOL_OPERATOR_GREATER_THAN:
+				result = (left > right);
+				break;
+			case A65_TOKEN_SYMBOL_OPERATOR_GREATER_THAN_EQUALS:
+				result = (left >= right);
+				break;
+			case A65_TOKEN_SYMBOL_OPERATOR_LESS_THAN:
+				result = (left < right);
+				break;
+			case A65_TOKEN_SYMBOL_OPERATOR_LESS_THAN_EQUALS:
+				result = (left <= right);
+				break;
+			case A65_TOKEN_SYMBOL_OPERATOR_NOT_EQUALS:
+				result = (left != right);
+				break;
+			default:
+				A65_THROW_EXCEPTION_INFO("Malformed condition tree", "%s", A65_STRING_CHECK(entry.to_string()));
+		}
+	} else {
+		a65_tree::move_child(tree, 0);
+		result = (evaluate_expression(parser, tree) != 0);
+		a65_tree::move_parent(tree);
+	}
 
 	A65_DEBUG_EXIT_INFO("Result=%x", result);
 	return result;
