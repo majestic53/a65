@@ -271,6 +271,119 @@ parse(
 	return result;
 }
 
+int
+run(
+	__in const std::vector<std::string> &input,
+	__in const std::string &output,
+	__in const std::string &name,
+	__in int flags
+	)
+{
+	int result = EXIT_SUCCESS;
+	std::vector<std::string>::const_iterator entry;
+	std::vector<std::string> archives, objects, sources;
+	bool source = A65_FLAG_CONTAINS(A65_FLAG_SOURCE, flags),
+		verbose = A65_FLAG_CONTAINS(A65_FLAG_VERBOSE, flags);
+
+	if(verbose) {
+		display_version(true);
+		std::cout << std::endl;
+	}
+
+	if(!input.empty()) {
+
+		if(verbose) {
+			std::cout << "Inputs: ";
+		}
+
+		for(entry = input.begin(); entry != input.end(); ++entry) {
+
+			if(verbose) {
+
+				if(entry != input.begin()) {
+					std::cout << ", ";
+				}
+
+				std::cout << *entry;
+			}
+
+			size_t dot = entry->find_last_of(A65_EXTENSION);
+
+			if(dot != std::string::npos) {
+				std::string extension = entry->substr(dot + 1);
+
+				if(extension == A65_EXTENSION_ARCHIVE) {
+					archives.push_back(*entry);
+				} else if(extension == A65_EXTENSION_OBJECT) {
+					objects.push_back(*entry);
+				} else {
+					sources.push_back(*entry);
+				}
+			}
+		}
+
+		if(verbose) {
+			std::cout << std::endl;
+		}
+	}
+
+	if(verbose) {
+		std::cout << "Output: " << A65_STRING_CHECK(output) << std::endl;
+	}
+
+	if(A65_FLAG_CONTAINS(A65_FLAG_ARCHIVE, flags)) {
+
+		if(verbose) {
+			std::cout << A65_VERBOSE_DIVIDER
+				<< std::endl << A65_VERBOSE_SECTION_ARCHIVE
+				<< std::endl << "Name: " << name
+				<< std::endl << A65_VERBOSE_DIVIDER
+				<< std::endl;
+		}
+
+		result = build_archive(objects, sources, output, name, source);
+	} else if(A65_FLAG_CONTAINS(A65_FLAG_COMPILE, flags)) {
+
+		if(verbose) {
+			std::cout << A65_VERBOSE_DIVIDER
+				<< std::endl << A65_VERBOSE_SECTION_COMPILE
+				<< std::endl << "Name: " << name
+				<< std::endl << A65_VERBOSE_DIVIDER
+				<< std::endl;
+		}
+
+		result = compile(objects, archives, sources, output, name, source);
+	} else {
+
+		if(verbose) {
+			std::cout << A65_VERBOSE_DIVIDER
+				<< std::endl << A65_VERBOSE_SECTION_OBJECT
+				<< std::endl << "Sources: ";
+
+			for(entry = sources.begin(); entry != sources.end(); ++entry) {
+
+				if(entry != sources.begin()) {
+					std::cout << ", ";
+				}
+
+				std::cout << *entry;
+			}
+
+			std::cout << std::endl << A65_VERBOSE_DIVIDER
+				<< std::endl;
+		}
+
+		result = build_objects(objects, sources, output, source);
+	}
+
+	if(result) {
+		std::cerr << "Error: " << a65_error() << std::endl;
+	} else if(verbose) {
+		std::cout << "Success" << std::endl;
+	}
+
+	return result;
+}
 
 int
 main(
@@ -293,107 +406,7 @@ main(
 			} else if(A65_FLAG_CONTAINS(A65_FLAG_VERSION, flags)) {
 				display_version();
 			} else {
-				std::vector<std::string>::iterator entry;
-				std::vector<std::string> archives, objects, sources;
-				bool source = A65_FLAG_CONTAINS(A65_FLAG_SOURCE, flags),
-					verbose = A65_FLAG_CONTAINS(A65_FLAG_VERBOSE, flags);
-
-				if(verbose) {
-					display_version(true);
-					std::cout << std::endl;
-				}
-
-				if(!input.empty()) {
-
-					if(verbose) {
-						std::cout << "Inputs: ";
-					}
-
-					for(entry = input.begin(); entry != input.end(); ++entry) {
-
-						if(verbose) {
-
-							if(entry != input.begin()) {
-								std::cout << ", ";
-							}
-
-							std::cout << *entry;
-						}
-
-						size_t dot = entry->find_last_of(A65_EXTENSION);
-
-						if(dot != std::string::npos) {
-							std::string extension = entry->substr(dot + 1);
-
-							if(extension == A65_EXTENSION_ARCHIVE) {
-								archives.push_back(*entry);
-							} else if(extension == A65_EXTENSION_OBJECT) {
-								objects.push_back(*entry);
-							} else {
-								sources.push_back(*entry);
-							}
-						}
-					}
-
-					if(verbose) {
-						std::cout << std::endl;
-					}
-				}
-
-				if(verbose) {
-					std::cout << "Output: " << A65_STRING_CHECK(output) << std::endl;
-				}
-
-				if(A65_FLAG_CONTAINS(A65_FLAG_ARCHIVE, flags)) {
-
-					if(verbose) {
-						std::cout << A65_VERBOSE_DIVIDER
-							<< std::endl << A65_VERBOSE_SECTION_ARCHIVE
-							<< std::endl << "Name: " << name
-							<< std::endl << A65_VERBOSE_DIVIDER
-							<< std::endl;
-					}
-
-					result = build_archive(objects, sources, output, name, source);
-				} else if(A65_FLAG_CONTAINS(A65_FLAG_COMPILE, flags)) {
-
-					if(verbose) {
-						std::cout << A65_VERBOSE_DIVIDER
-							<< std::endl << A65_VERBOSE_SECTION_COMPILE
-							<< std::endl << "Name: " << name
-							<< std::endl << A65_VERBOSE_DIVIDER
-							<< std::endl;
-					}
-
-					result = compile(objects, archives, sources, output, name, source);
-				} else {
-
-					if(verbose) {
-						std::cout << A65_VERBOSE_DIVIDER
-							<< std::endl << A65_VERBOSE_SECTION_OBJECT
-							<< std::endl << "Sources: ";
-
-						for(entry = sources.begin(); entry != sources.end(); ++entry) {
-
-							if(entry != sources.begin()) {
-								std::cout << ", ";
-							}
-
-							std::cout << *entry;
-						}
-
-						std::cout << std::endl << A65_VERBOSE_DIVIDER
-							<< std::endl;
-					}
-
-					result = build_objects(objects, sources, output, source);
-				}
-
-				if(result) {
-					std::cerr << "Error: " << a65_error() << std::endl;
-				} else if(verbose) {
-					std::cout << "Success" << std::endl;
-				}
+				result = run(input, output, name, flags);
 			}
 		} else {
 			display_usage();

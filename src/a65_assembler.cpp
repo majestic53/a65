@@ -435,8 +435,9 @@ a65_assembler::evaluate_command(
 	__in a65_tree &tree
 	)
 {
-	int mode;
+	int mode, type;
 	a65_token entry;
+	uint16_t operand;
 	std::vector<uint8_t> result;
 
 	A65_DEBUG_ENTRY_INFO("Parser=%p, Tree=%p", &parser, &tree);
@@ -447,54 +448,278 @@ a65_assembler::evaluate_command(
 	}
 
 	mode = entry.mode();
-	switch(mode) {
-		case A65_TOKEN_COMMAND_MODE_ABSOLUTE:
-			// TODO
-			break;
-		case A65_TOKEN_COMMAND_MODE_ABSOLUTE_INDEX_INDIRECT:
-			// TODO
-			break;
-		case A65_TOKEN_COMMAND_MODE_ABSOLUTE_INDEX_X:
-			// TODO
-			break;
-		case A65_TOKEN_COMMAND_MODE_ABSOLUTE_INDEX_Y:
-			// TODO
-			break;
-		case A65_TOKEN_COMMAND_MODE_ABSOLUTE_INDIRECT:
-			// TODO
-			break;
-		case A65_TOKEN_COMMAND_MODE_ACCUMULATOR:
-			// TODO
-			break;
-		case A65_TOKEN_COMMAND_MODE_IMMEDIATE:
-			// TODO
-			break;
-		case A65_TOKEN_COMMAND_MODE_IMPLIED:
-			// TODO
-			break;
-		case A65_TOKEN_COMMAND_MODE_RELATIVE:
-			// TODO
-			break;
-		case A65_TOKEN_COMMAND_MODE_ZEROPAGE:
-			// TODO
-			break;
-		case A65_TOKEN_COMMAND_MODE_ZEROPAGE_INDEX_INDIRECT:
-			// TODO
-			break;
-		case A65_TOKEN_COMMAND_MODE_ZEROPAGE_INDEX_X:
-			// TODO
-			break;
-		case A65_TOKEN_COMMAND_MODE_ZEROPAGE_INDEX_Y:
-			// TODO
-			break;
-		case A65_TOKEN_COMMAND_MODE_ZEROPAGE_INDIRECT:
-			// TODO
-			break;
-		case A65_TOKEN_COMMAND_MODE_ZEROPAGE_INDIRECT_INDEX:
-			// TODO
-			break;
-		default:
-			A65_THROW_EXCEPTION_INFO("Malformed command tree", "%s", A65_STRING_CHECK(entry.to_string()));
+	type = entry.subtype();
+
+	if(type != A65_TOKEN_COMMAND_CMD) {
+		uint8_t opcode;
+
+		switch(mode) {
+			case A65_TOKEN_COMMAND_MODE_ABSOLUTE:
+
+				if(!A65_IS_COMMAND_ABSOLUTE(type)) {
+					A65_THROW_EXCEPTION_INFO("Unsupported addressing mode", "%s", A65_STRING_CHECK(entry.to_string()));
+				}
+
+				opcode = A65_COMMAND_ABSOLUTE_OPCODE(type);
+
+				a65_tree::move_child(tree, 0);
+				operand = evaluate_expression(parser, tree);
+				a65_tree::move_parent(tree);
+
+				if((operand <= UINT8_MAX) && A65_IS_COMMAND_ZEROPAGE(entry.subtype())) {
+					opcode = A65_COMMAND_ZEROPAGE_OPCODE(type);
+					result.push_back(opcode);
+					result.push_back(operand);
+				} else {
+					result.push_back(opcode);
+					result.push_back(operand);
+					result.push_back(operand >> CHAR_BIT);
+				}
+				break;
+			case A65_TOKEN_COMMAND_MODE_ABSOLUTE_INDEX_INDIRECT:
+
+				if(!A65_IS_COMMAND_ABSOLUTE_INDEX_INDIRECT(type)) {
+					A65_THROW_EXCEPTION_INFO("Unsupported addressing mode", "%s", A65_STRING_CHECK(entry.to_string()));
+				}
+
+				opcode = A65_COMMAND_ABSOLUTE_INDEX_INDIRECT_OPCODE(type);
+
+				a65_tree::move_child(tree, 0);
+				operand = evaluate_expression(parser, tree);
+				a65_tree::move_parent(tree);
+
+				if((operand <= UINT8_MAX) && A65_IS_COMMAND_ZEROPAGE_INDEX_INDIRECT(entry.subtype())) {
+					opcode = A65_COMMAND_ZEROPAGE_INDEX_INDIRECT_OPCODE(type);
+					result.push_back(opcode);
+					result.push_back(operand);
+				} else {
+					result.push_back(opcode);
+					result.push_back(operand);
+					result.push_back(operand >> CHAR_BIT);
+				}
+				break;
+			case A65_TOKEN_COMMAND_MODE_ABSOLUTE_INDEX_X:
+
+				if(!A65_IS_COMMAND_ABSOLUTE_INDEX_X(type)) {
+					A65_THROW_EXCEPTION_INFO("Unsupported addressing mode", "%s", A65_STRING_CHECK(entry.to_string()));
+				}
+
+				opcode = A65_COMMAND_ABSOLUTE_INDEX_X_OPCODE(type);
+
+				a65_tree::move_child(tree, 0);
+				operand = evaluate_expression(parser, tree);
+				a65_tree::move_parent(tree);
+
+				if((operand <= UINT8_MAX) && A65_IS_COMMAND_ZEROPAGE_INDEX_X(entry.subtype())) {
+					opcode = A65_COMMAND_ZEROPAGE_INDEX_X_OPCODE(type);
+					result.push_back(opcode);
+					result.push_back(operand);
+				} else {
+					result.push_back(opcode);
+					result.push_back(operand);
+					result.push_back(operand >> CHAR_BIT);
+				}
+				break;
+			case A65_TOKEN_COMMAND_MODE_ABSOLUTE_INDEX_Y:
+
+				if(!A65_IS_COMMAND_ABSOLUTE_INDEX_Y(type)) {
+					A65_THROW_EXCEPTION_INFO("Unsupported addressing mode", "%s", A65_STRING_CHECK(entry.to_string()));
+				}
+
+				opcode = A65_COMMAND_ABSOLUTE_INDEX_Y_OPCODE(type);
+
+				a65_tree::move_child(tree, 0);
+				operand = evaluate_expression(parser, tree);
+				a65_tree::move_parent(tree);
+
+				if((operand <= UINT8_MAX) && A65_IS_COMMAND_ZEROPAGE_INDEX_Y(entry.subtype())) {
+					opcode = A65_COMMAND_ZEROPAGE_INDEX_Y_OPCODE(type);
+					result.push_back(opcode);
+					result.push_back(operand);
+				} else {
+					result.push_back(opcode);
+					result.push_back(operand);
+					result.push_back(operand >> CHAR_BIT);
+				}
+				break;
+			case A65_TOKEN_COMMAND_MODE_ABSOLUTE_INDIRECT:
+
+				if(!A65_IS_COMMAND_ABSOLUTE_INDIRECT(type)) {
+					A65_THROW_EXCEPTION_INFO("Unsupported addressing mode", "%s", A65_STRING_CHECK(entry.to_string()));
+				}
+
+				opcode = A65_COMMAND_ABSOLUTE_INDIRECT_OPCODE(type);
+
+				a65_tree::move_child(tree, 0);
+				operand = evaluate_expression(parser, tree);
+				a65_tree::move_parent(tree);
+
+				if((operand <= UINT8_MAX) && A65_IS_COMMAND_ZEROPAGE_INDIRECT(entry.subtype())) {
+					opcode = A65_COMMAND_ZEROPAGE_INDIRECT_OPCODE(type);
+					result.push_back(opcode);
+					result.push_back(operand);
+				} else {
+					result.push_back(opcode);
+					result.push_back(operand);
+					result.push_back(operand >> CHAR_BIT);
+				}
+				break;
+			case A65_TOKEN_COMMAND_MODE_ACCUMULATOR:
+
+				if(!A65_IS_COMMAND_ACCUMULATOR(type)) {
+					A65_THROW_EXCEPTION_INFO("Unsupported addressing mode", "%s", A65_STRING_CHECK(entry.to_string()));
+				}
+
+				opcode = A65_COMMAND_ACCUMULATOR_OPCODE(type);
+				result.push_back(opcode);
+				break;
+			case A65_TOKEN_COMMAND_MODE_IMMEDIATE:
+
+				if(!A65_IS_COMMAND_IMMEDIATE(type)) {
+					A65_THROW_EXCEPTION_INFO("Unsupported addressing mode", "%s", A65_STRING_CHECK(entry.to_string()));
+				}
+
+				opcode = A65_COMMAND_IMMEDIATE_OPCODE(type);
+
+				a65_tree::move_child(tree, 0);
+				operand = evaluate_expression(parser, tree);
+				a65_tree::move_parent(tree);
+
+				result.push_back(opcode);
+				result.push_back(operand);
+				break;
+			case A65_TOKEN_COMMAND_MODE_IMPLIED:
+
+				if(!A65_IS_COMMAND_IMPLIED(type)) {
+					A65_THROW_EXCEPTION_INFO("Unsupported addressing mode", "%s", A65_STRING_CHECK(entry.to_string()));
+				}
+
+				opcode = A65_COMMAND_IMPLIED_OPCODE(type);
+				result.push_back(opcode);
+				break;
+			case A65_TOKEN_COMMAND_MODE_RELATIVE:
+
+				if(!A65_IS_COMMAND_RELATIVE(type)) {
+					A65_THROW_EXCEPTION_INFO("Unsupported addressing mode", "%s", A65_STRING_CHECK(entry.to_string()));
+				}
+
+				opcode = A65_COMMAND_RELATIVE_OPCODE(type);
+
+				a65_tree::move_child(tree, 0);
+				operand = evaluate_expression(parser, tree);
+				a65_tree::move_parent(tree);
+
+				result.push_back(opcode);
+				result.push_back(operand);
+				break;
+			case A65_TOKEN_COMMAND_MODE_ZEROPAGE:
+
+				if(!A65_IS_COMMAND_ZEROPAGE(type)) {
+					A65_THROW_EXCEPTION_INFO("Unsupported addressing mode", "%s", A65_STRING_CHECK(entry.to_string()));
+				}
+
+				opcode = A65_COMMAND_ZEROPAGE_OPCODE(type);
+
+				a65_tree::move_child(tree, 0);
+				operand = evaluate_expression(parser, tree);
+				a65_tree::move_parent(tree);
+
+				result.push_back(opcode);
+				result.push_back(operand);
+				break;
+			case A65_TOKEN_COMMAND_MODE_ZEROPAGE_INDEX_INDIRECT:
+
+				if(!A65_IS_COMMAND_ZEROPAGE_INDEX_INDIRECT(type)) {
+					A65_THROW_EXCEPTION_INFO("Unsupported addressing mode", "%s", A65_STRING_CHECK(entry.to_string()));
+				}
+
+				opcode = A65_COMMAND_ZEROPAGE_INDEX_INDIRECT_OPCODE(type);
+
+				a65_tree::move_child(tree, 0);
+				operand = evaluate_expression(parser, tree);
+				a65_tree::move_parent(tree);
+
+				result.push_back(opcode);
+				result.push_back(operand);
+				break;
+			case A65_TOKEN_COMMAND_MODE_ZEROPAGE_INDEX_X:
+
+				if(!A65_IS_COMMAND_ZEROPAGE_INDEX_X(type)) {
+					A65_THROW_EXCEPTION_INFO("Unsupported addressing mode", "%s", A65_STRING_CHECK(entry.to_string()));
+				}
+
+				opcode = A65_COMMAND_ZEROPAGE_INDEX_X_OPCODE(type);
+
+				a65_tree::move_child(tree, 0);
+				operand = evaluate_expression(parser, tree);
+				a65_tree::move_parent(tree);
+
+				result.push_back(opcode);
+				result.push_back(operand);
+				break;
+			case A65_TOKEN_COMMAND_MODE_ZEROPAGE_INDEX_Y:
+
+				if(!A65_IS_COMMAND_ZEROPAGE_INDEX_Y(type)) {
+					A65_THROW_EXCEPTION_INFO("Unsupported addressing mode", "%s", A65_STRING_CHECK(entry.to_string()));
+				}
+
+				opcode = A65_COMMAND_ZEROPAGE_INDEX_Y_OPCODE(type);
+
+				a65_tree::move_child(tree, 0);
+				operand = evaluate_expression(parser, tree);
+				a65_tree::move_parent(tree);
+
+				result.push_back(opcode);
+				result.push_back(operand);
+				break;
+			case A65_TOKEN_COMMAND_MODE_ZEROPAGE_INDIRECT:
+
+				if(!A65_IS_COMMAND_ZEROPAGE_INDIRECT(type)) {
+					A65_THROW_EXCEPTION_INFO("Unsupported addressing mode", "%s", A65_STRING_CHECK(entry.to_string()));
+				}
+
+				opcode = A65_COMMAND_ZEROPAGE_INDIRECT_OPCODE(type);
+
+				a65_tree::move_child(tree, 0);
+				operand = evaluate_expression(parser, tree);
+				a65_tree::move_parent(tree);
+
+				result.push_back(opcode);
+				result.push_back(operand);
+				break;
+			case A65_TOKEN_COMMAND_MODE_ZEROPAGE_INDIRECT_INDEX:
+
+				if(!A65_IS_COMMAND_ZEROPAGE_INDIRECT_INDEX(type)) {
+					A65_THROW_EXCEPTION_INFO("Unsupported addressing mode", "%s", A65_STRING_CHECK(entry.to_string()));
+				}
+
+				opcode = A65_COMMAND_ZEROPAGE_INDIRECT_INDEX_OPCODE(type);
+
+				a65_tree::move_child(tree, 0);
+				operand = evaluate_expression(parser, tree);
+				a65_tree::move_parent(tree);
+
+				result.push_back(opcode);
+				result.push_back(operand);
+				break;
+			default:
+				A65_THROW_EXCEPTION_INFO("Malformed command tree", "%s", A65_STRING_CHECK(entry.to_string()));
+		}
+	} else {
+		result.push_back(entry.scalar());
+
+		if(tree.node().has_child(0)) {
+			a65_tree::move_child(tree, 0);
+			operand = evaluate_expression(parser, tree);
+			a65_tree::move_parent(tree);
+
+			if(operand <= UINT8_MAX) {
+				result.push_back(operand);
+			} else {
+				result.push_back(operand);
+				result.push_back(operand >> CHAR_BIT);
+			}
+		}
 	}
 
 	A65_DEBUG_EXIT();

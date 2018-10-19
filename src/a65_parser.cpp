@@ -334,12 +334,12 @@ a65_parser::enumerate_command(
 	)
 {
 	a65_token entry;
-	int cmd, mode = A65_TOKEN_COMMAND_MODE_IMPLIED;
+	int mode = A65_TOKEN_COMMAND_MODE_IMPLIED, type;
 
 	A65_DEBUG_ENTRY_INFO("Tree=%p", &tree);
 
 	entry = a65_lexer::token();
-	cmd = entry.subtype();
+	type = entry.subtype();
 	add_child_subtree(tree, A65_NODE_COMMAND, entry.id());
 
 	if(!a65_lexer::has_next()) {
@@ -348,7 +348,7 @@ a65_parser::enumerate_command(
 
 	a65_lexer::move_next();
 
-	if(cmd == A65_TOKEN_COMMAND_CMD) {
+	if(type == A65_TOKEN_COMMAND_CMD) {
 		enumerate_command_custom(tree);
 	}
 
@@ -363,7 +363,7 @@ a65_parser::enumerate_command(
 			|| entry.match(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_UNARY_NOT)) {
 		enumerate_expression(tree);
 
-		if(!A65_IS_TOKEN_COMMAND_RELATIVE(cmd)) {
+		if(!A65_IS_TOKEN_COMMAND_RELATIVE(type)) {
 			mode = A65_TOKEN_COMMAND_MODE_ABSOLUTE;
 
 			entry = a65_lexer::token();
@@ -378,8 +378,16 @@ a65_parser::enumerate_command(
 				entry = a65_lexer::token();
 				if(entry.match(A65_TOKEN_REGISTER, A65_TOKEN_REGISTER_INDEX_X)) {
 					mode = A65_TOKEN_COMMAND_MODE_ABSOLUTE_INDEX_X;
+
+					if(!A65_IS_TOKEN_COMMAND_ABSOLUTE_INDEX_X(type) && A65_IS_TOKEN_COMMAND_ZEROPAGE_INDEX_X(type)) {
+						mode = A65_TOKEN_COMMAND_MODE_ZEROPAGE_INDEX_X;
+					}
 				} else if(entry.match(A65_TOKEN_REGISTER, A65_TOKEN_REGISTER_INDEX_Y)) {
 					mode = A65_TOKEN_COMMAND_MODE_ABSOLUTE_INDEX_Y;
+
+					if(!A65_IS_TOKEN_COMMAND_ABSOLUTE_INDEX_Y(type) && A65_IS_TOKEN_COMMAND_ZEROPAGE_INDEX_Y(type)) {
+						mode = A65_TOKEN_COMMAND_MODE_ZEROPAGE_INDEX_Y;
+					}
 				} else {
 					A65_THROW_EXCEPTION_INFO("Expecting index register", "%s", A65_STRING_CHECK(entry.to_string()));
 				}
@@ -387,6 +395,8 @@ a65_parser::enumerate_command(
 				if(a65_lexer::has_next()) {
 					a65_lexer::move_next();
 				}
+			} else if(!A65_IS_TOKEN_COMMAND_ABSOLUTE(type) && A65_IS_TOKEN_COMMAND_ZEROPAGE(type)) {
+				mode = A65_TOKEN_COMMAND_MODE_ZEROPAGE;
 			}
 		} else {
 			mode = A65_TOKEN_COMMAND_MODE_RELATIVE;
@@ -424,6 +434,8 @@ a65_parser::enumerate_command(
 					}
 
 					a65_lexer::move_next();
+				} else if(!A65_IS_TOKEN_COMMAND_ABSOLUTE_INDIRECT(type) && A65_IS_TOKEN_COMMAND_ZEROPAGE_INDIRECT(type)) {
+					mode = A65_TOKEN_COMMAND_MODE_ZEROPAGE_INDIRECT;
 				}
 			}
 		} else if(entry.match(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_SEPERATOR)) {
@@ -453,6 +465,10 @@ a65_parser::enumerate_command(
 
 			if(a65_lexer::has_next()) {
 				a65_lexer::move_next();
+			}
+
+			if(!A65_IS_TOKEN_COMMAND_ABSOLUTE_INDEX_INDIRECT(type) && A65_IS_TOKEN_COMMAND_ZEROPAGE_INDEX_INDIRECT(type)) {
+				mode = A65_TOKEN_COMMAND_MODE_ZEROPAGE_INDEX_INDIRECT;
 			}
 		}
 	} else if(entry.match(A65_TOKEN_SYMBOL, A65_TOKEN_SYMBOL_IMMEDIATE)) {

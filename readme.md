@@ -58,6 +58,11 @@ Changelog
 
 Version 0.1.1842
 ----------------
+*Updated: 10/19/2018*
+
+* Implemented command evaluation
+
+*Updated: 10/16/2018*
 
 * Implemented directive evaluation
 * Simplified archive file format
