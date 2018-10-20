@@ -979,11 +979,10 @@ a65_assembler::evaluate_expression(
 	)
 {
 	a65_token entry;
-	uint16_t result = 0;
+	uint16_t left, result = 0, right;
 
 	A65_DEBUG_ENTRY_INFO("Parser=%p, Tree=%p", &parser, &tree);
 
-	// TODO: evaluate expression
 	entry = parser.token(tree.node().token());
 
 	switch(tree.node().type()) {
@@ -993,12 +992,125 @@ a65_assembler::evaluate_expression(
 			a65_tree::move_parent(tree);
 			break;
 		case A65_NODE_CONSTANT:
-			result = entry.scalar();
+
+			switch(entry.type()) {
+				case A65_TOKEN_CONSTANT:
+
+					switch(entry.subtype()) {
+						case A65_TOKEN_CONSTANT_FALSE:
+							result = false;
+							break;
+						case A65_TOKEN_CONSTANT_NULL:
+							result = (uint16_t)NULL;
+							break;
+						case A65_TOKEN_CONSTANT_TRUE:
+							result = true;
+							break;
+						default:
+							A65_THROW_EXCEPTION_INFO("Malformed expression tree", "%s", A65_STRING_CHECK(entry.to_string()));
+					}
+					break;
+				case A65_TOKEN_IDENTIFIER:
+					// TODO
+					break;
+				case A65_TOKEN_LABEL:
+					// TODO
+					break;
+				case A65_TOKEN_LITERAL:
+					// TODO
+					break;
+				case A65_TOKEN_SCALAR:
+					result = entry.scalar();
+					break;
+				default:
+					A65_THROW_EXCEPTION_INFO("Malformed expression tree", "%s", A65_STRING_CHECK(entry.to_string()));
+			}
+			break;
+		case A65_NODE_MACRO:
+			a65_tree::move_child(tree, 0);
+			result = evaluate_expression(parser, tree);
+			a65_tree::move_parent(tree);
+
+			switch(entry.subtype()) {
+				case A65_TOKEN_MACRO_HIGH:
+					result >>= CHAR_BIT;
+					break;
+				case A65_TOKEN_MACRO_LOW:
+					result &= UINT8_MAX;
+					break;
+				default:
+					A65_THROW_EXCEPTION_INFO("Malformed expression tree", "%s", A65_STRING_CHECK(entry.to_string()));
+			}
+			break;
+		case A65_NODE_OPERATOR:
+			a65_tree::move_child(tree, 0);
+			left = evaluate_expression(parser, tree);
+			a65_tree::move_parent(tree);
+
+			a65_tree::move_child(tree, 1);
+			right = evaluate_expression(parser, tree);
+			a65_tree::move_parent(tree);
+
+			switch(entry.subtype()) {
+				case A65_TOKEN_SYMBOL_ARITHMETIC_ADDITION:
+					result = (left + right);
+					break;
+				case A65_TOKEN_SYMBOL_ARITHMETIC_DIVIDE:
+					result = (left / right);
+					break;
+				case A65_TOKEN_SYMBOL_ARITHMETIC_MODULUS:
+					result = (left % right);
+					break;
+				case A65_TOKEN_SYMBOL_ARITHMETIC_MULTIPLY:
+					result = (left * right);
+					break;
+				case A65_TOKEN_SYMBOL_ARITHMETIC_SUBTRACTION:
+					result = (left - right);
+					break;
+				case A65_TOKEN_SYMBOL_BINARY_AND:
+					result = (left & right);
+					break;
+				case A65_TOKEN_SYMBOL_BINARY_OR:
+					result = (left | right);
+					break;
+				case A65_TOKEN_SYMBOL_BINARY_XOR:
+					result = (left ^ right);
+					break;
+				case A65_TOKEN_SYMBOL_LOGICAL_AND:
+					result = (left && right);
+					break;
+				case A65_TOKEN_SYMBOL_LOGICAL_OR:
+					result = (left || right);
+					break;
+				case A65_TOKEN_SYMBOL_LOGICAL_SHIFT_LEFT:
+					result = (left << right);
+					break;
+				case A65_TOKEN_SYMBOL_LOGICAL_SHIFT_RIGHT:
+					result = (left >> right);
+					break;
+				default:
+					A65_THROW_EXCEPTION_INFO("Malformed expression tree", "%s", A65_STRING_CHECK(entry.to_string()));
+			}
+			break;
+		case A65_NODE_UNARY:
+			a65_tree::move_child(tree, 0);
+			result = evaluate_expression(parser, tree);
+			a65_tree::move_parent(tree);
+
+			switch(entry.subtype()) {
+				case A65_TOKEN_SYMBOL_UNARY_NEGATION:
+					result = ~result;
+					break;
+				case A65_TOKEN_SYMBOL_UNARY_NOT:
+					result = !result;
+					break;
+				default:
+					A65_THROW_EXCEPTION_INFO("Malformed expression tree", "%s", A65_STRING_CHECK(entry.to_string()));
+			}
 			break;
 		default:
 			A65_THROW_EXCEPTION_INFO("Malformed expression tree", "%s", A65_STRING_CHECK(entry.to_string()));
 	}
-	// ---
 
 	A65_DEBUG_EXIT_INFO("Result=%u(%04x)", result, result);
 	return result;
