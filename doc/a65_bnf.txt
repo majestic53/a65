@@ -147,7 +147,7 @@ label ::= <identifier>:
 
 literal ::= "<character>*"
 
-literal_character ::= <identifier>{<expression>}? | <literal>{<expression>}? | '<character>'
+literal_character ::= <literal>{<expression>}? | '<character>'
 
 macro ::= high | low
 

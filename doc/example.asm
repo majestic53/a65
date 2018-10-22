@@ -59,7 +59,7 @@ nextchar:
 	lda #0x00				; for xam mode.
 	tax					; 0->x.
 setstor:
-	asl					; leaves $7b if setting stor mode.
+	asl a					; leaves $7b if setting stor mode.
 setmode:
 	sta mode				; $00=xam $7b=stor $ae=blok xam
 blskip:
@@ -87,13 +87,13 @@ nexthex:
 	cmp #0xfa				; hex letter?
 	bcc nothex				; no, character not hex.
 dig:
-	asl
-	asl					; hex digit to msd of a.
-	asl
-	asl
+	asl a
+	asl a					; hex digit to msd of a.
+	asl a
+	asl a
 	ldx #0x04				; shift count.
 hexshift:
-	asl					; hex digit left, msb to carry.
+	asl a					; hex digit left, msb to carry.
 	rol l					; rotate into lsd.
 	rol h					;  rotate into msd’s.
 	dex					; done 4 shifts?
@@ -154,10 +154,10 @@ mod8chk:
 	bpl nxtprnt				; always taken.
 prbyte:
 	pha					; save a for lsd.
-	lsr
-	lsr
-	lsr					; msd to lsd position.
-	lsr
+	lsr a
+	lsr a
+	lsr a					; msd to lsd position.
+	lsr a
 	jsr prhex				; output hex digit.
 	pla					; restore a.
 prhex:

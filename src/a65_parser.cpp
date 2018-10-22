@@ -1104,8 +1104,17 @@ a65_parser::enumerate_expression_factor(
 		if(a65_lexer::has_next()) {
 			a65_lexer::move_next();
 		}
-	} else if(entry.match(A65_TOKEN_IDENTIFIER)
-			|| entry.match(A65_TOKEN_LITERAL)) {
+	} else if(entry.match(A65_TOKEN_IDENTIFIER)) {
+		add_child_subtree(tree, A65_NODE_CONSTANT, entry.id());
+
+		if(!a65_lexer::has_next()) {
+			A65_THROW_EXCEPTION_INFO("Unterminated expression", "%s", A65_STRING_CHECK(entry.to_string()));
+		}
+
+		if(a65_lexer::has_next()) {
+			a65_lexer::move_next();
+		}
+	} else if(entry.match(A65_TOKEN_LITERAL)) {
 		add_child_subtree(tree, A65_NODE_CONSTANT, entry.id());
 
 		if(!a65_lexer::has_next()) {
