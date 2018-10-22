@@ -100,50 +100,42 @@ class a65_assembler :
 
 		void evaluate(
 			__in const std::string &name,
-			__in const std::string &input,
-			__in bool second_pass
+			__in const std::string &input
 			);
 
 		std::vector<uint8_t> evaluate(
 			__in a65_parser &parser,
-			__in a65_tree &tree,
-			__in bool second_pass
+			__in a65_tree &tree
 			);
 
 		std::vector<uint8_t> evaluate_command(
 			__in a65_parser &parser,
-			__in a65_tree &tree,
-			__in bool second_pass
+			__in a65_tree &tree
 			);
 
 		bool evaluate_condition(
 			__in a65_parser &parser,
-			__in a65_tree &tree,
-			__in bool second_pass
+			__in a65_tree &tree
 			);
 
 		std::vector<uint8_t> evaluate_directive(
 			__in a65_parser &parser,
-			__in a65_tree &tree,
-			__in bool second_pass
+			__in a65_tree &tree
 			);
 
 		uint16_t evaluate_expression(
 			__in a65_parser &parser,
-			__in a65_tree &tree,
-			__in bool second_pass
+			__in a65_tree &tree
 			);
 
 		std::vector<uint8_t> evaluate_list(
 			__in a65_parser &parser,
-			__in a65_tree &tree,
-			__in bool second_pass
+			__in a65_tree &tree
 			);
 
 		std::vector<uint8_t> evaluate_pragma(
 			__in a65_parser &parser,
-			__in a65_tree &tree,
-			__in bool second_pass
+			__in a65_tree &tree
 			);
 
 		std::map<std::string, uint16_t>::iterator find_define(
@@ -252,6 +244,8 @@ class a65_assembler :
 		uint16_t m_origin;
 
 		std::string m_output;
+
+		bool m_second_pass;
 
 		std::map<uint16_t, a65_section> m_section;
 };

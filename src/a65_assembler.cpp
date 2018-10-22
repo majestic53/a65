@@ -42,6 +42,7 @@ a65_assembler::a65_assembler(
 		m_offset(other.m_offset),
 		m_origin(other.m_origin),
 		m_output(other.m_output),
+		m_second_pass(other.m_second_pass),
 		m_section(other.m_section)
 {
 	A65_DEBUG_ENTRY();
@@ -71,6 +72,7 @@ a65_assembler::operator=(
 		m_offset = other.m_offset;
 		m_origin = other.m_origin;
 		m_output = other.m_output;
+		m_second_pass = other.m_second_pass;
 		m_section = other.m_section;
 	}
 
@@ -235,13 +237,14 @@ a65_assembler::build_object(
 	a65_parser::load(processed.str(), false);
 
 	a65_assembler::clear();
-	evaluate(name, processed.str(), false);
+	evaluate(name, processed.str());
 
 	label = m_label;
 	a65_assembler::clear();
 	m_label = label;
+	m_second_pass = true;
 
-	evaluate(name, processed.str(), true);
+	evaluate(name, processed.str());
 	result = output_object(name);
 
 	A65_DEBUG_EXIT_INFO("Result[%u]=%s", result.size(), A65_STRING_CHECK(result));
@@ -260,6 +263,7 @@ a65_assembler::clear(void)
 	m_name.clear();
 	m_offset = 0;
 	m_origin = 0;
+	m_second_pass = false;
 	m_section.clear();
 
 	A65_DEBUG_EXIT();
@@ -354,12 +358,10 @@ a65_assembler::contains_section(
 void
 a65_assembler::evaluate(
 	__in const std::string &name,
-	__in const std::string &input,
-	__in bool second_pass
+	__in const std::string &input
 	)
 {
-	A65_DEBUG_ENTRY_INFO("Name[%u]=%s, Input[%u]=%p, Pass=%s", name.size(), A65_STRING_CHECK(name), input.size(), &input,
-		second_pass ? "Second" : "First");
+	A65_DEBUG_ENTRY_INFO("Name[%u]=%s, Input[%u]=%p", name.size(), A65_STRING_CHECK(name), input.size(), &input);
 
 	a65_parser::load(input, false);
 	a65_lexer::set_metadata(name);
@@ -371,7 +373,7 @@ a65_assembler::evaluate(
 				&& !tree.node().match(A65_NODE_END)) {
 			std::vector<uint8_t> data;
 
-			data = evaluate(*this, tree, second_pass);
+			data = evaluate(*this, tree);
 			if(!data.empty()) {
 
 				if(!contains_section(m_origin)) {
@@ -412,32 +414,31 @@ std::cout << std::endl;
 std::vector<uint8_t>
 a65_assembler::evaluate(
 	__in a65_parser &parser,
-	__in a65_tree &tree,
-	__in bool second_pass
+	__in a65_tree &tree
 	)
 {
 	a65_token entry;
 	std::vector<uint8_t> result;
 
-	A65_DEBUG_ENTRY_INFO("Parser=%p, Tree=%p, Pass=%s", &parser, &tree, second_pass ? "Second" : "First");
+	A65_DEBUG_ENTRY_INFO("Parser=%p, Tree=%p", &parser, &tree);
 
 	entry = parser.token(tree.node().token());
 	switch(entry.type()) {
 		case A65_TOKEN_COMMAND:
-			result = evaluate_command(parser, tree, second_pass);
+			result = evaluate_command(parser, tree);
 			break;
 		case A65_TOKEN_DIRECTIVE:
-			result = evaluate_directive(parser, tree, second_pass);
+			result = evaluate_directive(parser, tree);
 			break;
 		case A65_TOKEN_LABEL:
 
-			if(!second_pass) {
+			if(!m_second_pass) {
 				m_name = entry.literal();
 				add_label(entry, m_origin + m_offset);
 			}
 			break;
 		case A65_TOKEN_PRAGMA:
-			result = evaluate_pragma(parser, tree, second_pass);
+			result = evaluate_pragma(parser, tree);
 			break;
 		default:
 			A65_THROW_EXCEPTION_INFO("Malformed tree", "%s", A65_STRING_CHECK(entry.to_string()));
@@ -450,8 +451,7 @@ a65_assembler::evaluate(
 std::vector<uint8_t>
 a65_assembler::evaluate_command(
 	__in a65_parser &parser,
-	__in a65_tree &tree,
-	__in bool second_pass
+	__in a65_tree &tree
 	)
 {
 	int mode, type;
@@ -459,7 +459,7 @@ a65_assembler::evaluate_command(
 	uint16_t operand;
 	std::vector<uint8_t> result;
 
-	A65_DEBUG_ENTRY_INFO("Parser=%p, Tree=%p", &parser, &tree, second_pass ? "Second" : "First");
+	A65_DEBUG_ENTRY_INFO("Parser=%p, Tree=%p", &parser, &tree);
 
 	entry = parser.token(tree.node().token());
 	if(!entry.match(A65_TOKEN_COMMAND)) {
@@ -482,7 +482,7 @@ a65_assembler::evaluate_command(
 				opcode = A65_COMMAND_ABSOLUTE_OPCODE(type);
 
 				a65_tree::move_child(tree, 0);
-				operand = evaluate_expression(parser, tree, second_pass);
+				operand = evaluate_expression(parser, tree);
 				a65_tree::move_parent(tree);
 
 				if((operand <= UINT8_MAX) && A65_IS_COMMAND_ZEROPAGE(entry.subtype())) {
@@ -504,7 +504,7 @@ a65_assembler::evaluate_command(
 				opcode = A65_COMMAND_ABSOLUTE_INDEX_INDIRECT_OPCODE(type);
 
 				a65_tree::move_child(tree, 0);
-				operand = evaluate_expression(parser, tree, second_pass);
+				operand = evaluate_expression(parser, tree);
 				a65_tree::move_parent(tree);
 
 				if((operand <= UINT8_MAX) && A65_IS_COMMAND_ZEROPAGE_INDEX_INDIRECT(entry.subtype())) {
@@ -526,7 +526,7 @@ a65_assembler::evaluate_command(
 				opcode = A65_COMMAND_ABSOLUTE_INDEX_X_OPCODE(type);
 
 				a65_tree::move_child(tree, 0);
-				operand = evaluate_expression(parser, tree, second_pass);
+				operand = evaluate_expression(parser, tree);
 				a65_tree::move_parent(tree);
 
 				if((operand <= UINT8_MAX) && A65_IS_COMMAND_ZEROPAGE_INDEX_X(entry.subtype())) {
@@ -548,7 +548,7 @@ a65_assembler::evaluate_command(
 				opcode = A65_COMMAND_ABSOLUTE_INDEX_Y_OPCODE(type);
 
 				a65_tree::move_child(tree, 0);
-				operand = evaluate_expression(parser, tree, second_pass);
+				operand = evaluate_expression(parser, tree);
 				a65_tree::move_parent(tree);
 
 				if((operand <= UINT8_MAX) && A65_IS_COMMAND_ZEROPAGE_INDEX_Y(entry.subtype())) {
@@ -570,7 +570,7 @@ a65_assembler::evaluate_command(
 				opcode = A65_COMMAND_ABSOLUTE_INDIRECT_OPCODE(type);
 
 				a65_tree::move_child(tree, 0);
-				operand = evaluate_expression(parser, tree, second_pass);
+				operand = evaluate_expression(parser, tree);
 				a65_tree::move_parent(tree);
 
 				if((operand <= UINT8_MAX) && A65_IS_COMMAND_ZEROPAGE_INDIRECT(entry.subtype())) {
@@ -601,7 +601,7 @@ a65_assembler::evaluate_command(
 				opcode = A65_COMMAND_IMMEDIATE_OPCODE(type);
 
 				a65_tree::move_child(tree, 0);
-				operand = evaluate_expression(parser, tree, second_pass);
+				operand = evaluate_expression(parser, tree);
 				a65_tree::move_parent(tree);
 
 				result.push_back(opcode);
@@ -625,7 +625,7 @@ a65_assembler::evaluate_command(
 				opcode = A65_COMMAND_RELATIVE_OPCODE(type);
 
 				a65_tree::move_child(tree, 0);
-				operand = evaluate_expression(parser, tree, second_pass);
+				operand = evaluate_expression(parser, tree);
 				a65_tree::move_parent(tree);
 
 				result.push_back(opcode);
@@ -640,7 +640,7 @@ a65_assembler::evaluate_command(
 				opcode = A65_COMMAND_ZEROPAGE_OPCODE(type);
 
 				a65_tree::move_child(tree, 0);
-				operand = evaluate_expression(parser, tree, second_pass);
+				operand = evaluate_expression(parser, tree);
 				a65_tree::move_parent(tree);
 
 				result.push_back(opcode);
@@ -655,7 +655,7 @@ a65_assembler::evaluate_command(
 				opcode = A65_COMMAND_ZEROPAGE_INDEX_INDIRECT_OPCODE(type);
 
 				a65_tree::move_child(tree, 0);
-				operand = evaluate_expression(parser, tree, second_pass);
+				operand = evaluate_expression(parser, tree);
 				a65_tree::move_parent(tree);
 
 				result.push_back(opcode);
@@ -670,7 +670,7 @@ a65_assembler::evaluate_command(
 				opcode = A65_COMMAND_ZEROPAGE_INDEX_X_OPCODE(type);
 
 				a65_tree::move_child(tree, 0);
-				operand = evaluate_expression(parser, tree, second_pass);
+				operand = evaluate_expression(parser, tree);
 				a65_tree::move_parent(tree);
 
 				result.push_back(opcode);
@@ -685,7 +685,7 @@ a65_assembler::evaluate_command(
 				opcode = A65_COMMAND_ZEROPAGE_INDEX_Y_OPCODE(type);
 
 				a65_tree::move_child(tree, 0);
-				operand = evaluate_expression(parser, tree, second_pass);
+				operand = evaluate_expression(parser, tree);
 				a65_tree::move_parent(tree);
 
 				result.push_back(opcode);
@@ -700,7 +700,7 @@ a65_assembler::evaluate_command(
 				opcode = A65_COMMAND_ZEROPAGE_INDIRECT_OPCODE(type);
 
 				a65_tree::move_child(tree, 0);
-				operand = evaluate_expression(parser, tree, second_pass);
+				operand = evaluate_expression(parser, tree);
 				a65_tree::move_parent(tree);
 
 				result.push_back(opcode);
@@ -715,7 +715,7 @@ a65_assembler::evaluate_command(
 				opcode = A65_COMMAND_ZEROPAGE_INDIRECT_INDEX_OPCODE(type);
 
 				a65_tree::move_child(tree, 0);
-				operand = evaluate_expression(parser, tree, second_pass);
+				operand = evaluate_expression(parser, tree);
 				a65_tree::move_parent(tree);
 
 				result.push_back(opcode);
@@ -729,7 +729,7 @@ a65_assembler::evaluate_command(
 
 		if(tree.node().has_child(0)) {
 			a65_tree::move_child(tree, 0);
-			operand = evaluate_expression(parser, tree, second_pass);
+			operand = evaluate_expression(parser, tree);
 			a65_tree::move_parent(tree);
 
 			if(operand <= UINT8_MAX) {
@@ -748,24 +748,23 @@ a65_assembler::evaluate_command(
 bool
 a65_assembler::evaluate_condition(
 	__in a65_parser &parser,
-	__in a65_tree &tree,
-	__in bool second_pass
+	__in a65_tree &tree
 	)
 {
 	a65_token entry;
 	bool result = false;
 
-	A65_DEBUG_ENTRY_INFO("Parser=%p, Tree=%p", &parser, &tree, second_pass ? "Second" : "First");
+	A65_DEBUG_ENTRY_INFO("Parser=%p, Tree=%p", &parser, &tree);
 
 	if(tree.node().has_token()) {
 		uint16_t left, right;
 
 		a65_tree::move_child(tree, 0);
-		left = evaluate_expression(parser, tree, second_pass);
+		left = evaluate_expression(parser, tree);
 		a65_tree::move_parent(tree);
 
 		a65_tree::move_child(tree, 1);
-		right = evaluate_expression(parser, tree, second_pass);
+		right = evaluate_expression(parser, tree);
 		a65_tree::move_parent(tree);
 
 		entry = parser.token(tree.node().token());
@@ -793,7 +792,7 @@ a65_assembler::evaluate_condition(
 		}
 	} else {
 		a65_tree::move_child(tree, 0);
-		result = (evaluate_expression(parser, tree, second_pass) != 0);
+		result = (evaluate_expression(parser, tree) != 0);
 		a65_tree::move_parent(tree);
 	}
 
@@ -804,8 +803,7 @@ a65_assembler::evaluate_condition(
 std::vector<uint8_t>
 a65_assembler::evaluate_directive(
 	__in a65_parser &parser,
-	__in a65_tree &tree,
-	__in bool second_pass
+	__in a65_tree &tree
 	)
 {
 	int type;
@@ -814,7 +812,7 @@ a65_assembler::evaluate_directive(
 	bool branch = false;
 	std::vector<uint8_t> result;
 
-	A65_DEBUG_ENTRY_INFO("Parser=%p, Tree=%p", &parser, &tree, second_pass ? "Second" : "First");
+	A65_DEBUG_ENTRY_INFO("Parser=%p, Tree=%p", &parser, &tree);
 
 	entry = parser.token(tree.node().token());
 
@@ -830,7 +828,7 @@ a65_assembler::evaluate_directive(
 
 			for(size_t child = 0; child < tree.node().child_count(); ++child) {
 				a65_tree::move_child(tree, child);
-				result.push_back(evaluate_expression(parser, tree, second_pass));
+				result.push_back(evaluate_expression(parser, tree));
 				a65_tree::move_parent(tree);
 			}
 
@@ -846,7 +844,7 @@ a65_assembler::evaluate_directive(
 
 			for(size_t child = 0; child < tree.node().child_count(); ++child) {
 				a65_tree::move_child(tree, child);
-				value = evaluate_expression(parser, tree, second_pass);
+				value = evaluate_expression(parser, tree);
 				result.push_back(value);
 				result.push_back(value >> CHAR_BIT);
 				a65_tree::move_parent(tree);
@@ -858,7 +856,7 @@ a65_assembler::evaluate_directive(
 
 			if(tree.has_child(1)) {
 				a65_tree::move_child(tree, 1);
-				value = evaluate_expression(parser, tree, second_pass);
+				value = evaluate_expression(parser, tree);
 				a65_tree::move_parent(tree);
 			}
 
@@ -891,12 +889,12 @@ a65_assembler::evaluate_directive(
 				A65_THROW_EXCEPTION_INFO("Malformed directive tree", "%s", A65_STRING_CHECK(entry.to_string()));
 			}
 
-			branch = evaluate_condition(parser, tree, second_pass);
+			branch = evaluate_condition(parser, tree);
 			a65_tree::move_parent(tree);
 
 			if(branch) {
 				a65_tree::move_child(tree, 1);
-				result = evaluate_list(parser, tree, second_pass);
+				result = evaluate_list(parser, tree);
 				a65_tree::move_parent(tree);
 			} else {
 
@@ -906,18 +904,18 @@ a65_assembler::evaluate_directive(
 					entry = parser.token(tree.node().token());
 					if(entry.match(A65_TOKEN_DIRECTIVE, A65_TOKEN_DIRECTIVE_ELSE_IF)) {
 						a65_tree::move_child(tree, 0);
-						branch = evaluate_condition(parser, tree, second_pass);
+						branch = evaluate_condition(parser, tree);
 						a65_tree::move_parent(tree);
 
 						if(branch) {
 							a65_tree::move_child(tree, 1);
-							result = evaluate_list(parser, tree, second_pass);
+							result = evaluate_list(parser, tree);
 							a65_tree::move_parent(tree);
 						}
 					} else if(entry.match(A65_TOKEN_DIRECTIVE, A65_TOKEN_DIRECTIVE_ELSE)) {
 						branch = true;
 						a65_tree::move_child(tree, 0);
-						result = evaluate_list(parser, tree, second_pass);
+						result = evaluate_list(parser, tree);
 						a65_tree::move_parent(tree);
 					} else {
 						A65_THROW_EXCEPTION_INFO("Malformed directive tree", "%s", A65_STRING_CHECK(entry.to_string()));
@@ -949,7 +947,7 @@ a65_assembler::evaluate_directive(
 
 			if(branch) {
 				a65_tree::move_child(tree, 1);
-				result = evaluate_list(parser, tree, second_pass);
+				result = evaluate_list(parser, tree);
 				a65_tree::move_parent(tree);
 			} else if(tree.has_child(2)) {
 				a65_tree::move_child(tree, 2);
@@ -959,20 +957,20 @@ a65_assembler::evaluate_directive(
 				}
 
 				a65_tree::move_child(tree, 0);
-				result = evaluate_list(parser, tree, second_pass);
+				result = evaluate_list(parser, tree);
 				a65_tree::move_parent(tree);
 				a65_tree::move_parent(tree);
 			}
 			break;
 		case A65_TOKEN_DIRECTIVE_ORIGIN:
 			a65_tree::move_child(tree, 0);
-			m_origin = evaluate_expression(parser, tree, second_pass);
+			m_origin = evaluate_expression(parser, tree);
 			m_offset = 0;
 			a65_tree::move_parent(tree);
 			break;
 		case A65_TOKEN_DIRECTIVE_RESERVE:
 			a65_tree::move_child(tree, 0);
-			result.resize(evaluate_expression(parser, tree, second_pass), A65_ASSEMBLER_FILL);
+			result.resize(evaluate_expression(parser, tree), A65_ASSEMBLER_FILL);
 			a65_tree::move_parent(tree);
 			break;
 		case A65_TOKEN_DIRECTIVE_UNDEFINE:
@@ -997,22 +995,21 @@ a65_assembler::evaluate_directive(
 uint16_t
 a65_assembler::evaluate_expression(
 	__in a65_parser &parser,
-	__in a65_tree &tree,
-	__in bool second_pass
+	__in a65_tree &tree
 	)
 {
 	a65_token entry;
 	std::string literal;
-	uint16_t index, left, result = 0, right;
+	uint16_t left, result = 0, right;
 
-	A65_DEBUG_ENTRY_INFO("Parser=%p, Tree=%p", &parser, &tree, second_pass ? "Second" : "First");
+	A65_DEBUG_ENTRY_INFO("Parser=%p, Tree=%p", &parser, &tree);
 
 	entry = parser.token(tree.node().token());
 
 	switch(tree.node().type()) {
 		case A65_NODE_EXPRESSION:
 			a65_tree::move_child(tree, 0);
-			result = evaluate_expression(parser, tree, second_pass);
+			result = evaluate_expression(parser, tree);
 			a65_tree::move_parent(tree);
 			break;
 		case A65_NODE_CONSTANT:
@@ -1042,7 +1039,7 @@ a65_assembler::evaluate_expression(
 						result = find_define(literal)->second;
 					} else if(contains_label(literal)) {
 						result = find_label(literal)->second;
-					} else if(!second_pass) {
+					} else if(!m_second_pass) {
 						result = UINT16_MAX;
 					} else {
 						A65_THROW_EXCEPTION_INFO("Undefined operand", "%s", A65_STRING_CHECK(entry.to_string()));
@@ -1052,8 +1049,10 @@ a65_assembler::evaluate_expression(
 					literal = entry.literal();
 
 					if(tree.node().has_child(0)) {
+						uint16_t index;
+
 						a65_tree::move_child(tree, 0);
-						index = evaluate_expression(parser, tree, second_pass);
+						index = evaluate_expression(parser, tree);
 						a65_tree::move_parent(tree);
 
 						if(index >= literal.size()) {
@@ -1074,7 +1073,7 @@ a65_assembler::evaluate_expression(
 			break;
 		case A65_NODE_MACRO:
 			a65_tree::move_child(tree, 0);
-			result = evaluate_expression(parser, tree, second_pass);
+			result = evaluate_expression(parser, tree);
 			a65_tree::move_parent(tree);
 
 			switch(entry.subtype()) {
@@ -1090,11 +1089,11 @@ a65_assembler::evaluate_expression(
 			break;
 		case A65_NODE_OPERATOR:
 			a65_tree::move_child(tree, 0);
-			left = evaluate_expression(parser, tree, second_pass);
+			left = evaluate_expression(parser, tree);
 			a65_tree::move_parent(tree);
 
 			a65_tree::move_child(tree, 1);
-			right = evaluate_expression(parser, tree, second_pass);
+			right = evaluate_expression(parser, tree);
 			a65_tree::move_parent(tree);
 
 			switch(entry.subtype()) {
@@ -1140,7 +1139,7 @@ a65_assembler::evaluate_expression(
 			break;
 		case A65_NODE_UNARY:
 			a65_tree::move_child(tree, 0);
-			result = evaluate_expression(parser, tree, second_pass);
+			result = evaluate_expression(parser, tree);
 			a65_tree::move_parent(tree);
 
 			switch(entry.subtype()) {
@@ -1165,19 +1164,18 @@ a65_assembler::evaluate_expression(
 std::vector<uint8_t>
 a65_assembler::evaluate_list(
 	__in a65_parser &parser,
-	__in a65_tree &tree,
-	__in bool second_pass
+	__in a65_tree &tree
 	)
 {
 	std::vector<uint8_t> result;
 
-	A65_DEBUG_ENTRY_INFO("Parser=%p, Tree=%p", &parser, &tree, second_pass ? "Second" : "First");
+	A65_DEBUG_ENTRY_INFO("Parser=%p, Tree=%p", &parser, &tree);
 
 	for(size_t child = 0; child < tree.node().child_count(); ++child) {
 		std::vector<uint8_t> data;
 
 		a65_tree::move_child(tree, child);
-		data = evaluate(parser, tree, second_pass);
+		data = evaluate(parser, tree);
 		a65_tree::move_parent(tree);
 
 		if(!data.empty()) {
@@ -1192,8 +1190,7 @@ a65_assembler::evaluate_list(
 std::vector<uint8_t>
 a65_assembler::evaluate_pragma(
 	__in a65_parser &parser,
-	__in a65_tree &tree,
-	__in bool second_pass
+	__in a65_tree &tree
 	)
 {
 	uint16_t line;
@@ -1201,7 +1198,7 @@ a65_assembler::evaluate_pragma(
 	std::string path;
 	std::vector<uint8_t> result;
 
-	A65_DEBUG_ENTRY_INFO("Parser=%p, Tree=%p", &parser, &tree, second_pass ? "Second" : "First");
+	A65_DEBUG_ENTRY_INFO("Parser=%p, Tree=%p", &parser, &tree);
 
 	entry = parser.token(tree.node().token());
 	switch(entry.subtype()) {
