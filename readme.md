@@ -56,6 +56,13 @@ a65 [-a name][-c name][-h][-o output][-s][-b][-v] input...
 Changelog
 =========
 
+Version 0.1.1843
+----------------
+*Updated: 10/22/2018*
+
+* Implemented binary output
+* Numerous bug fixes
+
 Version 0.1.1842
 ----------------
 *Updated: 10/19/2018*
@@ -66,26 +73,6 @@ Version 0.1.1842
 
 * Implemented directive evaluation
 * Simplified archive file format
-
-Version 0.1.1841
-----------------
-*Updated: 10/14/2018*
-
-* Added export directive
-* Bug fixes
-
-*Updated: 10/10/2018*
-
-* Added archive class
-
-*Updated: 10/9/2018*
-
-* Added assemble/archive/link interface routines
-* Added archive/compile flags to cli interface
-
-*Updated: 10/8/2018*
-
-* Added cli interface
 
 *Changelog truncated (see file history for full log)*
 

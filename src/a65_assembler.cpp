@@ -203,7 +203,6 @@ a65_assembler::build_object(
 {
 	std::string name, result;
 	std::stringstream processed;
-	std::map<std::string, uint16_t> label;
 
 	A65_DEBUG_ENTRY_INFO("Input[%u]=%p, Output[%u]=%p, Source=%x", input.size(), &input, output.size(), &output, source);
 
@@ -230,22 +229,23 @@ a65_assembler::build_object(
 		<< std::endl << A65_CHARACTER_COMMENT << " " << A65_ASSEMBLER_DIVIDER
 		<< std::endl << preprocess(std::string());
 
+#ifndef NDEBUG
 	if(source) {
 		output_source(name, processed.str());
 	}
+#endif // NDEBUG
 
 	a65_parser::load(processed.str(), false);
 
 	a65_assembler::clear();
 	evaluate(name, processed.str());
 
-	label = m_label;
-	a65_assembler::clear();
-	m_label = label;
 	m_second_pass = true;
-
+	a65_assembler::clear();
 	evaluate(name, processed.str());
-	result = output_object(name);
+	m_second_pass = false;
+
+	result = output_object(name, source);
 
 	A65_DEBUG_EXIT_INFO("Result[%u]=%s", result.size(), A65_STRING_CHECK(result));
 	return result;
@@ -259,11 +259,14 @@ a65_assembler::clear(void)
 	a65_parser::reset();
 	m_define.clear();
 	m_export.clear();
-	m_label.clear();
+
+	if(!m_second_pass) {
+		m_label.clear();
+	}
+
 	m_name.clear();
 	m_offset = 0;
 	m_origin = 0;
-	m_second_pass = false;
 	m_section.clear();
 
 	A65_DEBUG_EXIT();
@@ -290,6 +293,8 @@ a65_assembler::compile(
 	}
 
 	result = output_binary(name, input);
+
+	// TODO: form ihex output
 
 	A65_DEBUG_EXIT_INFO("Result[%u]=%s", result.size(), A65_STRING_CHECK(result));
 	return result;
@@ -397,7 +402,7 @@ a65_assembler::evaluate(
 std::cout << a65_parser::as_string(tree, 0) << std::endl;
 
 if(!data.empty()) {
-	std::cout << a65_utility::data_as_string(data, m_origin + m_offset) << std::endl;
+	std::cout << a65_utility::data_as_string(data, m_origin + m_offset - data.size()) << std::endl;
 }
 
 std::cout << std::endl;
@@ -628,8 +633,13 @@ a65_assembler::evaluate_command(
 				operand = evaluate_expression(parser, tree);
 				a65_tree::move_parent(tree);
 
+				if(m_second_pass && ((operand < ((m_origin + m_offset) - UINT8_MAX))
+						|| (operand > ((m_origin + m_offset) + UINT8_MAX)))) {
+					A65_THROW_EXCEPTION_INFO("Relative jump out-of-range", "%s", A65_STRING_CHECK(entry.to_string()));
+				}
+
 				result.push_back(opcode);
-				result.push_back(operand);
+				result.push_back(operand - (m_origin + m_offset));
 				break;
 			case A65_TOKEN_COMMAND_MODE_ZEROPAGE:
 
@@ -827,8 +837,29 @@ a65_assembler::evaluate_directive(
 			}
 
 			for(size_t child = 0; child < tree.node().child_count(); ++child) {
+				std::string literal;
+
 				a65_tree::move_child(tree, child);
-				result.push_back(evaluate_expression(parser, tree));
+
+				if(!tree.node().has_child(0)) {
+					A65_THROW_EXCEPTION_INFO("Malformed directive tree", "%s", A65_STRING_CHECK(entry.to_string()));
+				}
+
+				a65_tree::move_child(tree, 0);
+
+				entry = parser.token(tree.node().token());
+				if((entry.type() == A65_TOKEN_LITERAL) && !tree.node().child_count()) {
+					literal = entry.literal();
+				}
+
+				a65_tree::move_parent(tree);
+
+				if(!literal.empty()) {
+					result.insert(result.end(), literal.begin(), literal.end());
+				} else {
+					result.push_back(evaluate_expression(parser, tree));
+				}
+
 				a65_tree::move_parent(tree);
 			}
 
@@ -843,10 +874,35 @@ a65_assembler::evaluate_directive(
 			}
 
 			for(size_t child = 0; child < tree.node().child_count(); ++child) {
+				std::string literal;
+
 				a65_tree::move_child(tree, child);
-				value = evaluate_expression(parser, tree);
-				result.push_back(value);
-				result.push_back(value >> CHAR_BIT);
+
+				if(!tree.node().has_child(0)) {
+					A65_THROW_EXCEPTION_INFO("Malformed directive tree", "%s", A65_STRING_CHECK(entry.to_string()));
+				}
+
+				a65_tree::move_child(tree, 0);
+
+				entry = parser.token(tree.node().token());
+				if((entry.type() == A65_TOKEN_LITERAL) && !tree.node().child_count()) {
+					literal = entry.literal();
+				}
+
+				a65_tree::move_parent(tree);
+
+				if(!literal.empty()) {
+
+					for(std::string::iterator ch = literal.begin(); ch != literal.end(); ++ch) {
+						result.push_back(*ch);
+						result.push_back(0);
+					}
+				} else {
+					value = evaluate_expression(parser, tree);
+					result.push_back(value);
+					result.push_back(value >> CHAR_BIT);
+				}
+
 				a65_tree::move_parent(tree);
 			}
 
@@ -1419,9 +1475,43 @@ a65_assembler::output_binary(
 	result << A65_ASSEMBLER_OUTPUT_BINARY_EXTENSION;
 
 	if(!input.empty()) {
+		std::vector<a65_object> object;
+		std::vector<a65_object>::iterator object_entry;
+		std::vector<std::string> archive_file, object_file;
+		std::vector<std::string>::const_iterator file_entry;
 
-		// TODO: form binary from inputs (archives + objects)
+		binary.resize(UINT16_MAX + 1, A65_ASSEMBLER_FILL);
 
+		for(file_entry = input.begin(); file_entry != input.end(); ++file_entry) {
+			size_t dot = file_entry->find_last_of(A65_EXTENSION);
+
+			if(dot != std::string::npos) {
+				std::string extension = file_entry->substr(dot);
+
+				if(extension == A65_ASSEMBLER_OUTPUT_ARCHIVE_EXTENSION) {
+					archive_file.push_back(*file_entry);
+				} else if(extension == A65_ASSEMBLER_OUTPUT_OBJECT_EXTENSION) {
+					object_file.push_back(*file_entry);
+				} else {
+					A65_THROW_EXCEPTION_INFO("Unsupported file", "%s", A65_STRING_CHECK(*file_entry));
+				}
+			}
+		}
+
+		for(file_entry = archive_file.begin(); file_entry != archive_file.end(); ++file_entry) {
+
+			// TODO: read in archive and form objects
+		}
+
+		for(file_entry = object_file.begin(); file_entry != object_file.end(); ++file_entry) {
+
+			// TODO: read in object
+		}
+
+		for(object_entry = object.begin(); object_entry != object.end(); ++object_entry) {
+
+			// TODO: form binary from object sections
+		}
 	}
 
 	a65_utility::write_file(result.str(), binary);

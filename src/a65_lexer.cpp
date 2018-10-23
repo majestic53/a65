@@ -271,6 +271,11 @@ a65_lexer::enumerate_alpha_character(void)
 						a65_stream::move_next();
 
 						if(!a65_stream::is_hexidecimal()) {
+							a65_stream::move_previous();
+							break;
+						}
+
+						if(!a65_stream::is_hexidecimal()) {
 							A65_THROW_EXCEPTION_INFO("Invalid character escape", "(%s:%u)",
 								A65_STRING_CHECK(path()), line());
 						}
@@ -292,7 +297,8 @@ a65_lexer::enumerate_alpha_character(void)
 			for(iter = 0; iter < A65_CHARACTER_ESCAPE_DECIMAL_LENGTH; ++iter) {
 
 				if(!a65_stream::is_decimal()) {
-					A65_THROW_EXCEPTION_INFO("Invalid character escape", "(%s:%u)", A65_STRING_CHECK(path()), line());
+					a65_stream::move_previous();
+					break;
 				}
 
 				literal += character();
