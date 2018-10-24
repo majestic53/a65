@@ -61,12 +61,13 @@ int
 a65_build_object(
 	__in const char *input,
 	__in const char *output,
+	__in int header,
 	__in int source
 	)
 {
 	int result = EXIT_SUCCESS;
 
-	A65_DEBUG_ENTRY_INFO("Input=%p, Output=%p, Source=%x", input, output, source);
+	A65_DEBUG_ENTRY_INFO("Input=%p, Output=%p, Header=%x, Source=%x", input, output, header, source);
 
 	try {
 		a65_assembler assembler;
@@ -79,7 +80,7 @@ a65_build_object(
 			A65_THROW_EXCEPTION_INFO("Invalid output path", "%p", output);
 		}
 
-		g_output = assembler.build_object(input, output, source);
+		g_output = assembler.build_object(input, output, header, source);
 	} catch(std::exception &exc) {
 		g_error = exc.what();
 		result = EXIT_FAILURE;
@@ -94,12 +95,14 @@ a65_compile(
 	__in int count,
 	__in const char **input,
 	__in const char *output,
-	__in const char *name
+	__in const char *name,
+	__in int binary,
+	__in int ihex
 	)
 {
 	int result = EXIT_SUCCESS;
 
-	A65_DEBUG_ENTRY_INFO("Input[%i]=%p, Output=%p, Name=%p", count, input, output, name);
+	A65_DEBUG_ENTRY_INFO("Input[%i]=%p, Output=%p, Name=%p, Binary=%x, Ihex=%x", count, input, output, name, binary, ihex);
 
 	try {
 		a65_assembler assembler;
@@ -112,7 +115,7 @@ a65_compile(
 			A65_THROW_EXCEPTION_INFO("Invalid output path", "%p", output);
 		}
 
-		g_output = assembler.compile(std::vector<std::string>(input, input + count), output, name);
+		g_output = assembler.compile(std::vector<std::string>(input, input + count), output, name, binary, ihex);
 	} catch(std::exception &exc) {
 		g_error = exc.what();
 		result = EXIT_FAILURE;

@@ -50,6 +50,7 @@ class a65_assembler :
 		std::string build_object(
 			__in const std::string &input,
 			__in const std::string &output,
+			__in_opt bool header = false,
 			__in_opt bool source = false
 			);
 
@@ -58,7 +59,9 @@ class a65_assembler :
 		std::string compile(
 			__in const std::vector<std::string> &input,
 			__in const std::string &output,
-			__in const std::string &name
+			__in const std::string &name,
+			__in_opt bool binary = true,
+			__in_opt bool ihex = false
 			);
 
 	protected:
@@ -173,15 +176,22 @@ class a65_assembler :
 
 		std::string output_binary(
 			__in const std::string &name,
-			__in const std::vector<std::string> &input
+			__in const std::vector<std::string> &input,
+			__in_opt bool binary = true,
+			__in_opt bool ihex = false
+			);
+
+		std::string output_binary_ihex(
+			__in const std::string &name,
+			__in const std::vector<a65_object> &object
 			);
 
 		std::string output_object(
 			__in const std::string &name,
-			__in_opt bool source = true
+			__in_opt bool header = true
 			);
 
-		std::string output_object_source(
+		std::string output_object_header(
 			__in const std::string &name,
 			__in const a65_object &object
 			);

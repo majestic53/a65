@@ -198,13 +198,14 @@ std::string
 a65_assembler::build_object(
 	__in const std::string &input,
 	__in const std::string &output,
+	__in_opt bool header,
 	__in_opt bool source
 	)
 {
 	std::string name, result;
 	std::stringstream processed;
 
-	A65_DEBUG_ENTRY_INFO("Input[%u]=%p, Output[%u]=%p, Source=%x", input.size(), &input, output.size(), &output, source);
+	A65_DEBUG_ENTRY_INFO("Input[%u]=%p, Output[%u]=%p, Header=%x, Source=%x", input.size(), &input, output.size(), &output, header, source);
 
 	m_input = a65_utility::decompose_file_path(input, name);
 	a65_parser::load(input);
@@ -229,11 +230,9 @@ a65_assembler::build_object(
 		<< std::endl << A65_CHARACTER_COMMENT << " " << A65_ASSEMBLER_DIVIDER
 		<< std::endl << preprocess(std::string());
 
-#ifndef NDEBUG
 	if(source) {
 		output_source(name, processed.str());
 	}
-#endif // NDEBUG
 
 	a65_parser::load(processed.str(), false);
 
@@ -245,7 +244,7 @@ a65_assembler::build_object(
 	evaluate(name, processed.str());
 	m_second_pass = false;
 
-	result = output_object(name, source);
+	result = output_object(name, header);
 
 	A65_DEBUG_EXIT_INFO("Result[%u]=%s", result.size(), A65_STRING_CHECK(result));
 	return result;
@@ -276,13 +275,15 @@ std::string
 a65_assembler::compile(
 	__in const std::vector<std::string> &input,
 	__in const std::string &output,
-	__in const std::string &name
+	__in const std::string &name,
+	__in_opt bool binary,
+	__in_opt bool ihex
 	)
 {
 	std::string result;
 
-	A65_DEBUG_ENTRY_INFO("Input[%u]=%p, Output[%u]=%s, Name[%u]=%s", input.size(), &input, output.size(), A65_STRING_CHECK(output),
-		name.size(), A65_STRING_CHECK(name));
+	A65_DEBUG_ENTRY_INFO("Input[%u]=%p, Output[%u]=%s, Name[%u]=%s, Binary=%x, Ihex=%x", input.size(), &input, output.size(),
+		A65_STRING_CHECK(output), name.size(), A65_STRING_CHECK(name), binary, ihex);
 
 	a65_assembler::clear();
 
@@ -292,9 +293,7 @@ a65_assembler::compile(
 		m_output = output;
 	}
 
-	result = output_binary(name, input);
-
-	// TODO: form ihex output
+	result = output_binary(name, input, binary, ihex);
 
 	A65_DEBUG_EXIT_INFO("Result[%u]=%s", result.size(), A65_STRING_CHECK(result));
 	return result;
@@ -399,13 +398,15 @@ a65_assembler::evaluate(
 			}
 
 // TODO
-std::cout << a65_parser::as_string(tree, 0) << std::endl;
+if(m_second_pass) {
+	std::cout << a65_parser::as_string(tree, 0) << std::endl;
 
-if(!data.empty()) {
-	std::cout << a65_utility::data_as_string(data, m_origin + m_offset - data.size()) << std::endl;
+	if(!data.empty()) {
+		std::cout << a65_utility::data_as_string(data, m_origin + m_offset - data.size()) << std::endl;
+	}
+
+	std::cout << std::endl;
 }
-
-std::cout << std::endl;
 // ---
 
 		}
@@ -1303,7 +1304,7 @@ a65_assembler::find_define(
 
 	result = m_define.find(name);
 	if(result == m_define.end()) {
-		A65_THROW_EXCEPTION_INFO("Define not found", "[%u]%s", name.size(), A65_STRING_CHECK(name));
+		A65_THROW_EXCEPTION_INFO("Define not found", "%s", A65_STRING_CHECK(name));
 	}
 
 	A65_DEBUG_EXIT_INFO("Result={[%u]%s, %u(%04x)}", result->first.size(), A65_STRING_CHECK(result->first), result->second, result->second);
@@ -1321,7 +1322,7 @@ a65_assembler::find_label(
 
 	result = m_label.find(name);
 	if(result == m_label.end()) {
-		A65_THROW_EXCEPTION_INFO("Label not found", "[%u]%s", name.size(), A65_STRING_CHECK(name));
+		A65_THROW_EXCEPTION_INFO("Label not found", "%s", A65_STRING_CHECK(name));
 	}
 
 	A65_DEBUG_EXIT_INFO("Result={[%u]%s, %u(%04x)}", result->first.size(), A65_STRING_CHECK(result->first), result->second, result->second);
@@ -1452,13 +1453,16 @@ a65_assembler::output_archive(
 std::string
 a65_assembler::output_binary(
 	__in const std::string &name,
-	__in const std::vector<std::string> &input
+	__in const std::vector<std::string> &input,
+	__in_opt bool binary,
+	__in_opt bool ihex
 	)
 {
 	std::stringstream result;
-	std::vector<uint8_t> binary;
+	std::vector<uint8_t> data;
 
-	A65_DEBUG_ENTRY_INFO("Name[%u]=%s, Input[%u]=%p", name.size(), A65_STRING_CHECK(name), input.size(), &input);
+	A65_DEBUG_ENTRY_INFO("Name[%u]=%s, Input[%u]=%p, Binary=%x, Ihex=%x", name.size(), A65_STRING_CHECK(name), input.size(), &input, binary,
+		ihex);
 
 	result << m_output;
 
@@ -1480,7 +1484,7 @@ a65_assembler::output_binary(
 		std::vector<std::string> archive_file, object_file;
 		std::vector<std::string>::const_iterator file_entry;
 
-		binary.resize(UINT16_MAX + 1, A65_ASSEMBLER_FILL);
+		data.resize(UINT16_MAX + 1, A65_ASSEMBLER_FILL);
 
 		for(file_entry = input.begin(); file_entry != input.end(); ++file_entry) {
 			size_t dot = file_entry->find_last_of(A65_EXTENSION);
@@ -1499,22 +1503,76 @@ a65_assembler::output_binary(
 		}
 
 		for(file_entry = archive_file.begin(); file_entry != archive_file.end(); ++file_entry) {
+			a65_archive archive(*file_entry);
 
-			// TODO: read in archive and form objects
+			for(size_t iter = 0; iter < archive.count(); ++iter) {
+				object.push_back(a65_object());
+				archive.object(iter, object.back());
+			}
 		}
 
 		for(file_entry = object_file.begin(); file_entry != object_file.end(); ++file_entry) {
-
-			// TODO: read in object
+			object.push_back(a65_object(*file_entry));
 		}
 
-		for(object_entry = object.begin(); object_entry != object.end(); ++object_entry) {
+		if(binary) {
 
-			// TODO: form binary from object sections
+			for(object_entry = object.begin(); object_entry != object.end(); ++object_entry) {
+
+				// TODO: form binary from object sections
+			}
+
+			a65_utility::write_file(result.str(), data);
+		}
+// TODO
+		else {
+
+			// TODO
+			std::cout << "NO BINARY" << std::endl;
+			// ---
+		}
+// ---
+
+		if(ihex) {
+			output_binary_ihex(name, object);
 		}
 	}
 
-	a65_utility::write_file(result.str(), binary);
+	A65_DEBUG_EXIT_INFO("Result[%u]=%s", result.str().size(), A65_STRING_CHECK(result.str()));
+	return result.str();
+}
+
+std::string
+a65_assembler::output_binary_ihex(
+	__in const std::string &name,
+	__in const std::vector<a65_object> &object
+	)
+{
+	std::stringstream result, source;
+	std::vector<a65_object>::const_iterator entry;
+
+	A65_DEBUG_ENTRY_INFO("Name[%u]=%s, Object[%u]=%p", name.size(), A65_STRING_CHECK(name), object.size(), &object);
+
+	result << m_output;
+
+	if(result.str().back() != A65_ASSEMBLER_OUTPUT_SEPERATOR) {
+		result << A65_ASSEMBLER_OUTPUT_SEPERATOR;
+	}
+
+	if(name.empty()) {
+		result << A65_ASSEMBLER_OUTPUT_IHEX_NAME_DEFAULT << "_" << A65_STRING_HEX(int, std::rand());
+	} else {
+		result << name;
+	}
+
+	result << A65_ASSEMBLER_OUTPUT_IHEX_EXTENSION;
+
+	for(entry = object.begin(); entry != object.end(); ++entry) {
+
+		// TODO: form ihex from object sections
+	}
+
+	a65_utility::write_file(result.str(), source.str());
 
 	A65_DEBUG_EXIT_INFO("Result[%u]=%s", result.str().size(), A65_STRING_CHECK(result.str()));
 	return result.str();
@@ -1523,13 +1581,13 @@ a65_assembler::output_binary(
 std::string
 a65_assembler::output_object(
 	__in const std::string &name,
-	__in_opt bool source
+	__in_opt bool header
 	)
 {
 	a65_object object;
 	std::stringstream result;
 
-	A65_DEBUG_ENTRY_INFO("Name[%u]=%s, Source=%x", name.size(), A65_STRING_CHECK(name), source);
+	A65_DEBUG_ENTRY_INFO("Name[%u]=%s, Header=%x", name.size(), A65_STRING_CHECK(name), header);
 
 	result << m_output;
 
@@ -1547,8 +1605,8 @@ a65_assembler::output_object(
 	object.import(m_section);
 	object.write(result.str());
 
-	if(source && !m_export.empty()) {
-		output_object_source(result.str(), object);
+	if(header) {
+		output_object_header(result.str(), object);
 	}
 
 	A65_DEBUG_EXIT_INFO("Result[%u]=%s", result.str().size(), A65_STRING_CHECK(result.str()));
@@ -1556,7 +1614,7 @@ a65_assembler::output_object(
 }
 
 std::string
-a65_assembler::output_object_source(
+a65_assembler::output_object_header(
 	__in const std::string &name,
 	__in const a65_object &object
 	)
@@ -1599,7 +1657,8 @@ a65_assembler::output_source(
 	__in const std::string &source
 	)
 {
-	std::stringstream result;
+	std::string line;
+	std::stringstream input, output, result;
 
 	A65_DEBUG_ENTRY_INFO("Name[%u]=%s, Source[%u]=%p", name.size(), A65_STRING_CHECK(name), source.size(), &source);
 
@@ -1616,7 +1675,22 @@ a65_assembler::output_source(
 	}
 
 	result << A65_ASSEMBLER_OUTPUT_SOURCE_EXTENSION;
-	a65_utility::write_file(result.str(), source);
+
+	input << source;
+	while(std::getline(input, line)) {
+
+		if(line.front() == A65_ASSEMBLER_CHARACTER_METADATA) {
+			continue;
+		}
+
+		if(!output.str().empty()) {
+			output << std::endl;
+		}
+
+		output << line;
+	}
+
+	a65_utility::write_file(result.str(), output.str());
 
 	A65_DEBUG_EXIT_INFO("Result[%u]=%s", result.str().size(), A65_STRING_CHECK(result.str()));
 	return result.str();
@@ -1675,13 +1749,13 @@ a65_assembler::preprocess(
 	entry = parser.token(tree.node().token());
 	switch(entry.type()) {
 		case A65_TOKEN_COMMAND:
-			result << preprocess_command(parser, tree);
+			result << A65_ASSEMBLER_CHARACTER_TAB << preprocess_command(parser, tree);
 			break;
 		case A65_TOKEN_CONSTANT:
 			result << A65_TOKEN_CONSTANT_STRING(entry.subtype());
 			break;
 		case A65_TOKEN_DIRECTIVE:
-			result << preprocess_directive(parser, tree);
+			result << A65_ASSEMBLER_CHARACTER_TAB << preprocess_directive(parser, tree);
 			break;
 		case A65_TOKEN_IDENTIFIER:
 			result << entry.literal();
@@ -1709,7 +1783,7 @@ a65_assembler::preprocess(
 			result << A65_TOKEN_SYMBOL_STRING(A65_TOKEN_SYMBOL_PARENTHESIS_CLOSE);
 			break;
 		case A65_TOKEN_PRAGMA:
-			result << preprocess_pragma(parser, tree);
+			result << A65_ASSEMBLER_CHARACTER_TAB << preprocess_pragma(parser, tree);
 			break;
 		case A65_TOKEN_REGISTER:
 			result << A65_TOKEN_REGISTER_STRING(entry.subtype());

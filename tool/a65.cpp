@@ -24,6 +24,7 @@ build_objects(
 	__inout std::vector<std::string> &objects,
 	__in const std::vector<std::string> &sources,
 	__in const std::string &output,
+	__in bool header,
 	__in bool source
 	)
 {
@@ -32,7 +33,7 @@ build_objects(
 
 	for(entry = sources.begin(); entry != sources.end(); ++entry) {
 
-		result = a65_build_object(entry->c_str(), output.c_str(), source);
+		result = a65_build_object(entry->c_str(), output.c_str(), header, source);
 		if(result) {
 			break;
 		}
@@ -49,13 +50,14 @@ build_archive(
 	__in const std::vector<std::string> &sources,
 	__in const std::string &output,
 	__in const std::string &name,
+	__in bool header,
 	__in bool source
 	)
 {
 	int result = EXIT_SUCCESS;
 
 	if(!sources.empty()) {
-		result = build_objects(objects, sources, output, source);
+		result = build_objects(objects, sources, output, header, source);
 	}
 
 	if(result == EXIT_SUCCESS) {
@@ -78,13 +80,16 @@ compile(
 	__in const std::vector<std::string> &sources,
 	__in const std::string &output,
 	__in const std::string &name,
-	__in bool source
+	__in bool header,
+	__in bool source,
+	__in bool binary,
+	__in bool ihex
 	)
 {
 	int result = EXIT_SUCCESS;
 
 	if(!sources.empty()) {
-		result = build_objects(objects, sources, output, source);
+		result = build_objects(objects, sources, output, header, source);
 	}
 
 	if(result == EXIT_SUCCESS) {
@@ -98,7 +103,7 @@ compile(
 			inputs.push_back(entry->c_str());
 		}
 
-		result = a65_compile(inputs.size(), (const char **)&inputs[0], output.c_str(), name.c_str());
+		result = a65_compile(inputs.size(), (const char **)&inputs[0], output.c_str(), name.c_str(), binary, ihex);
 	}
 
 	return result;
@@ -216,8 +221,14 @@ parse(
 							name = *(++argument);
 						}
 						break;
+					case A65_FLAG_EXPORT:
+					case A65_FLAG_IHEX:
 					case A65_FLAG_HELP:
-						A65_FLAG_APPEND(A65_FLAG_HELP, flags);
+					case A65_FLAG_NO_BINARY:
+					case A65_FLAG_SOURCE:
+					case A65_FLAG_VERBOSE:
+					case A65_FLAG_VERSION:
+						A65_FLAG_APPEND(id, flags);
 						break;
 					case A65_FLAG_OUTPUT:
 
@@ -228,18 +239,10 @@ parse(
 							output = *(++argument);
 						}
 						break;
-					case A65_FLAG_SOURCE:
-						A65_FLAG_APPEND(A65_FLAG_SOURCE, flags);
-						break;
-					case A65_FLAG_VERBOSE:
-						A65_FLAG_APPEND(A65_FLAG_VERBOSE, flags);
-						break;
-					case A65_FLAG_VERSION:
-						A65_FLAG_APPEND(A65_FLAG_VERSION, flags);
-						break;
 					default:
 						stream << "Invalid flag: " << *argument;
 						result = EXIT_FAILURE;
+						break;
 				}
 			} else {
 				stream << "Undefined flag: " << *argument;
@@ -282,7 +285,10 @@ run(
 	int result = EXIT_SUCCESS;
 	std::vector<std::string>::const_iterator entry;
 	std::vector<std::string> archives, objects, sources;
-	bool source = A65_FLAG_CONTAINS(A65_FLAG_SOURCE, flags),
+	bool binary = !A65_FLAG_CONTAINS(A65_FLAG_NO_BINARY, flags),
+		header = A65_FLAG_CONTAINS(A65_FLAG_EXPORT, flags),
+		ihex = A65_FLAG_CONTAINS(A65_FLAG_IHEX, flags),
+		source = A65_FLAG_CONTAINS(A65_FLAG_SOURCE, flags),
 		verbose = A65_FLAG_CONTAINS(A65_FLAG_VERBOSE, flags);
 
 	if(verbose) {
@@ -341,7 +347,7 @@ run(
 				<< std::endl;
 		}
 
-		result = build_archive(objects, sources, output, name, source);
+		result = build_archive(objects, sources, output, name, header, source);
 	} else if(A65_FLAG_CONTAINS(A65_FLAG_COMPILE, flags)) {
 
 		if(verbose) {
@@ -352,7 +358,7 @@ run(
 				<< std::endl;
 		}
 
-		result = compile(objects, archives, sources, output, name, source);
+		result = compile(objects, archives, sources, output, name, header, source, binary, ihex);
 	} else {
 
 		if(verbose) {
@@ -373,7 +379,7 @@ run(
 				<< std::endl;
 		}
 
-		result = build_objects(objects, sources, output, source);
+		result = build_objects(objects, sources, output, header, source);
 	}
 
 	if(result) {

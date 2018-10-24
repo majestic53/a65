@@ -42,11 +42,14 @@ Launch from the project root directory:
 ### Interface
 
 ```
-a65 [-a name][-c name][-h][-o output][-s][-b][-v] input...
+a65 [-a name][-c name][-e][-h][-i][-n][-o output][-s][-b][-v] input...
 
 -a|--archive     Output archive file
 -c|--compile     Output binary file
+-e|--export      Output export file
 -h|--help        Display help information
+-i|--ihex        Output ihex file
+-n|--no-binary   Exclude binary file output
 -o|--output      Specify output directory
 -s|--source      Enable source output
 -b|--verbose     Enable verbose output
@@ -58,6 +61,11 @@ Changelog
 
 Version 0.1.1843
 ----------------
+*Updated: 10/23/2018*
+
+* Added additional interface flags
+* Implemented binary output (cont.)
+
 *Updated: 10/22/2018*
 
 * Implemented binary output

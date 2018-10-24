@@ -25,9 +25,9 @@ extern "C" {
 
 extern int a65_build_archive(int count, const char **input, const char *output, const char *name);
 
-extern int a65_build_object(const char *input, const char *output, int source);
+extern int a65_build_object(const char *input, const char *output, int header, int source);
 
-extern int a65_compile(int count, const char **input, const char *output, const char *name);
+extern int a65_compile(int count, const char **input, const char *output, const char *name, int binary, int ihex);
 
 extern const char *a65_error(void);
 
