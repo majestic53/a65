@@ -480,6 +480,8 @@ enum {
 
 #define A65_IHEX_CHARACTER ':'
 
+#define A65_IHEX_LENGTH 16
+
 #define A65_IHEX_MAX A65_IHEX_END
 
 static const std::string A65_IHEX_STR[] = {

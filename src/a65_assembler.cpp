@@ -1501,8 +1501,20 @@ a65_assembler::output_binary(
 		if(binary) {
 
 			for(object_entry = object.begin(); object_entry != object.end(); ++object_entry) {
+				size_t position = 0;
 
-				// TODO: form binary from object sections
+				while(object_entry->contains_section(position)) {
+					uint16_t origin;
+					std::vector<uint8_t> object_data;
+
+					origin = object_entry->section(position, object_data);
+
+					for(size_t offset = 0; offset < object_data.size(); ++offset) {
+						data.at(origin + offset) = object_data.at(offset);
+					}
+
+					++position;
+				}
 			}
 
 			a65_utility::write_file(result.str(), data);
@@ -1543,8 +1555,32 @@ a65_assembler::output_binary_ihex(
 	result << A65_ASSEMBLER_OUTPUT_IHEX_EXTENSION;
 
 	for(entry = object.begin(); entry != object.end(); ++entry) {
+		size_t position = 0;
 
-		// TODO: form ihex from object sections
+		while(entry->contains_section(position)) {
+			uint16_t origin;
+			std::vector<uint8_t> data, subdata;
+
+			origin = entry->section(position, data);
+
+			for(size_t offset = 0; offset < data.size(); ++offset) {
+
+				if(!(offset % A65_IHEX_LENGTH) && !subdata.empty()) {
+					source << form_ihex(A65_IHEX_DATA, origin, subdata) << std::endl;
+					origin += subdata.size();
+					subdata.clear();
+				}
+
+				subdata.push_back(data.at(offset));
+			}
+
+			if(!subdata.empty()) {
+				source << form_ihex(A65_IHEX_DATA, origin, subdata) << std::endl;
+				subdata.clear();
+			}
+
+			++position;
+		}
 	}
 
 	source << form_ihex(A65_IHEX_END);

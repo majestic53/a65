@@ -78,7 +78,7 @@
 	std::transform((_STRING_).begin(), (_STRING_).end(), (_STRING_).begin(), ::tolower)
 
 #define A65_VERSION_MAJOR 0
-#define A65_VERSION_MINOR 1
-#define A65_VERSION_REVISION 47
+#define A65_VERSION_MINOR 2
+#define A65_VERSION_REVISION 0
 
 #endif // A65_DEFINE_H_

@@ -477,7 +477,7 @@ a65_object::section(
 		A65_THROW_EXCEPTION_INFO("Malformed object payload section", "%u", position);
 	}
 
-	data = std::vector<uint8_t>(((char *)&m_payload) + section->offset, ((char *)&m_payload) + section->offset + section->size);
+	data = std::vector<uint8_t>(((char *)m_payload) + section->offset, ((char *)m_payload) + section->offset + section->size);
 
 	result = section->origin;
 
