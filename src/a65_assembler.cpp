@@ -1347,66 +1347,49 @@ a65_assembler::find_section(
 	return result;
 }
 
-std::vector<uint8_t>
-a65_assembler::form_command(
+std::string
+a65_assembler::form_ihex(
 	__in int type,
-	__in int mode,
-	__in_opt uint16_t immediate
+	__in_opt uint16_t origin,
+	__in_opt const std::vector<uint8_t> &data
 	)
 {
-	size_t length;
-	std::vector<uint8_t> result;
+	uint16_t checksum;
+	std::stringstream result;
+	std::vector<uint8_t>::const_iterator entry;
 
-	A65_DEBUG_ENTRY_INFO("Type=%u(%s), Mode=%u(%s), Immediate=%u(%04x)", type, A65_TOKEN_COMMAND_STRING(type),
-		mode, A65_TOKEN_COMMAND_MODE_STRING(mode), immediate, immediate);
+	A65_DEBUG_ENTRY_INFO("Type=%u(%s), Origin=%u(%04x), Data[%u]=%p", type, A65_IHEX_STRING(type), origin, origin, data.size(), &data);
 
-	if(!is_valid_command(type, mode)) {
-		A65_THROW_EXCEPTION_INFO("Unsupported command type/mode", "%s %s, %u(%04x)", A65_TOKEN_COMMAND_STRING(type),
-			A65_TOKEN_COMMAND_MODE_STRING(mode), immediate, immediate);
-	}
+	switch(type) {
+		case A65_IHEX_END:
 
-	result.push_back(A65_ASSEMBLER_COMMAND_OPCODE(type, mode));
+			if(!data.empty()) {
+				A65_THROW_EXCEPTION_INFO("Data too large", "%u (max=%u)", data.size(), 0);
+			}
+		case A65_IHEX_DATA:
 
-	length = A65_ASSEMBLER_COMMAND_LENGTH(type, mode);
-	switch(length) {
-		case A65_ASSEMBLER_COMMAND_IMMEDIATE_NONE:
-			break;
-		case A65_ASSEMBLER_COMMAND_IMMEDIATE_BYTE:
-			result.push_back(immediate & UINT8_MAX);
-			break;
-		case A65_ASSEMBLER_COMMAND_IMMEDIATE_WORD:
-			result.push_back(immediate & UINT8_MAX);
-			result.push_back((immediate >> CHAR_BIT) & UINT8_MAX);
+			if(data.size() > UINT8_MAX) {
+				A65_THROW_EXCEPTION_INFO("Data too large", "%u (max=%u)", data.size(), UINT8_MAX);
+			}
+
+			result << A65_IHEX_CHARACTER << A65_STRING_HEX(uint8_t, data.size()) << A65_STRING_HEX(uint16_t, origin)
+				<< A65_STRING_HEX(uint8_t, type);
+
+			checksum = (data.size() + ((origin >> CHAR_BIT) & UINT8_MAX) + (origin & UINT8_MAX) + (type & UINT8_MAX));
+
+			for(entry = data.begin(); entry != data.end(); ++entry) {
+				result << A65_STRING_HEX(uint8_t, *entry);
+				checksum += *entry;
+			}
+
+			result << A65_STRING_HEX(uint8_t, ~(checksum & UINT8_MAX) + 1);
 			break;
 		default:
-			A65_THROW_EXCEPTION_INFO("Unsupported command length", "%u", length);
-			break;
+			A65_THROW_EXCEPTION_INFO("Unsupported ihex type", "%u(%x)", type, type);
 	}
 
 	A65_DEBUG_EXIT();
-	return result;
-}
-
-bool
-a65_assembler::is_valid_command(
-	__in int type,
-	__in int mode
-	) const
-{
-	bool result;
-	std::map<int, std::map<int, std::pair<uint8_t, size_t>>>::const_iterator entry;
-
-	A65_DEBUG_ENTRY_INFO("Type=%u(%s), Mode=%u(%s)", type, A65_TOKEN_COMMAND_STRING(type), mode, A65_TOKEN_COMMAND_MODE_STRING(mode));
-
-	entry = A65_ASSEMBLER_COMMAND_MAP.find(mode);
-
-	result = (entry != A65_ASSEMBLER_COMMAND_MAP.end());
-	if(result) {
-		result = (entry->second.find(type) != entry->second.end());
-	}
-
-	A65_DEBUG_EXIT_INFO("Result=%x", result);
-	return result;
+	return result.str();
 }
 
 std::string
@@ -1524,14 +1507,6 @@ a65_assembler::output_binary(
 
 			a65_utility::write_file(result.str(), data);
 		}
-// TODO
-		else {
-
-			// TODO
-			std::cout << "NO BINARY" << std::endl;
-			// ---
-		}
-// ---
 
 		if(ihex) {
 			output_binary_ihex(name, object);
@@ -1571,6 +1546,8 @@ a65_assembler::output_binary_ihex(
 
 		// TODO: form ihex from object sections
 	}
+
+	source << form_ihex(A65_IHEX_END);
 
 	a65_utility::write_file(result.str(), source.str());
 

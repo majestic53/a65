@@ -29,8 +29,6 @@
 
 #define A65_ASSEMBLER_FILL 0xea
 
-#define A65_EXTENSION "."
-
 #define A65_ASSEMBLER_OUTPUT_ARCHIVE_NAME_DEFAULT "a"
 #define A65_ASSEMBLER_OUTPUT_ARCHIVE_EXTENSION ".a"
 
@@ -472,5 +470,24 @@ static const std::map<int, std::map<int, std::pair<uint8_t, size_t>>> A65_ASSEMB
 
 #define A65_ASSEMBLER_COMMAND_LENGTH(_TYPE_, _MODE_) \
 	A65_ASSEMBLER_COMMAND_MAP.find(_MODE_)->second.find(_TYPE_)->second.second
+
+#define A65_EXTENSION "."
+
+enum {
+	A65_IHEX_DATA = 0,
+	A65_IHEX_END,
+};
+
+#define A65_IHEX_CHARACTER ':'
+
+#define A65_IHEX_MAX A65_IHEX_END
+
+static const std::string A65_IHEX_STR[] = {
+	"Data", "End",
+	};
+
+#define A65_IHEX_STRING(_TYPE_) \
+	(((_TYPE_) > A65_IHEX_MAX) ? A65_STRING_UNKNOWN : \
+		A65_STRING_CHECK(A65_IHEX_STR[_TYPE_]))
 
 #endif // A65_ASSEMBLER_TYPE_H_

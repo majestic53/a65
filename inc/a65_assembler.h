@@ -153,16 +153,11 @@ class a65_assembler :
 			__in uint16_t origin
 			);
 
-		std::vector<uint8_t> form_command(
+		std::string form_ihex(
 			__in int type,
-			__in int mode,
-			__in_opt uint16_t immediate = 0
+			__in_opt uint16_t origin = 0,
+			__in_opt const std::vector<uint8_t> &data = std::vector<uint8_t>()
 			);
-
-		bool is_valid_command(
-			__in int type,
-			__in int mode
-			) const;
 
 		void move_child_tree(
 			__in a65_tree &tree,
