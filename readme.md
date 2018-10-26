@@ -56,6 +56,32 @@ a65 [-a name][-c name][-e][-h][-i][-n][-o output][-s][-b][-v] input...
 -v|--version     Display version information
 ```
 
+### Example
+
+To build objects files, call a65 with a series of source files as input:
+
+```
+a65 -o <OUTPUT> <INPUT>
+
+For example: a65 -o ./bin ./doc/example.asm
+```
+
+To build archives files, call a65 with a series of source and/or object files as input and a name:
+
+```
+a65 -a <NAME> -o <OUTPUT> <INPUT>
+
+For example: a65 -a example -o ./bin ./doc/example.asm
+```
+
+To build binary files, call a65 with a series of source, object and/or archive files as input and a name:
+
+```
+a65 -c <NAME> -o <OUTPUT> <INPUT>
+
+For example: a65 -c example -o ./bin ./doc/example.asm
+```
+
 Changelog
 =========
 
