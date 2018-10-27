@@ -1,36 +1,36 @@
 A65 Syntax
 ==========
 
-For more detail see the [A65 Backus–Naur Documentation](https://github.com/majestic53/a65/blob/master/doc/a65_bnf.txt)
+For more detail see the [A65 Language Spec](https://github.com/majestic53/a65/blob/master/doc/a65_bnf.txt)
 
 Primitives
 ==========
 
-###Character
+### Character
 
 ```
 . | \a | \b | \\ | \r | \f | \n | \" | \' | \t | \v | \x[0-9a-fA-F]{1-2} | \[0-9]{1-3}
 ```
 
-###Constant
+### Constant
 
 ```
 false | null | true
 ```
 
-###Identifier
+### Identifier
 
 ```
 [_a-zA-Z][_a-zA-Z0-9]*
 ```
 
-###Literal
+### Literal
 
 ```
 "<character>*"{<expression>}? | '<character>'
 ```
 
-###Scalar
+### Scalar
 
 ```
 -?[0b[0-1]{1-16} | [0-9]{1-5} | 0x[a-fA-F0-9]{1-4} | 0c[0-7]{1-6}]
@@ -39,65 +39,65 @@ false | null | true
 Command
 =======
 
-###Absolute
+### Absolute
 
 ```
 [cmd{<scalar>} | adc | and | asl | bit | cmp | cpx | cpy | dec | eor | inc | jmp | jsr | lda | ldx | ldy | lsr
 	| ora | rol | ror | sbc | sta | stx | sty | stz | trb | tsb] <expression>
 ```
 
-###Absolute Index Indirect
+### Absolute Index Indirect
 
 ```
 [cmd{<scalar>} | jmp] [<expression>,x]
 ```
 
-###Absolute Index-x
+### Absolute Index-x
 
 ```
 [cmd{<scalar>} | adc | and | asl | bit | cmp | dec | eor | inc | lda | ldy | lsr | ora | rol | ror
 	| sbc | sta | stz] <expression>,x
 ```
 
-###Absolute Index-y
+### Absolute Index-y
 
 ```
 [cmd{<scalar>} | adc | and | cmp | eor | lda | ldx | ora | sbc | sta] <expression>,y
 ```
 
-###Absolute Indirect
+### Absolute Indirect
 
 ```
 [cmd{<scalar>} | jmp] [<expression>]
 ```
 
-###Accumulator
+### Accumulator
 
 ```
 [cmd{<scalar>} | asl | dec | inc | lsr | rol | ror] a
 ```
 
-###Immediate
+### Immediate
 
 ```
 [cmd{<scalar>} | adc | and | bit | cmp | cpx | cpy | eor | lda | ldx | ldy | ora | sbc] #<expression>
 ```
 
-###Implied
+### Implied
 
 ```
 [cmd{<scalar>} | brk | clc | cld | cli | clv | dex | dey | inx | iny | nop | pha | php | phx | phy | pla | plp
 	| plx | ply | rti | rts | sec | sed | sei | stp | tax | tay | tsx | txa | txs | tya | wai]
 ```
 
-###Relative
+### Relative
 
 ```
 [cmd{<scalar>} | bbr0 | bbr1 | bbr2 | bbr3 | bbr4 | bbr5 | bbr6 | bbr7 | bbs0 | bbs1 | bbs2 | bbs3 | bbs4 | bbs5
 	| bbs6 | bbs7 | bcc | bcs | beq | bmi | bne | bpl | bra | bvc | bvs] <expression>
 ```
 
-###Zeropage
+### Zeropage
 
 ```
 [cmd{<scalar>} | adc | and | asl | bit | cmp | cpx | cpy | dec | eor | inc | lda | ldx | ldy | lsr | ora
@@ -105,32 +105,32 @@ Command
 	| sta | stx | sty | stz | trb | tsb] <expression>
 ```
 
-###Zeropage Index Indirect
+### Zeropage Index Indirect
 
 ```
 [cmd{<scalar>} | adc | and | cmp | eor | lda | ora | sbc | sta] [<expression>,x]
 ```
 
-###Zeropage Index-x
+### Zeropage Index-x
 
 ```
 [cmd{<scalar>} | adc | and | asl | bit | cmp | dec | eor | inc | lda | ldy | lsr | ora | rol | ror | sbc
 	| sta | sty | stz] <expression>,x
 ```
 
-###Zeropage Index-y
+### Zeropage Index-y
 
 ```
 [cmd{<scalar>} | ldx | stx] <expression>,y
 ```
 
-###Zeropage Indirect
+### Zeropage Indirect
 
 ```
 [cmd{<scalar>} | adc | and | cmp | eor | lda | ora | sbc | sta] [<expression>]
 ```
 
-###Zeropage Indirect Index
+### Zeropage Indirect Index
 
 ```
 [cmd{<scalar>} | adc | and | cmp | eor | lda | ora | sbc | sta] [<expression>],y
@@ -139,55 +139,55 @@ Command
 Directive
 =========
 
-###Define Bytes
+### Define Bytes
 
 ```
 directive_data_byte ::= .db <expression_list>
 ```
 
-###Define Words
+### Define Words
 
 ```
 directive_data_word ::= .dw <expression_list>
 ```
 
-###Define
+### Define
 
 ```
 directive_define ::= .def <identifier> <expression>?
 ```
 
-###Export
+### Export
 
 ```
 directive_export ::= .exp <identifier>
 ```
 
-###If
+### If
 
 ```
 directive_if ::= .if <expression_condition> <statement>* (.elseif <expression_condition> <statement>*)* (.else <statement>*)? .endif
 ```
 
-###If Defined
+### If Defined
 
 ```
 directive_ifdef ::= [.ifdef | .ifndef] <identifier> <statement>* (.else <statement>*)? .endif
 ```
 
-###Origin
+### Origin
 
 ```
 directive_origin ::= .org <expression>
 ```
 
-###Reserve
+### Reserve
 
 ```
 directive_reserve ::= .res <expression>
 ```
 
-###Undefine
+### Undefine
 
 ```
 directive_undefine ::= .undef <identifier>
@@ -203,13 +203,13 @@ Label
 Pragma
 ======
 
-###Include Binary
+### Include Binary
 
 ```
 @incb <literal>
 ```
 
-###Include Source
+### Include Source
 
 ```
 @inc <literal>
