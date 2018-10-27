@@ -155,7 +155,7 @@ pragma_include_source ::= @inc <literal>
 
 pragma_metadata ::= @meta <literal> <scalar>
 
-scalar ::= -[<scalar_binary> | <scalar_decimal> | <scalar_hexidecimal> | <scalar_octal>]
+scalar ::= -?[<scalar_binary> | <scalar_decimal> | <scalar_hexidecimal> | <scalar_octal>]
 
 scalar_binary ::= 0b[0-1]{1-16}
 

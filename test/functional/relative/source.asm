@@ -1,0 +1,9 @@
+	.org 0x0600
+
+	lda #0x01
+	cmp #0x02
+	bne notequal
+	sta 0x22
+
+notequal:
+	brk

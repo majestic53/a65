@@ -396,19 +396,6 @@ a65_assembler::evaluate(
 				find_section(m_origin)->second.add(data, tree.id());
 				m_offset += data.size();
 			}
-
-// TODO
-if(m_second_pass) {
-	std::cout << a65_parser::as_string(tree, 0) << std::endl;
-
-	if(!data.empty()) {
-		std::cout << a65_utility::data_as_string(data, m_origin + m_offset - data.size()) << std::endl;
-	}
-
-	std::cout << std::endl;
-}
-// ---
-
 		}
 
 		a65_parser::move_next();
@@ -640,7 +627,7 @@ a65_assembler::evaluate_command(
 				}
 
 				result.push_back(opcode);
-				result.push_back(operand - (m_origin + m_offset));
+				result.push_back(operand - (m_origin + m_offset) - A65_COMMAND_RELATIVE_LENGTH(type));
 				break;
 			case A65_TOKEN_COMMAND_MODE_ZEROPAGE:
 

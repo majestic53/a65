@@ -87,6 +87,10 @@ Changelog
 
 Version 0.1.1843
 ----------------
+*Updated: 10/26/2018*
+
+* Added regression tests
+
 *Updated: 10/23/2018*
 
 * Added additional interface flags

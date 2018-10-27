@@ -20,20 +20,23 @@ DIR_BIN=./bin/
 DIR_BIN_INC=./bin/inc/
 DIR_BIN_LIB=./bin/lib/
 DIR_BUILD=./build/
-DIR_EXE=./tool/
+DIR_BUILD_TEST=./build/test/
 DIR_ROOT=./
 DIR_SRC=./src/
-EXE=a65
+DIR_TEST=./test/
+DIR_TOOL=./tool/
 JOB_SLOTS=4
+TEST=a65_test
+TOOL=a65
 TRACE?=0
 TRACE_FLAGS_DBG=CC_TRACE_FLAGS=-DTRACE_COLOR\ -DTRACE=
 TRACE_FLAGS_REL=CC_TRACE_FLAGS=-DTRACE_COLOR\ -DTRACE=0
 
 all: debug
 
-debug: clean init lib_debug exe_debug
+debug: clean init lib_debug exe_debug reg_test
 
-release: clean init lib_release exe_release
+release: clean init lib_release exe_release reg_test
 
 ### SETUP ###
 
@@ -44,7 +47,7 @@ clean:
 init:
 	mkdir -p $(DIR_BIN_INC)
 	mkdir -p $(DIR_BIN_LIB)
-	mkdir $(DIR_BUILD)
+	mkdir -p $(DIR_BUILD_TEST)
 
 ### LIBRARY ###
 
@@ -71,14 +74,32 @@ exe_debug:
 	@echo '============================================'
 	@echo 'BUILDING EXECUTABLES (DEBUG)'
 	@echo '============================================'
-	cd $(DIR_EXE) && make $(BUILD_FLAGS_DBG) $(TRACE_FLAGS_DBG)$(TRACE)
+	cd $(DIR_TOOL) && make $(BUILD_FLAGS_DBG) $(TRACE_FLAGS_DBG)$(TRACE)
+	cd $(DIR_TEST) && make $(BUILD_FLAGS_DBG) $(TRACE_FLAGS_DBG)$(TRACE)
 
 exe_release:
 	@echo ''
 	@echo '============================================'
 	@echo 'BUILDING EXECUTABLES (RELEASE)'
 	@echo '============================================'
-	cd $(DIR_EXE) && make $(BUILD_FLAGS_REL) $(TRACE_FLAGS_REL)
+	cd $(DIR_TOOL) && make $(BUILD_FLAGS_REL) $(TRACE_FLAGS_REL)
+	cd $(DIR_TEST) && make $(BUILD_FLAGS_REL) $(TRACE_FLAGS_REL)
+
+### REGRESSION TESTS ###
+
+reg_test:
+	@echo ''
+	@echo '============================================'
+	@echo 'RUNNING REGRESSION TESTS'
+	@echo '============================================'
+	@echo ''
+	@echo '--- TESTS RUNNING --------------------------'
+	@cd $(DIR_BUILD_TEST) && if ./$(TEST); \
+	then \
+		echo '--- PASSED ---------------------------------'; \
+	else \
+		echo '--- FAILED ---------------------------------'; \
+	fi
 
 ### MISC ###
 
@@ -94,7 +115,7 @@ memory:
 	@echo '============================================'
 	@echo 'RUNNING MEMORY TEST'
 	@echo '============================================'
-	valgrind --leak-check=full --show-leak-kinds=all $(DIR_BIN)$(EXE)
+	valgrind --leak-check=full --show-leak-kinds=all $(DIR_BIN)$(TOOL)
 
 static:
 	@echo ''

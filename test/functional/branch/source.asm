@@ -1,0 +1,11 @@
+	.org 0x0600
+
+	ldx #0x08
+
+decrement:
+	dex
+	stx 0x0200
+	cpx #0x03
+	bne decrement
+	stx 0x0201
+	brk

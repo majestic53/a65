@@ -1,0 +1,9 @@
+0600: a9 01 85 f0 a9 cc 85 f1 6c f0 00
+
+address  hexdump   dissassembly
+-------------------------------
+$0600    a9 01     lda #$01
+$0602    85 f0     sta $f0
+$0604    a9 cc     lda #$cc
+$0606    85 f1     sta $f1
+$0608    6c f0 00  jmp ($00f0)
