@@ -86,23 +86,24 @@ Command
 ### Implied
 
 ```
-[cmd{<scalar>} | brk | clc | cld | cli | clv | dex | dey | inx | iny | nop | pha | php | phx | phy | pla | plp
-	| plx | ply | rti | rts | sec | sed | sei | stp | tax | tay | tsx | txa | txs | tya | wai]
+[cmd{<scalar>} | brk | clc | cld | cli | clv | dex | dey | inx | iny | nop | pha | php | phx | phy
+	| pla | plp | plx | ply | rti | rts | sec | sed | sei | stp | tax | tay | tsx | txa | txs
+	| tya | wai]
 ```
 
 ### Relative
 
 ```
-[cmd{<scalar>} | bbr0 | bbr1 | bbr2 | bbr3 | bbr4 | bbr5 | bbr6 | bbr7 | bbs0 | bbs1 | bbs2 | bbs3 | bbs4 | bbs5
-	| bbs6 | bbs7 | bcc | bcs | beq | bmi | bne | bpl | bra | bvc | bvs] <expression>
+[cmd{<scalar>} | bbr0 | bbr1 | bbr2 | bbr3 | bbr4 | bbr5 | bbr6 | bbr7 | bbs0 | bbs1 | bbs2 | bbs3
+	| bbs4 | bbs5 | bbs6 | bbs7 | bcc | bcs | beq | bmi | bne | bpl | bra | bvc | bvs] <expression>
 ```
 
 ### Zeropage
 
 ```
 [cmd{<scalar>} | adc | and | asl | bit | cmp | cpx | cpy | dec | eor | inc | lda | ldx | ldy | lsr | ora
-	| rmb0 | rmb1 | rmb2 | rmb3 | rmb4 | rmb5 | rmb6 | rmb7 | rol | ror | sbc | smb0 | smb1 | smb2 | smb3 | smb4 | smb5 | smb6 | smb7
-	| sta | stx | sty | stz | trb | tsb] <expression>
+	| rmb0 | rmb1 | rmb2 | rmb3 | rmb4 | rmb5 | rmb6 | rmb7 | rol | ror | sbc | smb0 | smb1 | smb2
+	| smb3 | smb4 | smb5 | smb6 | smb7 | sta | stx | sty | stz | trb | tsb] <expression>
 ```
 
 ### Zeropage Index Indirect
@@ -166,7 +167,8 @@ directive_export ::= .exp <identifier>
 ### If
 
 ```
-directive_if ::= .if <expression_condition> <statement>* (.elseif <expression_condition> <statement>*)* (.else <statement>*)? .endif
+directive_if ::= .if <expression_condition> <statement>* (.elseif <expression_condition> <statement>*)*
+	(.else <statement>*)? .endif
 ```
 
 ### If Defined
@@ -213,5 +215,4 @@ Pragma
 
 ```
 @inc <literal>
-```
 ```
