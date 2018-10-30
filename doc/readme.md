@@ -143,56 +143,56 @@ Directive
 ### Define Bytes
 
 ```
-directive_data_byte ::= .db <expression_list>
+.db <expression_list>
 ```
 
 ### Define Words
 
 ```
-directive_data_word ::= .dw <expression_list>
+.dw <expression_list>
 ```
 
 ### Define
 
 ```
-directive_define ::= .def <identifier> <expression>?
+.def <identifier> <expression>?
 ```
 
 ### Export
 
 ```
-directive_export ::= .exp <identifier>
+.exp <identifier>
 ```
 
 ### If
 
 ```
-directive_if ::= .if <expression_condition> <statement>* (.elseif <expression_condition> <statement>*)*
+.if <expression_condition> <statement>* (.elseif <expression_condition> <statement>*)*
 	(.else <statement>*)? .endif
 ```
 
 ### If Defined
 
 ```
-directive_ifdef ::= [.ifdef | .ifndef] <identifier> <statement>* (.else <statement>*)? .endif
+[.ifdef | .ifndef] <identifier> <statement>* (.else <statement>*)? .endif
 ```
 
 ### Origin
 
 ```
-directive_origin ::= .org <expression>
+.org <expression>
 ```
 
 ### Reserve
 
 ```
-directive_reserve ::= .res <expression>
+.res <expression>
 ```
 
 ### Undefine
 
 ```
-directive_undefine ::= .undef <identifier>
+.undef <identifier>
 ```
 
 Label
