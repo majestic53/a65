@@ -212,7 +212,7 @@ static const std::map<int, std::pair<uint8_t, size_t>> A65_ASSEMBLER_COMMAND_IMM
 	A65_ASSEMBLER_COMMAND_IMMEDIATE_MAP.find(_TYPE_)->second.second
 
 static const std::map<int, std::pair<uint8_t, size_t>> A65_ASSEMBLER_COMMAND_IMPLIED_MAP = {
-	std::make_pair(A65_TOKEN_COMMAND_BRK, std::make_pair(0x00, A65_ASSEMBLER_COMMAND_IMMEDIATE_NONE)),
+	std::make_pair(A65_TOKEN_COMMAND_BRK, std::make_pair(0x00, A65_ASSEMBLER_COMMAND_IMMEDIATE_BYTE)),
 	std::make_pair(A65_TOKEN_COMMAND_CLC, std::make_pair(0x18, A65_ASSEMBLER_COMMAND_IMMEDIATE_NONE)),
 	std::make_pair(A65_TOKEN_COMMAND_CLD, std::make_pair(0xd8, A65_ASSEMBLER_COMMAND_IMMEDIATE_NONE)),
 	std::make_pair(A65_TOKEN_COMMAND_CLI, std::make_pair(0x58, A65_ASSEMBLER_COMMAND_IMMEDIATE_NONE)),
