@@ -28,6 +28,7 @@
 #define A65_ASSEMBLER_DIVIDER "============================================"
 
 #define A65_ASSEMBLER_FILL 0xea
+#define A65_ASSEMBLER_FILL_RESERVE 0x00
 
 #define A65_ASSEMBLER_OUTPUT_ARCHIVE_NAME_DEFAULT "a"
 #define A65_ASSEMBLER_OUTPUT_ARCHIVE_EXTENSION ".a"

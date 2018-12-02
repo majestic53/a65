@@ -1014,7 +1014,7 @@ a65_assembler::evaluate_directive(
 			break;
 		case A65_TOKEN_DIRECTIVE_RESERVE:
 			a65_tree::move_child(tree, 0);
-			result.resize(evaluate_expression(parser, tree), A65_ASSEMBLER_FILL);
+			result.resize(evaluate_expression(parser, tree), A65_ASSEMBLER_FILL_RESERVE);
 			a65_tree::move_parent(tree);
 			break;
 		case A65_TOKEN_DIRECTIVE_UNDEFINE:

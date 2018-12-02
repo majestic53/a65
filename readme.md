@@ -61,7 +61,7 @@ a65 [-a name][-c name][-e][-h][-i][-n][-o output][-s][-b][-v] input...
 To build objects files, call a65 with a series of source files as input:
 
 ```
-a65 -o <OUTPUT> <INPUT>
+$ a65 -o <OUTPUT> <INPUT>
 
 For example: a65 -o ./bin ./doc/example.asm
 ```
@@ -69,7 +69,7 @@ For example: a65 -o ./bin ./doc/example.asm
 To build archives files, call a65 with a series of source and/or object files as input and a name:
 
 ```
-a65 -a <NAME> -o <OUTPUT> <INPUT>
+$ a65 -a <NAME> -o <OUTPUT> <INPUT>
 
 For example: a65 -a example -o ./bin ./doc/example.asm
 ```
@@ -77,13 +77,19 @@ For example: a65 -a example -o ./bin ./doc/example.asm
 To build binary files, call a65 with a series of source, object and/or archive files as input and a name:
 
 ```
-a65 -c <NAME> -o <OUTPUT> <INPUT>
+$ a65 -c <NAME> -o <OUTPUT> <INPUT>
 
 For example: a65 -c example -o ./bin ./doc/example.asm
 ```
 
 Changelog
 =========
+
+Version 0.1.1848
+----------------
+*Updated: 12/02/2018*
+
+* Reserve directive now fills with 0x00, instead of 0xEA
 
 Version 0.1.1843
 ----------------
@@ -100,17 +106,6 @@ Version 0.1.1843
 
 * Implemented binary output
 * Numerous bug fixes
-
-Version 0.1.1842
-----------------
-*Updated: 10/19/2018*
-
-* Implemented command evaluation
-
-*Updated: 10/16/2018*
-
-* Implemented directive evaluation
-* Simplified archive file format
 
 *Changelog truncated (see file history for full log)*
 
