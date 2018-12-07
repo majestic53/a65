@@ -104,8 +104,14 @@ run_functional_tests(void)
 		std::cout << A65_COLUMN_WIDTH(A65_TEST_COLUMN_WIDTH) << A65_TEST_STRING(test) << "[";
 
 		result = (run_functional_test(test) ? EXIT_SUCCESS : EXIT_FAILURE);
-
-		std::cout << ((result == EXIT_SUCCESS) ? "PASS" : "FAIL") << "]" << std::endl;
+#ifdef TRACE_COLOR
+		std::cout << A65_DEBUG_COLOR_STRING((result == EXIT_SUCCESS) ? A65_DEBUG_LEVEL_INFORMATION : A65_DEBUG_LEVEL_ERROR);
+#endif // TRACE_COLOR
+		std::cout << ((result == EXIT_SUCCESS) ? "PASS" : "FAIL");
+#ifdef TRACE_COLOR
+		std::cout << A65_DEBUG_COLOR_OFF;
+#endif // TRACE_COLOR
+		std::cout << "]" << std::endl;
 	}
 
 	return result;
